@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PULSAR by ShowRoots — Resumen Ejecutivo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --primary: #6C3AED;
+      --primary-light: #8B5CF6;
+      --primary-dark: #5B21B6;
+      --accent: #F59E0B;
+      --bg: #ffffff;
+      --text: #1E293B;
+      --text-light: #64748B;
+      --border: #E2E8F0;
+      --card-bg: #F8FAFC;
+      --success: #10B981;
+      --danger: #EF4444;
+      --info: #3B82F6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.7;
+      font-size: 11pt;
+    }
+
+    @page {
+      size: A4;
+      margin: 20mm 18mm;
+    }
+
+    @media print {
+      body { font-size: 10pt; }
+      .page-break { page-break-before: always; }
+      .no-break { page-break-inside: avoid; }
+      .cover { height: 100vh; }
+    }
+
+    /* ── Cover Page ── */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1E1B4B 0%, #4C1D95 40%, #6D28D9 70%, #7C3AED 100%);
+      color: white;
+      text-align: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      right: -120px;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -80px;
+      left: -80px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: rgba(139, 92, 246, 0.2);
+    }
+
+    .cover-logo {
+      font-size: 72px;
+      margin-bottom: 10px;
+    }
+
+    .cover h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .cover h1 span {
+      color: var(--accent);
+    }
+
+    .cover .subtitle {
+      font-size: 20px;
+      font-weight: 300;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+
+    .cover .tagline {
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent);
+      margin-bottom: 60px;
+    }
+
+    .cover-meta {
+      position: relative;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    /* ── Content ── */
+    .content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 30px;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 40px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 3px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .emoji {
+      font-size: 24px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 24px 0 10px 0;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .highlight {
+      background: linear-gradient(135deg, #EDE9FE, #FEF3C7);
+      border-left: 4px solid var(--primary);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+
+    .highlight strong {
+      color: var(--primary-dark);
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 10.5pt;
+    }
+
+    thead th {
+      background: var(--primary);
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10pt;
+    }
+
+    thead th:first-child {
+      border-radius: 8px 0 0 0;
+    }
+
+    thead th:last-child {
+      border-radius: 0 8px 0 0;
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--card-bg);
+    }
+
+    tbody tr:hover {
+      background: #EDE9FE;
+    }
+
+    /* ── Lists ── */
+    ul, ol {
+      margin: 10px 0 16px 24px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    li strong {
+      color: var(--primary-dark);
+    }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #1E293B;
+      color: #E2E8F0;
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 10pt;
+      line-height: 1.6;
+      margin: 12px 0;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-block .comment {
+      color: #94A3B8;
+    }
+
+    .code-block .highlight-line {
+      color: var(--accent);
+    }
+
+    /* ── Flow Diagram ── */
+    .flow {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 16px 0;
+      text-align: center;
+    }
+
+    .flow-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flow-step {
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 9.5pt;
+      font-weight: 500;
+    }
+
+    .flow-step.rejected {
+      background: var(--danger);
+    }
+
+    .flow-step.success {
+      background: var(--success);
+    }
+
+    .flow-arrow {
+      color: var(--text-light);
+      font-size: 16px;
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .card ul {
+      margin: 0 0 0 16px;
+      font-size: 10pt;
+    }
+
+    .card li {
+      margin-bottom: 3px;
+    }
+
+    /* ── Blockquote ── */
+    blockquote {
+      background: linear-gradient(135deg, #F5F3FF, #FFFBEB);
+      border-left: 4px solid var(--accent);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-style: italic;
+      color: var(--text-light);
+    }
+
+    /* ── Divider ── */
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
+      margin: 32px 0;
+    }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 9pt;
+      font-weight: 600;
+    }
+
+    .badge-premium {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .badge-standard {
+      background: #E0E7FF;
+      color: #3730A3;
+    }
+
+    /* ── Phases ── */
+    .phase {
+      border-left: 3px solid var(--primary);
+      padding-left: 20px;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .phase::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 2px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .phase h3 {
+      margin-top: 0;
+    }
+
+    /* ── Vision ── */
+    .vision-box {
+      background: linear-gradient(135deg, #1E1B4B, #4C1D95);
+      color: white;
+      padding: 24px 28px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    .vision-box p {
+      color: rgba(255,255,255,0.9);
+    }
+
+    .vision-box strong {
+      color: var(--accent);
+    }
+
+    .vision-list {
+      list-style: none;
+      margin: 12px 0 0 0;
+      padding: 0;
+    }
+
+    .vision-list li {
+      padding: 4px 0;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .vision-list li::before {
+      content: '✦ ';
+      color: var(--accent);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 30px;
+      font-size: 10pt;
+      color: var(--text-light);
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════ COVER PAGE ═══════ -->
+  <div class="cover">
+    <div class="cover-logo">🎵</div>
+    <h1>PULSAR <span>by ShowRoots</span></h1>
+    <p class="subtitle">Resumen Ejecutivo del Sistema</p>
+    <p class="tagline">Plataforma Curada de Talento Musical</p>
+    <div class="cover-meta">
+      Documento generado — Abril 2026<br>
+      Versión 1.0 | Confidencial
+    </div>
+  </div>
+
+  <!-- ═══════ CONTENT ═══════ -->
+  <div class="content">
+
+    <!-- ── ¿Qué es Pulsar? ── -->
+    <h2><span class="emoji">🎯</span> ¿Qué es Pulsar?</h2>
+    <p>Pulsar (ShowRoots) es una <strong>plataforma curada</strong> para conectar clientes con <strong>DJs, músicos y bandas</strong>. No es un marketplace abierto — es un sistema controlado donde la calidad del talento es verificada por un administrador antes de ser visible al público.</p>
+    <div class="highlight">
+      <strong>Modelo de negocio:</strong> Comisión por reserva (Standard: 20% | Premium: 15%) + fee de "Gestión y garantía" al cliente (5% del total o escalonado).
+    </div>
+
+    <hr>
+
+    <!-- ── Roles del Sistema ── -->
+    <h2><span class="emoji">👥</span> Roles del Sistema</h2>
+    <p>El sistema tiene <strong>4 roles principales</strong>:</p>
+    <table>
+      <thead>
+        <tr><th>Rol</th><th>Descripción</th><th>Dashboard</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Cliente</strong></td><td>Persona que busca y contrata talento</td><td><code>/dashboard</code></td></tr>
+        <tr><td><strong>Talento</strong></td><td>DJ, músico o banda que ofrece servicios</td><td><code>/talent-dashboard</code></td></tr>
+        <tr><td><strong>Admin</strong></td><td>Equipo ShowRoots que supervisa todo</td><td><code>/admin-dashboard</code></td></tr>
+        <tr><td><strong>Partner</strong></td><td>Intermediario que trae clientes y gana comisión</td><td><code>/partner</code></td></tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ── ROL: CLIENTE ── -->
+    <div class="page-break"></div>
+    <h2><span class="emoji">🟢</span> ROL: CLIENTE</h2>
+
+    <h3>¿Qué puede hacer?</h3>
+    <ul>
+      <li>Explorar talentos <strong>sin crear cuenta</strong></li>
+      <li>Filtrar por ciudad, género musical, tipo y presupuesto</li>
+      <li>Ver perfiles completos (fotos, videos, bio, reseñas, precio/hora)</li>
+      <li>Enviar solicitud de cotización/reserva</li>
+      <li>Ver precio estimado antes de reservar</li>
+      <li>Recibir propuesta final ajustada por el talento</li>
+      <li>Pagar un porcentaje (ej: 50%) o el total</li>
+      <li>Chatear con el talento después de la reserva</li>
+      <li>Dejar reseña después del evento</li>
+      <li>Ver historial de reservas</li>
+    </ul>
+
+    <h3>¿Qué NO puede hacer?</h3>
+    <ul>
+      <li>Editar perfiles de talentos</li>
+      <li>Ver panel de admin</li>
+      <li>Confirmar reserva sin pagar</li>
+    </ul>
+
+    <h3>Flujo típico del cliente:</h3>
+    <ol>
+      <li>Entra a Pulsar</li>
+      <li>Selecciona: tipo de talento + ubicación + fecha</li>
+      <li>Ve los perfiles filtrados (premium primero, standard después)</li>
+      <li>Entra al perfil de un talento (fotos, videos, bio, precio, reseñas)</li>
+      <li>Solicita cotización → completa detalles del evento</li>
+      <li>El talento acepta/rechaza/ajusta</li>
+      <li>Cliente recibe propuesta final</li>
+      <li><strong>Crea cuenta</strong> (obligatorio solo para pagar)</li>
+      <li>Paga → reserva confirmada</li>
+      <li>Se abre chat interno para coordinar</li>
+      <li>Después del evento → puede dejar reseña</li>
+    </ol>
+
+    <hr>
+
+    <!-- ── ROL: TALENTO ── -->
+    <div class="page-break"></div>
+    <h2><span class="emoji">🎵</span> ROL: TALENTO (DJ / Músico / Banda)</h2>
+
+    <h3>¿Qué puede hacer?</h3>
+    <ul>
+      <li>Crear perfil profesional (nombre artístico, bio, fotos, videos)</li>
+      <li>Definir géneros musicales</li>
+      <li>Definir precio base por hora</li>
+      <li>Configurar disponibilidad con calendario</li>
+      <li>Recibir solicitudes de clientes</li>
+      <li>Aceptar, rechazar o ajustar solicitudes</li>
+      <li>Enviar mensajes al cliente dentro de la plataforma</li>
+      <li>Ver historial de reservas</li>
+      <li>Ver ingresos generados</li>
+      <li>Cambiar su ubicación (si viaja)</li>
+      <li>Subir fotos y videos al perfil</li>
+    </ul>
+
+    <h3>¿Qué NO puede hacer?</h3>
+    <ul>
+      <li>Aprobarse a sí mismo (requiere aprobación del admin)</li>
+      <li>Editar ajustes globales del sistema</li>
+      <li>Modificar reservas ya pagadas sin intervención del admin</li>
+    </ul>
+
+    <h3>Niveles de talento:</h3>
+    <table>
+      <thead>
+        <tr><th>Nivel</th><th>Descripción</th><th>Comisión</th><th>Visibilidad</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-premium">Premium</span></td>
+          <td>Curado por el equipo ShowRoots</td>
+          <td><strong>15%</strong></td>
+          <td>Aparece primero, cards más grandes, badge especial</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-standard">Standard</span></td>
+          <td>Registro abierto, por defecto</td>
+          <td><strong>20%</strong></td>
+          <td>Aparece después de los premium, cards más simples</td>
+        </tr>
+      </tbody>
+    </table>
+    <blockquote>Todo talento nuevo entra como <strong>Standard</strong>. El Admin decide si lo sube a <strong>Premium</strong>.</blockquote>
+
+    <h3>Estrategia de retención:</h3>
+    <ul>
+      <li>Premium tiene <strong>mayor visibilidad</strong> y <strong>menor comisión</strong> (15%)</li>
+      <li>Standard tiene <strong>menor visibilidad</strong> y <strong>mayor comisión</strong> (20%)</li>
+      <li>El talento mejora sus ingresos dentro de la plataforma</li>
+      <li>El historial y reputación quedan dentro del sistema</li>
+    </ul>
+
+    <h3>Premium — ¿gratis o pago?</h3>
+    <div class="phase no-break">
+      <h3>Fase 1: Premium = curado (gratis)</h3>
+      <p>El equipo de ShowRoots selecciona manualmente a los talentos Premium sin costo.</p>
+    </div>
+    <div class="phase no-break">
+      <h3>Fase 2: Premium = suscripción opcional</h3>
+      <ul>
+        <li><strong>$20/mes</strong> si paga un año completo</li>
+        <li><strong>$30/mes</strong> si paga mensual</li>
+      </ul>
+    </div>
+
+    <hr>
+
+    <!-- ── ROL: ADMIN ── -->
+    <h2><span class="emoji">🛡️</span> ROL: ADMIN (ShowRoots)</h2>
+
+    <h3>¿Qué puede hacer?</h3>
+    <ul>
+      <li>Aprobar o rechazar talentos (control de calidad)</li>
+      <li>Ver todos los usuarios registrados</li>
+      <li>Editar perfiles si es necesario</li>
+      <li>Ver todas las reservas del sistema</li>
+      <li>Intervenir en disputas entre cliente y talento</li>
+      <li>Configurar comisión de la plataforma</li>
+      <li>Ver ingresos totales</li>
+      <li>Cambiar nivel de talento (Standard ↔ Premium)</li>
+      <li>Gestionar contenido destacado (featured)</li>
+      <li>Dashboard con métricas: reservas, ingresos, talentos activos</li>
+    </ul>
+
+    <hr>
+
+    <!-- ── ROL: PARTNER ── -->
+    <div class="page-break"></div>
+    <h2><span class="emoji">🤝</span> ROL: PARTNER ShowRoots</h2>
+
+    <h3>¿Qué es?</h3>
+    <p>Personas o empresas que ya consiguen clientes (wedding planners, productores, promotores, dueños de locales, managers, DJs que no pueden cubrir fechas).</p>
+
+    <h3>¿Qué puede hacer?</h3>
+    <ul>
+      <li>Buscar talentos dentro de la plataforma</li>
+      <li>Ver perfiles, precios y disponibilidad</li>
+      <li>Crear reservas en nombre de un cliente</li>
+      <li>Gestionar múltiples eventos</li>
+      <li>Ganar comisión por cada reserva generada</li>
+      <li>Dashboard con: eventos activos, ingresos, estado de bookings</li>
+    </ul>
+
+    <h3>Modelo de comisión del Partner:</h3>
+    <div class="code-block">Ejemplo con talento Standard:
+────────────────────────────────
+Evento: $500
+Comisión ShowRoots (20%): $100
+  → Partner recibe (30% de $100): $30
+  → ShowRoots neto: $70
+  → Talento recibe: $400
+  → Cliente paga adicional: "Gestión y garantía" (5% = $25)
+────────────────────────────────
+Total cliente: $525 | Talento: $400 | ShowRoots: $95 | Partner: $30</div>
+
+    <p><strong>Modelo avanzado:</strong> El Partner puede aumentar el precio al cliente final.</p>
+    <div class="code-block">Precio DJ en plataforma: $400
+Partner vende al cliente: $500
+Ganancia del Partner: $100</div>
+
+    <h3>Ejemplos de Partners:</h3>
+    <ul>
+      <li>DJs que no pueden cubrir fechas</li>
+      <li>Productores de eventos</li>
+      <li>Wedding planners</li>
+      <li>Managers</li>
+      <li>Promotores</li>
+      <li>Dueños de locales</li>
+    </ul>
+
+    <hr>
+
+    <!-- ── Estados de Reserva ── -->
+    <h2><span class="emoji">📋</span> Estados de una Reserva</h2>
+    <p>Cada solicitud pasa por estos estados:</p>
+
+    <div class="flow no-break">
+      <div class="flow-steps">
+        <span class="flow-step">Solicitud enviada</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Pendiente de respuesta</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Aceptada</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Pendiente de pago</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step success">Confirmada</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step success">Completada</span>
+      </div>
+      <div style="margin-top:10px; font-size:10pt; color: var(--text-light);">
+        También puede pasar a → <span class="flow-step rejected" style="font-size:9pt">Rechazada</span> o <span class="flow-step rejected" style="font-size:9pt">Cancelada</span>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Estado</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>solicitud_enviada</code></td><td>El cliente envió la solicitud</td></tr>
+        <tr><td><code>pendiente_respuesta</code></td><td>Esperando que el talento responda</td></tr>
+        <tr><td><code>aceptada</code></td><td>El talento aceptó</td></tr>
+        <tr><td><code>rechazada</code></td><td>El talento rechazó</td></tr>
+        <tr><td><code>pendiente_pago</code></td><td>Aceptada pero falta el pago</td></tr>
+        <tr><td><code>confirmada</code></td><td>Pagada, reserva activa</td></tr>
+        <tr><td><code>completada</code></td><td>El evento ya ocurrió</td></tr>
+        <tr><td><code>cancelada</code></td><td>Cancelada por cualquier parte</td></tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ── Modelo de Comisiones ── -->
+    <div class="page-break"></div>
+    <h2><span class="emoji">💰</span> Modelo de Comisiones</h2>
+
+    <h3>Fase inicial (crecimiento):</h3>
+    <table>
+      <thead>
+        <tr><th>Nivel Talento</th><th>Comisión Plataforma</th><th>Visibilidad</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-standard">Standard</span></td><td><strong>20%</strong></td><td>Normal</td></tr>
+        <tr><td><span class="badge badge-premium">Premium</span></td><td><strong>15%</strong></td><td>Prioritaria</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Fee al cliente: "Gestión y garantía"</h3>
+    <p>Adicional a la comisión sobre el talento, se cobra al cliente un fee por gestión:</p>
+    <table>
+      <thead>
+        <tr><th>Ticket del evento</th><th>Fee fijo</th><th>Alternativa</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Pequeño ($150–$400)</td><td>$10 – $15</td><td rowspan="3"><strong>5% del total</strong></td></tr>
+        <tr><td>Mediano ($400–$800)</td><td>$15 – $20</td></tr>
+        <tr><td>Grande ($800+)</td><td>$20 – $30</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Monetización total por booking:</h3>
+    <div class="code-block">Ejemplo — Evento $500, Talento Standard:
+────────────────────────────────
+Comisión plataforma (20%):  $100
+Gestión y garantía (5%):     $25
+────────────────────────────────
+Talento recibe:             $400
+ShowRoots recibe:           $125
+Cliente paga total:         $525</div>
+
+    <h3>Lógica de Pagos:</h3>
+    <ul>
+      <li>El cliente puede pagar un <strong>porcentaje</strong> (ej: 50%) o el <strong>total</strong></li>
+      <li>El pago inicial <strong>bloquea la fecha</strong></li>
+      <li>El monto restante debe pagarse antes del evento</li>
+      <li>El sistema calcula automáticamente:
+        <ul>
+          <li><strong>Comisión ShowRoots</strong> (según nivel: 15% o 20%)</li>
+          <li><strong>Pago neto al talento</strong></li>
+          <li><strong>Comisión del partner</strong> (si aplica: 30% de la comisión)</li>
+          <li><strong>Fee "Gestión y garantía"</strong> al cliente</li>
+        </ul>
+      </li>
+      <li>El talento puede visualizar el monto neto que recibirá</li>
+      <li>El admin puede ver y <strong>editar</strong> todos los movimientos</li>
+    </ul>
+
+    <h3>Fase futura de monetización:</h3>
+    <ul>
+      <li>Suscripción opcional para talentos premium ($20–$30/mes)</li>
+      <li>Pago por posicionamiento destacado</li>
+      <li>Optimización de comisiones según volumen de bookings</li>
+    </ul>
+
+    <hr>
+
+    <!-- ── Mensajería ── -->
+    <h2><span class="emoji">💬</span> Mensajería Interna</h2>
+    <ul>
+      <li>Se activa cuando el cliente envía una solicitud</li>
+      <li>Chat completo se habilita cuando el talento acepta</li>
+      <li>El sistema puede limitar intercambio de contacto (teléfono, redes) antes del pago</li>
+      <li>Cada chat está vinculado a una reserva específica</li>
+    </ul>
+
+    <hr>
+
+    <!-- ── Disponibilidad ── -->
+    <h2><span class="emoji">📅</span> Disponibilidad</h2>
+    <ul>
+      <li>El talento configura su calendario</li>
+      <li>El sistema evita doble reserva en la misma fecha</li>
+      <li>Fechas se bloquean automáticamente al confirmar una reserva</li>
+      <li>El talento puede editar disponibilidad manualmente</li>
+    </ul>
+
+    <hr>
+
+    <!-- ── Formulario ── -->
+    <h2><span class="emoji">📝</span> Formulario de Cotización/Reserva (9 pasos)</h2>
+    <table>
+      <thead>
+        <tr><th>Paso</th><th>Contenido</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>1. Evento</strong></td><td>Tipo talento, fecha, hora, duración, ubicación, tipo evento, # personas, interior/exterior</td></tr>
+        <tr><td><strong>2. Búsqueda</strong></td><td>Sistema muestra talentos filtrados (premium primero)</td></tr>
+        <tr><td><strong>3. Detalles</strong></td><td>Género musical, descripción, presupuesto estimado, mensaje adicional</td></tr>
+        <tr><td><strong>4. Producción</strong></td><td>Servicios adicionales: sonido, luces, DJ booth, micrófono, pantalla, piso LED, técnico</td></tr>
+        <tr><td><strong>5. Preguntas dinámicas</strong></td><td>Preguntas específicas según los servicios seleccionados</td></tr>
+        <tr><td><strong>6. Resumen</strong></td><td>Vista previa con todo lo seleccionado + precio estimado</td></tr>
+        <tr><td><strong>7. Datos cliente</strong></td><td>Nombre, email, teléfono (si no tiene cuenta)</td></tr>
+        <tr><td><strong>8. Envío</strong></td><td>Solicitud llega al talento y admin</td></tr>
+        <tr><td><strong>9. Pago</strong></td><td>Propuesta final → pago (abono o total) → confirmación</td></tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ── Notificaciones ── -->
+    <h2><span class="emoji">🔔</span> Notificaciones</h2>
+    <p>El sistema envía notificaciones por <strong>email</strong> y dentro de la plataforma:</p>
+    <ul>
+      <li>Nueva solicitud recibida (al talento)</li>
+      <li>Solicitud aceptada/rechazada (al cliente)</li>
+      <li>Pago realizado (ambos)</li>
+      <li>Reserva confirmada (ambos)</li>
+      <li>Recordatorio previo al evento</li>
+      <li>Nueva reseña recibida</li>
+    </ul>
+
+    <hr>
+
+    <!-- ── Reglas de Negocio ── -->
+    <div class="page-break"></div>
+    <h2><span class="emoji">⚖️</span> Reglas de Negocio</h2>
+    <ol>
+      <li>Un talento <strong>no puede recibir pagos</strong> sin haber aceptado la solicitud</li>
+      <li>Una reserva <strong>no se confirma</strong> hasta que exista un pago</li>
+      <li>Una fecha <strong>no puede ser doble reservada</strong> para el mismo talento</li>
+      <li>El sistema <strong>bloquea fechas</strong> automáticamente al confirmar</li>
+      <li>Solo se puede dejar reseña si la reserva está <strong>"completada"</strong></li>
+      <li>El talento <strong>no puede modificar</strong> una reserva pagada sin el admin</li>
+      <li>La <strong>comisión se calcula automáticamente</strong> según el nivel del talento (Standard 20% / Premium 15%)</li>
+      <li>Solicitudes sin respuesta en 48h <strong>expiran automáticamente</strong></li>
+    </ol>
+
+    <h3>¿Quién aprueba todo?</h3>
+    <div class="phase no-break">
+      <h3>Fase 1: Validación manual</h3>
+      <p>El equipo de ShowRoots valida de manera manual cada talento y contenido.</p>
+    </div>
+    <div class="phase no-break">
+      <h3>Fase 2: Automatización por reglas</h3>
+      <p>Se automatizan aprobaciones en base a reglas predefinidas (calidad, documentación, historial).</p>
+    </div>
+
+    <h3>Servicios adicionales (producción):</h3>
+    <div class="phase no-break">
+      <h3>Fase 1: Cotización manual</h3>
+      <p>El talento o equipo ShowRoots puede enviar cotización personalizada para sonido, luces, etc.</p>
+    </div>
+    <div class="phase no-break">
+      <h3>Fase 2: Paquetes automatizados</h3>
+      <ul>
+        <li>Se crean paquetes predefinidos para el cliente</li>
+        <li>Montajes elaborados → contacto directo con el equipo para cotización personalizada</li>
+        <li>Sistema sugiere sonido/luces según la cantidad de personas del evento</li>
+      </ul>
+    </div>
+
+    <hr>
+
+    <!-- ── Base de Datos ── -->
+    <h2><span class="emoji">📊</span> Base de Datos — Tablas Principales</h2>
+    <table>
+      <thead>
+        <tr><th>Tabla</th><th>Propósito</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Usuarios</strong></td><td>Info general de todos (id, nombre, email, rol, estado)</td></tr>
+        <tr><td><strong>Talentos</strong></td><td>Perfil profesional (nombre artístico, tipo, bio, tarifa, nivel, rating)</td></tr>
+        <tr><td><strong>Géneros</strong></td><td>Catálogo de géneros musicales</td></tr>
+        <tr><td><strong>Talento_Géneros</strong></td><td>Relación muchos-a-muchos entre talento y géneros</td></tr>
+        <tr><td><strong>Media</strong></td><td>Fotos y videos del perfil del talento</td></tr>
+        <tr><td><strong>Disponibilidad</strong></td><td>Calendario del talento (fecha, hora, estado)</td></tr>
+        <tr><td><strong>Reservas</strong></td><td>Tabla principal: cliente + talento + evento + estado + precio</td></tr>
+        <tr><td><strong>Pagos</strong></td><td>Montos, método, comisiones, estado del pago</td></tr>
+        <tr><td><strong>Mensajes</strong></td><td>Chat interno vinculado a cada reserva</td></tr>
+        <tr><td><strong>Reviews</strong></td><td>Puntuación y comentario del cliente al talento</td></tr>
+        <tr><td><strong>Notificaciones</strong></td><td>Alertas del sistema para cada usuario</td></tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ── Principios de Desarrollo ── -->
+    <h2><span class="emoji">🧭</span> Principios de Desarrollo</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h4>1. "Que el flujo funcione perfecto"</h4>
+        <ul><li>Prioridad #1: flujo de reserva end-to-end sin fricción</li></ul>
+      </div>
+      <div class="card">
+        <h4>2. "Primero mobile"</h4>
+        <ul><li>Los clientes están en el celular — diseño mobile-first</li></ul>
+      </div>
+      <div class="card">
+        <h4>3. "Admin debe poder editar TODO"</h4>
+        <ul><li>Panel admin con control total sobre usuarios, bookings, pagos, perfiles</li></ul>
+      </div>
+      <div class="card">
+        <h4>4. "Todo debe poder hacerse manual"</h4>
+        <ul><li>Si algo falla en la automatización, siempre hay fallback manual</li></ul>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- ── Fases de Desarrollo ── -->
+    <h2><span class="emoji">🚀</span> Fases de Desarrollo</h2>
+
+    <div class="phase no-break">
+      <h3>Fase 1 (MVP — Actual)</h3>
+      <ul>
+        <li>Perfiles de talento</li>
+        <li>Búsqueda y filtros (premium primero)</li>
+        <li>Solicitudes y reservas (flujo completo)</li>
+        <li>Comisiones diferenciadas (Standard 20% / Premium 15%)</li>
+        <li>Fee "Gestión y garantía" al cliente</li>
+        <li>Pagos básicos (simulados)</li>
+        <li>Panel admin con control total</li>
+        <li>Notificaciones (in-app + email)</li>
+        <li>Calendario y disponibilidad</li>
+        <li>Premium = curado (gratis)</li>
+        <li>Aprobación manual por equipo ShowRoots</li>
+        <li>Cotización manual de servicios adicionales</li>
+      </ul>
+    </div>
+
+    <div class="phase no-break">
+      <h3>Fase 2</h3>
+      <ul>
+        <li>Chat en tiempo real (WebSockets)</li>
+        <li>Reseñas y sistema de reputación</li>
+        <li>Suscripción Premium ($20/mes anual, $30/mes mensual)</li>
+        <li>Paquetes automatizados de producción</li>
+        <li>Aprobación automatizada por reglas</li>
+        <li>Integración de pasarela de pagos real</li>
+        <li>Calendario mejorado</li>
+      </ul>
+    </div>
+
+    <div class="phase no-break">
+      <h3>Fase 3 (Futuro)</h3>
+      <ul>
+        <li>Recomendación automática de talentos (IA)</li>
+        <li>Sistema de ranking</li>
+        <li>Publicación de eventos y venta de tickets</li>
+        <li>Dashboard financiero completo</li>
+        <li>Integración con WhatsApp</li>
+        <li>Cupones y promociones</li>
+        <li>Multiciudad / multipaís</li>
+        <li>Facturación automática</li>
+        <li>Optimización de comisiones por volumen</li>
+      </ul>
+    </div>
+
+    <hr>
+
+    <!-- ── Visión ── -->
+    <h2><span class="emoji">🎨</span> Visión del Producto</h2>
+    <div class="vision-box">
+      <p>ShowRoots no será solo una plataforma de DJs. Será una <strong>red de distribución de talento</strong>, donde múltiples actores (clientes, talentos, partners) pueden generar negocio dentro del sistema.</p>
+      <p style="margin-top:14px;">La clave está en:</p>
+      <ul class="vision-list">
+        <li><strong>Calidad controlada</strong> — sistema curado, no marketplace abierto</li>
+        <li><strong>Dos niveles de talento</strong> — premium vs standard</li>
+        <li><strong>Red de ventas escalable</strong> — rol Partner</li>
+        <li><strong>Monetización múltiple</strong> — comisión por reserva + fee de servicio + posicionamiento destacado + upgrade de nivel</li>
+      </ul>
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="footer">
+      PULSAR by ShowRoots — Resumen Ejecutivo | Abril 2026 | Confidencial
+    </div>
+
+  </div>
+
+</body>
+</html>

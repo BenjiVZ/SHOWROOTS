@@ -1,0 +1,727 @@
+/* ============================================
+   WebDJ — Design System v2
+   UI/UX Pro Max Enhanced
+   Style: Vibrant & Block-based (Entertainment)
+   Palette: Dark Audio + Play Green
+   Typography: Righteous / Poppins
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap');
+
+:root {
+  /* ---- Colores Principales (Pulsar Chartreuse) ---- */
+  --color-primary: #C1D82F;
+  --color-primary-hover: #A8BE1F;
+  --color-primary-light: #D4E84A;
+  --color-primary-ultra-light: rgba(193, 216, 47, 0.15);
+
+  /* ---- Acento / CTA (Coral — Pulsar) ---- */
+  --color-accent: #E85D4A;
+  --color-accent-hover: #D04A38;
+  --color-accent-light: rgba(232, 93, 74, 0.15);
+
+  /* ---- Secundario (Beige — Pulsar) ---- */
+  --color-secondary: #D7D6C4;
+  --color-secondary-light: rgba(215, 214, 196, 0.12);
+
+  /* ---- Fondos (Pure Black — Pulsar) ---- */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0A0A0A;
+  --color-bg-card: rgba(18, 18, 18, 0.85);
+  --color-bg-card-hover: rgba(193, 216, 47, 0.08);
+  --color-bg-elevated: #1A1A1A;
+  --color-bg-glass: rgba(0, 0, 0, 0.8);
+  --color-bg-input: rgba(18, 18, 18, 0.9);
+
+  /* ---- Textos ---- */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #D7D6C4;
+  --color-text-muted: #7A7A7A;
+  --color-text-accent: #C1D82F;
+
+  /* ---- Bordes ---- */
+  --color-border: rgba(193, 216, 47, 0.18);
+  --color-border-hover: rgba(193, 216, 47, 0.4);
+  --color-border-focus: rgba(193, 216, 47, 0.6);
+
+  /* ---- Estado ---- */
+  --color-success: #C1D82F;
+  --color-success-light: rgba(193, 216, 47, 0.15);
+  --color-warning: #F0B849;
+  --color-warning-light: rgba(240, 184, 73, 0.15);
+  --color-error: #E85D4A;
+  --color-error-light: rgba(232, 93, 74, 0.15);
+  --color-info: #D7D6C4;
+
+  /* ---- Gradientes ---- */
+  --gradient-primary: linear-gradient(135deg, #C1D82F 0%, #A8BE1F 100%);
+  --gradient-cta: var(--color-primary);
+  --gradient-dark: linear-gradient(180deg, #000000 0%, #0A0A0A 100%);
+  --gradient-card: linear-gradient(135deg, rgba(193, 216, 47, 0.05) 0%, rgba(232, 93, 74, 0.03) 100%);
+  --gradient-hero: radial-gradient(ellipse at 20% 50%, rgba(193, 216, 47, 0.12) 0%, transparent 50%),
+                   radial-gradient(ellipse at 80% 20%, rgba(232, 93, 74, 0.08) 0%, transparent 50%),
+                   radial-gradient(ellipse at 50% 80%, rgba(215, 214, 196, 0.05) 0%, transparent 40%);
+  --gradient-glow: radial-gradient(circle, rgba(193, 216, 47, 0.25) 0%, transparent 70%);
+
+  /* ---- Tipografía ---- */
+  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Righteous', 'Poppins', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --font-size-5xl: 3.25rem;
+  --font-size-6xl: 4rem;
+
+  /* ---- Espaciado ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ---- Sombras ---- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 30px rgba(193, 216, 47, 0.3);
+  --shadow-glow-accent: 0 0 30px rgba(193, 216, 47, 0.3);
+  --shadow-glow-cyan: 0 0 30px rgba(215, 214, 196, 0.2);
+  --shadow-neon: 0 0 10px rgba(193, 216, 47, 0.2), 0 0 40px rgba(193, 216, 47, 0.08);
+
+  /* ---- Transiciones ---- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Z-Index ---- */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+
+  /* ---- Contenedor ---- */
+  --container-max: 1280px;
+  --container-padding: var(--space-6);
+}
+
+/* ============================================
+   Light Theme Override
+   ============================================ */
+
+[data-theme="light"] {
+  /* ---- Colores Principales (Pulsar Chartreuse — adjusted for light bg) ---- */
+  --color-primary: #8BA318;
+  --color-primary-hover: #7A9010;
+  --color-primary-light: #6B8A0F;
+  --color-primary-ultra-light: rgba(139, 163, 24, 0.1);
+
+  /* ---- Acento (Same coral, slightly deeper for contrast) ---- */
+  --color-accent: #D94A38;
+  --color-accent-hover: #C43A28;
+  --color-accent-light: rgba(217, 74, 56, 0.1);
+
+  /* ---- Secundario ---- */
+  --color-secondary: #5A5A52;
+  --color-secondary-light: rgba(90, 90, 82, 0.08);
+
+  /* ---- Fondos (Clean whites) ---- */
+  --color-bg-primary: #F8F8F6;
+  --color-bg-secondary: #F0F0EC;
+  --color-bg-card: rgba(255, 255, 255, 0.9);
+  --color-bg-card-hover: rgba(139, 163, 24, 0.06);
+  --color-bg-elevated: #FFFFFF;
+  --color-bg-glass: rgba(255, 255, 255, 0.85);
+  --color-bg-input: rgba(255, 255, 255, 0.95);
+
+  /* ---- Textos ---- */
+  --color-text-primary: #1A1A18;
+  --color-text-secondary: #4A4A45;
+  --color-text-muted: #8A8A82;
+  --color-text-accent: #7A9010;
+
+  /* ---- Bordes ---- */
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-hover: rgba(139, 163, 24, 0.35);
+  --color-border-focus: rgba(139, 163, 24, 0.55);
+
+  /* ---- Estado ---- */
+  --color-success: #5A8A10;
+  --color-success-light: rgba(90, 138, 16, 0.1);
+  --color-warning: #D4960A;
+  --color-warning-light: rgba(212, 150, 10, 0.1);
+  --color-error: #D94A38;
+  --color-error-light: rgba(217, 74, 56, 0.1);
+  --color-info: #5A5A52;
+
+  /* ---- Gradientes ---- */
+  --gradient-primary: linear-gradient(135deg, #8BA318 0%, #7A9010 100%);
+  --gradient-cta: var(--color-primary);
+  --gradient-dark: linear-gradient(180deg, #F8F8F6 0%, #F0F0EC 100%);
+  --gradient-card: linear-gradient(135deg, rgba(139, 163, 24, 0.04) 0%, rgba(217, 74, 56, 0.02) 100%);
+  --gradient-hero: radial-gradient(ellipse at 20% 50%, rgba(139, 163, 24, 0.08) 0%, transparent 50%),
+                   radial-gradient(ellipse at 80% 20%, rgba(217, 74, 56, 0.05) 0%, transparent 50%),
+                   radial-gradient(ellipse at 50% 80%, rgba(90, 90, 82, 0.03) 0%, transparent 40%);
+  --gradient-glow: radial-gradient(circle, rgba(139, 163, 24, 0.15) 0%, transparent 70%);
+
+  /* ---- Sombras (softer for light) ---- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 30px rgba(139, 163, 24, 0.2);
+  --shadow-glow-accent: 0 0 30px rgba(139, 163, 24, 0.2);
+  --shadow-glow-cyan: 0 0 30px rgba(90, 90, 82, 0.1);
+  --shadow-neon: 0 4px 20px rgba(139, 163, 24, 0.12);
+}
+
+/* Skeleton shimmer for light mode */
+[data-theme="light"] .skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Scrollbar light */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #d0d0c8;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ============================================
+   Reset & Base
+   ============================================ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--color-primary-light);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  cursor: pointer;
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--color-text-primary);
+  letter-spacing: 0.02em;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* ============================================
+   Container
+   ============================================ */
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+/* ============================================
+   Buttons — Block-based, Bold
+   ============================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.btn-cta {
+  background: var(--color-primary);
+  color: #0d0d0d;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-cta:hover {
+  background: var(--color-primary-hover);
+  color: #0d0d0d;
+  box-shadow: 0 8px 30px rgba(193, 216, 47, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-card-hover);
+  border-color: var(--color-border-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary-light);
+  border: 1.5px solid var(--color-primary);
+}
+
+.btn-outline:hover {
+  background: var(--color-primary-ultra-light);
+  border-color: var(--color-primary-light);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.btn-ghost:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-lg {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-base);
+  border-radius: var(--radius-2xl);
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-xs);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-full);
+}
+
+/* ============================================
+   Glass
+   ============================================ */
+
+.glass {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid var(--color-border);
+}
+
+/* ============================================
+   Card — Bold with glow hover
+   ============================================ */
+
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--transition-base);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-neon);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Badges
+   ============================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-ultra-light);
+  color: var(--color-primary-light);
+  letter-spacing: 0.02em;
+}
+
+.badge-accent {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.badge-cyan {
+  background: var(--color-secondary-light);
+  color: var(--color-secondary);
+}
+
+.badge-success {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.badge-error {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+/* ============================================
+   Inputs — Dark with focus glow
+   ============================================ */
+
+.input-field {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.input-field:hover {
+  border-color: var(--color-border-hover);
+}
+
+.input-field:focus {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px var(--color-primary-ultra-light), var(--shadow-neon);
+}
+
+.input-field::placeholder {
+  color: var(--color-text-muted);
+}
+
+select.input-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C7FA0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+/* ============================================
+   Typography Utilities
+   ============================================ */
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-cta {
+  background: var(--gradient-cta);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.02em;
+}
+
+.section-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+  max-width: 600px;
+  font-weight: 300;
+}
+
+.stars {
+  color: #FBBF24;
+  letter-spacing: 2px;
+}
+
+/* ============================================
+   SVG Icon Utility (replace emojis)
+   ============================================ */
+
+.icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-sm { width: 16px; height: 16px; }
+.icon-lg { width: 32px; height: 32px; }
+.icon-xl { width: 48px; height: 48px; }
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(193, 216, 47, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(193, 216, 47, 0.3); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(18,18,18,0.6) 25%, rgba(30,30,30,0.8) 50%, rgba(18,18,18,0.6) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ---- Reduced Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 768px) {
+  :root {
+    --container-padding: var(--space-4);
+    --font-size-5xl: 2.25rem;
+    --font-size-4xl: 1.875rem;
+    --font-size-3xl: 1.5rem;
+  }
+}
+
+/* ============================================
+   Vue Transitions
+   ============================================ */
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-base);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all var(--transition-base);
+}
+.slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
