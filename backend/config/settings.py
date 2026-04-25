@@ -127,6 +127,9 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     'https://frontend.aplicacionesdamasco.com',
     'http://frontend.aplicacionesdamasco.com',
+    'https://backend.aplicacionesdamasco.com',
+    'http://backend.aplicacionesdamasco.com',
+    'http://localhost:3000',
     'http://localhost:3001',
 ]
 CORS_ALLOW_CREDENTIALS = True

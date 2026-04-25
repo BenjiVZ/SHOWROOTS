@@ -54,9 +54,9 @@
         <!-- Decorative pattern -->
         <div class="panel-pattern">
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(193,216,47,0.1)" stroke-width="0.5"/>
-            <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(193,216,47,0.08)" stroke-width="0.5"/>
-            <circle cx="100" cy="100" r="40" fill="none" stroke="rgba(193,216,47,0.06)" stroke-width="0.5"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.12"/>
+            <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.08"/>
+            <circle cx="100" cy="100" r="40" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.06"/>
           </svg>
         </div>
       </div>
@@ -401,7 +401,7 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  background: #000;
+  background: var(--color-bg-primary);
   position: relative;
   overflow: hidden;
 }
@@ -425,7 +425,7 @@ async function handleRegister() {
 .bg-orb-1 {
   width: 500px;
   height: 500px;
-  background: rgba(193, 216, 47, 0.15);
+  background: var(--color-primary-ultra-light);
   top: -10%;
   left: -10%;
   animation-delay: 0s;
@@ -434,7 +434,7 @@ async function handleRegister() {
 .bg-orb-2 {
   width: 400px;
   height: 400px;
-  background: rgba(232, 93, 74, 0.1);
+  background: var(--color-accent-light);
   bottom: -10%;
   right: -5%;
   animation-delay: -7s;
@@ -444,7 +444,7 @@ async function handleRegister() {
 .bg-orb-3 {
   width: 300px;
   height: 300px;
-  background: rgba(193, 216, 47, 0.08);
+  background: var(--color-primary-ultra-light);
   top: 50%;
   left: 60%;
   animation-delay: -14s;
@@ -469,16 +469,13 @@ async function handleRegister() {
   width: 100%;
   max-width: 1000px;
   min-height: 620px;
-  background: rgba(10, 10, 10, 0.7);
+  background: var(--color-bg-card);
   backdrop-filter: blur(40px) saturate(1.3);
   -webkit-backdrop-filter: blur(40px) saturate(1.3);
-  border: 1px solid rgba(193, 216, 47, 0.12);
+  border: 1px solid var(--color-border);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.03),
-    0 32px 64px rgba(0,0,0,0.5),
-    0 0 120px rgba(193, 216, 47, 0.04);
+  box-shadow: var(--shadow-xl);
   transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -491,8 +488,8 @@ async function handleRegister() {
   flex-direction: column;
   justify-content: center;
   padding: var(--space-10);
-  background: linear-gradient(160deg, rgba(193, 216, 47, 0.06) 0%, rgba(0,0,0,0.4) 60%, rgba(232, 93, 74, 0.04) 100%);
-  border-right: 1px solid rgba(193, 216, 47, 0.08);
+  background: var(--gradient-card);
+  border-right: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -512,8 +509,8 @@ async function handleRegister() {
   font-family: 'Righteous', sans-serif;
   font-size: 2.2rem;
   letter-spacing: 4px;
-  color: #fff;
-  text-shadow: 0 0 30px rgba(193, 216, 47, 0.3);
+  color: var(--color-text-primary);
+  text-shadow: 0 0 30px var(--color-primary-ultra-light);
 }
 
 .panel-logo-sub {
@@ -563,7 +560,7 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  background: rgba(193, 216, 47, 0.1);
+  background: var(--color-primary-ultra-light);
   color: var(--color-primary);
   flex-shrink: 0;
 }
@@ -583,6 +580,7 @@ async function handleRegister() {
   height: 220px;
   opacity: 0.5;
   z-index: 1;
+  color: var(--color-primary);
   animation: patternSpin 60s linear infinite;
 }
 
@@ -611,8 +609,8 @@ async function handleRegister() {
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 4px;
   margin-bottom: var(--space-8);
@@ -694,8 +692,8 @@ async function handleRegister() {
 .input-modern {
   width: 100%;
   padding: 16px 16px 16px 46px;
-  background: rgba(255,255,255,0.04);
-  border: 1.5px solid rgba(255,255,255,0.08);
+  background: var(--color-bg-input);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
@@ -706,8 +704,8 @@ async function handleRegister() {
 
 .input-modern:focus {
   border-color: var(--color-primary);
-  background: rgba(193, 216, 47, 0.04);
-  box-shadow: 0 0 0 3px rgba(193, 216, 47, 0.1);
+  background: var(--color-primary-ultra-light);
+  box-shadow: 0 0 0 3px var(--color-primary-ultra-light);
 }
 
 .input-modern:focus ~ .input-icon,
@@ -735,7 +733,7 @@ async function handleRegister() {
   left: 40px;
   font-size: 11px;
   color: var(--color-primary);
-  background: rgba(10, 10, 10, 0.9);
+  background: var(--color-bg-card);
   padding: 0 6px;
 }
 
@@ -772,8 +770,8 @@ async function handleRegister() {
   align-items: center;
   gap: 6px;
   padding: var(--space-4) var(--space-2);
-  background: rgba(255,255,255,0.03);
-  border: 1.5px solid rgba(255,255,255,0.06);
+  background: var(--color-bg-input);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -781,14 +779,14 @@ async function handleRegister() {
 }
 
 .role-card:hover {
-  border-color: rgba(193, 216, 47, 0.3);
-  background: rgba(193, 216, 47, 0.04);
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-card-hover);
 }
 
 .role-card.active {
   border-color: var(--color-primary);
-  background: rgba(193, 216, 47, 0.08);
-  box-shadow: 0 0 20px rgba(193, 216, 47, 0.1);
+  background: var(--color-primary-ultra-light);
+  box-shadow: var(--shadow-glow);
 }
 
 .role-icon {
@@ -845,7 +843,7 @@ async function handleRegister() {
 
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(193, 216, 47, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-submit:active:not(:disabled) {
@@ -859,7 +857,7 @@ async function handleRegister() {
 
 .btn-submit.btn-register {
   background: var(--color-primary);
-  color: #0d0d0d;
+  color: #1a1a18;
 }
 
 .loading-spinner {
@@ -885,10 +883,10 @@ async function handleRegister() {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  background: rgba(232, 93, 74, 0.12);
-  border: 1px solid rgba(232, 93, 74, 0.3);
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
   border-radius: var(--radius-md);
-  color: #ff7b6b;
+  color: var(--color-error);
   font-size: var(--font-size-sm);
 }
 

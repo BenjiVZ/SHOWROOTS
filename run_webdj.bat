@@ -7,16 +7,16 @@ echo     SHOW ROOTS - Iniciando Servicios
 echo ============================================
 echo.
 
-:: ---- Backend: Django (puerto 5000) ----
-echo [1/3] Iniciando Backend Django en puerto 5000...
-start "ShowRoots-Backend" cmd /c "cd /d %~dp0backend && python manage.py runserver 0.0.0.0:5000"
+:: ---- Backend: Django (puerto 3000) ----
+echo [1/3] Iniciando Backend Django en puerto 3000...
+start "ShowRoots-Backend" cmd /c "cd /d %~dp0backend && python manage.py runserver 0.0.0.0:3000"
 
 :: Esperar 3 segundos para que el backend arranque primero
 timeout /t 3 /nobreak > nul
 
-:: ---- Frontend: Vue + Vite (puerto 5001) ----
-echo [2/3] Iniciando Frontend Vue+Vite en puerto 5001...
-start "ShowRoots-Frontend" cmd /c "cd /d %~dp0frontend && npm run dev -- --port 5001"
+:: ---- Frontend: Vue + Vite (puerto 3001) ----
+echo [2/3] Iniciando Frontend Vue+Vite en puerto 3001...
+start "ShowRoots-Frontend" cmd /c "cd /d %~dp0frontend && npm run dev -- --port 3001"
 
 :: Esperar 2 segundos
 timeout /t 2 /nobreak > nul
@@ -27,8 +27,11 @@ start "ShowRoots-Scheduler" cmd /c "cd /d %~dp0backend && python manage.py run_s
 
 echo.
 echo ============================================
-echo   Backend:   http://localhost:5000
-echo   Frontend:  http://localhost:5001
+echo   Backend:   http://localhost:3000
+echo   Frontend:  http://localhost:3001
+echo   Dominios:
+echo     backend.aplicacionesdamasco.com -> :3000
+echo     frontend.aplicacionesdamasco.com -> :3001
 echo   Scheduler: Activo (expiracion + recordatorios)
 echo ============================================
 echo.
