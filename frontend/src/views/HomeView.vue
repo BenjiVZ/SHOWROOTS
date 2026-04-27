@@ -657,4 +657,40 @@ onMounted(async () => {
   .hero-stats { gap: var(--space-6); }
   .stat strong { font-size: var(--font-size-2xl); }
 }
+
+/* ---- Light Mode Overrides ---- */
+[data-theme="light"] .hero-orb-1 {
+  background: rgba(107, 138, 15, 0.08);
+}
+[data-theme="light"] .hero-orb-2 {
+  background: rgba(217, 74, 56, 0.06);
+}
+[data-theme="light"] .hero-orb-3 {
+  background: rgba(90, 90, 82, 0.04);
+}
+
+[data-theme="light"] .category-card {
+  background: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .category-card:hover {
+  box-shadow: 0 8px 24px rgba(107, 138, 15, 0.1);
+}
+[data-theme="light"] .category-card::before {
+  background: var(--gradient-primary);
+}
+
+[data-theme="light"] .cta-card {
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .step-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .step-card:hover {
+  box-shadow: 0 6px 20px rgba(107, 138, 15, 0.1);
+}
 </style>

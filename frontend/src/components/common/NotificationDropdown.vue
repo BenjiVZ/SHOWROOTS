@@ -176,4 +176,26 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .notif-dropdown { right: -20px; width: calc(100vw - 32px); }
 }
+
+/* ---- Light Mode Overrides ---- */
+[data-theme="light"] .notif-badge {
+  border-color: #F5F5F0;
+}
+[data-theme="light"] .notif-dropdown {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .notif-item {
+  border-bottom-color: rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .notif-item.unread {
+  background: rgba(107, 138, 15, 0.04);
+}
+[data-theme="light"] .notif-item:hover {
+  background: rgba(107, 138, 15, 0.06);
+}
+[data-theme="light"] .notif-bell:hover {
+  background: rgba(107, 138, 15, 0.06);
+}
 </style>

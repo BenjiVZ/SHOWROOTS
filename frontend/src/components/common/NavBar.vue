@@ -415,4 +415,34 @@ onMounted(() => {
 .theme-toggle:active .theme-icon {
   transform: scale(0.85);
 }
+
+/* ---- Light Mode Overrides ---- */
+[data-theme="light"] .navbar.scrolled {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .nav-links a:not(.btn):hover,
+[data-theme="light"] .nav-links a:not(.btn).router-link-active {
+  background: rgba(107, 138, 15, 0.08);
+  border-color: var(--color-primary);
+}
+
+[data-theme="light"] .user-pill {
+  background: #FFFFFF;
+}
+
+[data-theme="light"] .dropdown-item:hover {
+  background: rgba(107, 138, 15, 0.06);
+}
+
+[data-theme="light"] .theme-toggle {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .logo:hover .logo-text {
+  text-shadow: none;
+}
 </style>

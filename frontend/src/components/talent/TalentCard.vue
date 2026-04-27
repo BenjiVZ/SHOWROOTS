@@ -185,4 +185,13 @@ const typeClass = computed(() => {
   color: var(--color-accent);
   font-weight: 700;
 }
+
+/* ---- Light Mode Overrides ---- */
+[data-theme="light"] .talent-card {
+  background: #FFFFFF;
+}
+[data-theme="light"] .featured-badge {
+  background: rgba(255, 255, 255, 0.85);
+  color: #B8860B;
+}
 </style>

@@ -1010,4 +1010,60 @@ async function handleRegister() {
   transition: opacity var(--transition-fast);
 }
 .forgot-link:hover { opacity: 1; text-decoration: underline; }
+
+/* ---- Light Mode Overrides ---- */
+[data-theme="light"] .auth-container {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .auth-panel-left {
+  background: linear-gradient(135deg, rgba(107, 138, 15, 0.04) 0%, rgba(217, 74, 56, 0.02) 100%);
+  border-right-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .input-modern {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .input-modern:focus {
+  background: rgba(107, 138, 15, 0.04);
+  box-shadow: 0 0 0 3px rgba(107, 138, 15, 0.08);
+}
+
+[data-theme="light"] .input-modern:focus ~ .input-label-float,
+[data-theme="light"] .input-modern:not(:placeholder-shown) ~ .input-label-float {
+  background: #FFFFFF;
+}
+
+[data-theme="light"] .mode-switcher {
+  background: #F0F0EC;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .role-card {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .role-card:hover {
+  background: rgba(107, 138, 15, 0.04);
+  border-color: rgba(107, 138, 15, 0.3);
+}
+[data-theme="light"] .role-card.active {
+  background: rgba(107, 138, 15, 0.06);
+  border-color: var(--color-primary);
+}
+
+[data-theme="light"] .btn-submit {
+  color: #FFFFFF;
+}
+[data-theme="light"] .btn-submit.btn-register {
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .bg-orb {
+  opacity: 0.6;
+}
+
 </style>
