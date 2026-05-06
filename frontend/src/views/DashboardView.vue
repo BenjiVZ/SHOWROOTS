@@ -7,7 +7,13 @@
           <p class="section-subtitle">Bienvenido, <strong>{{ auth.user?.first_name || auth.user?.username }}</strong></p>
         </div>
         <div class="header-right">
-          <span class="badge" :class="roleBadgeClass">{{ auth.roleLabel }}</span>
+          <div class="role-level-group">
+            <span class="badge" :class="roleBadgeClass">{{ auth.roleLabel }}</span>
+            <span v-if="auth.isTalent && talentProfile" class="level-badge" :class="talentProfile.talent_level === 'premium' ? 'level-premium' : 'level-standard'">
+              <svg v-if="talentProfile.talent_level === 'premium'" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              {{ talentProfile.talent_level === 'premium' ? 'Premium' : 'Estándar' }}
+            </span>
+          </div>
           <button v-if="unreadCount > 0" class="notif-btn" @click="showNotifications = !showNotifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             <span class="notif-badge">{{ unreadCount }}</span>
@@ -136,6 +142,7 @@ const unreadCount = ref(0)
 const loading = ref(true)
 const showNotifications = ref(false)
 const activeTab = ref('all')
+const talentProfile = ref(null)
 
 const statusMap = {
   solicitud_enviada: { label: 'Solicitud Enviada', class: 'status-info' },
@@ -217,14 +224,17 @@ function handleNotifClick(n) {
 
 onMounted(async () => {
   try {
-    const [bookRes, notifRes, countRes] = await Promise.all([
+    const requests = [
       api.get('/bookings/'),
       api.get('/notifications/'),
       api.get('/notifications/unread-count/'),
-    ])
-    bookings.value = bookRes.data.results || bookRes.data
-    notifications.value = (notifRes.data.results || notifRes.data).slice(0, 10)
-    unreadCount.value = countRes.data.unread_count
+    ]
+    if (auth.isTalent) requests.push(api.get('/talents/me/'))
+    const results = await Promise.all(requests)
+    bookings.value = results[0].data.results || results[0].data
+    notifications.value = (results[1].data.results || results[1].data).slice(0, 10)
+    unreadCount.value = results[2].data.unread_count
+    if (auth.isTalent && results[3]) talentProfile.value = results[3].data
   } catch (e) {
     console.error(e)
   } finally {
@@ -248,6 +258,24 @@ onMounted(async () => {
 }
 
 .header-right { display: flex; align-items: center; gap: var(--space-3); }
+.role-level-group { display: flex; align-items: center; gap: var(--space-2); }
+
+.level-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: var(--radius-full);
+  font-size: var(--font-size-xs); font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.level-premium {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%);
+  color: #1a0e00;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.35);
+}
+.level-standard {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
 
 .notif-btn {
   position: relative;

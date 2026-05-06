@@ -8,10 +8,10 @@
           <p class="section-subtitle">Gestiona tu perfil, reservas y disponibilidad</p>
         </div>
         <div class="dash-header-actions">
-          <router-link to="/search" class="btn btn-secondary btn-sm">
+          <button class="btn btn-secondary btn-sm" @click="showPreview = true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Ver mi perfil público
-          </router-link>
+          </button>
         </div>
       </header>
 
@@ -247,6 +247,95 @@
 
       </div>
     </div>
+
+    <!-- ═══ Profile Preview Modal ═══ -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showPreview" class="preview-backdrop" @click.self="showPreview = false">
+          <div class="preview-modal animate-fade-in-up">
+            <!-- Close -->
+            <button class="preview-close" @click="showPreview = false" aria-label="Cerrar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+
+            <!-- Cover -->
+            <div class="preview-cover">
+              <img :src="profile?.cover_photo || previewPlaceholderCover" alt="Cover" />
+              <div class="preview-cover-overlay"></div>
+              <span class="preview-label">👁 Vista previa — Así te ven los clientes</span>
+            </div>
+
+            <!-- Body -->
+            <div class="preview-body">
+              <div class="preview-avatar-section">
+                <div class="preview-avatar-wrap">
+                  <img :src="profile?.profile_photo || previewPlaceholderAvatar" alt="Avatar" class="preview-avatar" />
+                  <span v-if="profile?.is_available" class="preview-status-dot" title="Disponible"></span>
+                </div>
+                <div class="preview-identity">
+                  <h2>{{ profile?.stage_name || auth.user?.first_name || 'Tu nombre' }}</h2>
+                  <div class="preview-badges">
+                    <span class="badge">{{ previewTypeLabel }}</span>
+                    <span v-if="profile?.talent_level" class="badge" :class="profile.talent_level === 'premium' ? 'badge-accent' : ''">{{ profile.talent_level === 'premium' ? '⭐ Premium' : 'Standard' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick stats -->
+              <div class="preview-stats">
+                <div class="preview-stat">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>{{ profile?.city || '—' }}</span>
+                </div>
+                <div v-if="profile?.experience_years" class="preview-stat">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>{{ profile.experience_years }} años exp.</span>
+                </div>
+                <div v-if="profile?.hourly_rate" class="preview-stat">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                  <strong>${{ profile.hourly_rate }}</strong>/hora
+                </div>
+                <div v-if="profile?.rating_avg" class="preview-stat">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FBBF24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <strong>{{ Number(profile.rating_avg).toFixed(1) }}</strong>
+                  <span class="muted">({{ profile.total_reviews || 0 }})</span>
+                </div>
+              </div>
+
+              <!-- Bio -->
+              <div v-if="profile?.description" class="preview-section">
+                <h4>Sobre mí</h4>
+                <p>{{ profile.description }}</p>
+              </div>
+
+              <!-- Genres -->
+              <div v-if="profile?.genres?.length" class="preview-section">
+                <h4>Géneros</h4>
+                <div class="preview-genres">
+                  <span v-for="g in profile.genres" :key="g.id || g" class="badge">{{ g.name || g }}</span>
+                </div>
+              </div>
+
+              <!-- Social -->
+              <div class="preview-social" v-if="profile?.instagram || profile?.soundcloud || profile?.spotify">
+                <a v-if="profile.instagram" :href="`https://instagram.com/${profile.instagram.replace('@','')}`" target="_blank" class="social-chip">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                  {{ profile.instagram }}
+                </a>
+                <a v-if="profile.spotify" :href="profile.spotify" target="_blank" class="social-chip">🎵 Spotify</a>
+                <a v-if="profile.soundcloud" :href="profile.soundcloud" target="_blank" class="social-chip">☁ SoundCloud</a>
+              </div>
+
+              <!-- Footer -->
+              <div class="preview-footer">
+                <router-link :to="`/talent/${profile?.id}`" class="btn btn-primary btn-sm" @click="showPreview = false">Ir a mi perfil público</router-link>
+                <button class="btn btn-ghost btn-sm" @click="showPreview = false">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -270,6 +359,15 @@ const saveSuccess = ref(false)
 const coverFile = ref(null)
 const coverPreview = ref(null)
 const uploadingCover = ref(false)
+const showPreview = ref(false)
+
+const previewPlaceholderCover = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"%3E%3Cdefs%3E%3ClinearGradient id="g" x1="0" y1="0" x2="1" y2="1"%3E%3Cstop offset="0%25" stop-color="%23C1D82F" stop-opacity="0.15"/%3E%3Cstop offset="100%25" stop-color="%23E85D4A" stop-opacity="0.08"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill="%230A0A0A" width="1200" height="400"/%3E%3Crect fill="url(%23g)" width="1200" height="400"/%3E%3C/svg%3E'
+const previewPlaceholderAvatar = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"%3E%3Crect fill="%230A0A0A" width="120" height="120" rx="60"/%3E%3Ccircle cx="60" cy="45" r="20" fill="none" stroke="%23C1D82F" stroke-width="2" opacity="0.5"/%3E%3Cpath d="M30 95a30 30 0 0160 0" fill="none" stroke="%23C1D82F" stroke-width="2" opacity="0.5"/%3E%3C/svg%3E'
+
+const previewTypeLabel = computed(() => {
+  const map = { dj: 'DJ', musician: 'Músico', band: 'Banda' }
+  return map[profile.value?.talent_type] || 'Talento'
+})
 
 function handleCoverSelect(e) {
   const file = e.target.files?.[0]
@@ -440,7 +538,7 @@ async function saveProfile() {
 async function fetchBookings() {
   try {
     const { data } = await api.get('/bookings/')
-    bookings.value = data
+    bookings.value = data.results || data
   } catch { /* silent */ }
 }
 
@@ -456,7 +554,7 @@ async function fetchAvailability() {
   if (!profile.value) return
   try {
     const { data } = await api.get(`/talents/${profile.value.id}/availability/`)
-    availability.value = data
+    availability.value = data.results || data
   } catch { /* silent */ }
 }
 
@@ -573,5 +671,134 @@ onMounted(async () => {
   .form-grid { grid-template-columns: 1fr; }
   .dash-tabs { gap: 0; }
   .tab-btn { padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); }
+}
+
+/* ═══════════════════════════════════════
+   Profile Preview Modal
+   ═══════════════════════════════════════ */
+.preview-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-6);
+}
+.preview-modal {
+  position: relative;
+  width: 100%; max-width: 600px; max-height: 90vh;
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-2xl);
+  overflow-y: auto; overflow-x: hidden;
+  border: none;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+.preview-close {
+  position: absolute; top: var(--space-3); right: var(--space-3);
+  z-index: 10; background: rgba(0,0,0,0.5); border: none;
+  color: white; width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.preview-close:hover { background: rgba(0,0,0,0.8); transform: scale(1.1); }
+
+/* Cover */
+.preview-cover {
+  position: relative; height: 180px; overflow: hidden;
+}
+.preview-cover img { width: 100%; height: 100%; object-fit: cover; }
+.preview-cover-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, var(--color-bg-primary));
+}
+.preview-label {
+  position: absolute; top: var(--space-3); left: var(--space-4);
+  background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.9);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-full);
+  backdrop-filter: blur(6px);
+}
+
+/* Body */
+.preview-body { padding: var(--space-6); padding-top: 0; margin-top: -40px; position: relative; }
+
+.preview-avatar-section { display: flex; align-items: flex-end; gap: var(--space-4); margin-bottom: var(--space-5); }
+.preview-avatar-wrap { position: relative; flex-shrink: 0; }
+.preview-avatar {
+  width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+  border: 3px solid var(--color-bg-primary);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.preview-status-dot {
+  position: absolute; bottom: 4px; right: 4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--color-success);
+  border: 2px solid var(--color-bg-primary);
+}
+.preview-identity h2 {
+  font-family: var(--font-heading); font-size: var(--font-size-xl);
+  margin-bottom: var(--space-1);
+}
+.preview-badges { display: flex; gap: var(--space-2); }
+
+/* Stats row */
+.preview-stats {
+  display: flex; flex-wrap: wrap; gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-bg-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl); margin-bottom: var(--space-5);
+}
+.preview-stat {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--font-size-sm); color: var(--color-text-secondary);
+}
+.preview-stat strong { color: var(--color-primary); }
+.preview-stat .muted { color: var(--color-text-muted); font-size: var(--font-size-xs); }
+
+/* Sections */
+.preview-section { margin-bottom: var(--space-5); }
+.preview-section h4 {
+  font-family: var(--font-heading); font-size: var(--font-size-sm);
+  color: var(--color-text-muted); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: var(--space-2);
+}
+.preview-section p { font-size: var(--font-size-sm); line-height: 1.6; color: var(--color-text-secondary); }
+.preview-genres { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* Social */
+.preview-social {
+  display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-6);
+}
+.social-chip {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-full); font-size: var(--font-size-xs);
+  color: var(--color-text-secondary); text-decoration: none;
+  transition: all var(--transition-fast);
+}
+.social-chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* Footer */
+.preview-footer {
+  display: flex; gap: var(--space-3); justify-content: center;
+  padding-top: var(--space-4); border-top: 1px solid var(--color-border);
+}
+
+/* Transition */
+.modal-enter-active { transition: all 0.25s ease-out; }
+.modal-leave-active { transition: all 0.2s ease-in; }
+.modal-enter-from { opacity: 0; }
+.modal-enter-from .preview-modal { transform: translateY(20px) scale(0.95); }
+.modal-leave-to { opacity: 0; }
+.modal-leave-to .preview-modal { transform: translateY(10px) scale(0.98); }
+
+@media (max-width: 768px) {
+  .preview-backdrop { padding: var(--space-3); }
+  .preview-modal { max-height: 95vh; }
+  .preview-cover { height: 140px; }
+  .preview-avatar { width: 64px; height: 64px; }
+  .preview-stats { flex-direction: column; }
 }
 </style>

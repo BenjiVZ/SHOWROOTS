@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar" :class="{ scrolled: isScrolled }">
+  <nav class="navbar" :class="{ scrolled: isScrolled, 'navbar--force-dark': forceDarkNav, 'menu-open': menuOpen }">
     <div class="container navbar-inner">
       <router-link to="/" class="logo" aria-label="Pulsar Home">
         <span class="logo-text">PULSAR</span>
@@ -30,23 +30,25 @@
             Dashboard
           </router-link>
           <NotificationDropdown />
-          <div class="user-pill" @click="showUserMenu = !showUserMenu">
-            <span class="user-initial">{{ auth.user?.first_name?.[0] || auth.user?.username?.[0] || '?' }}</span>
-            <span class="user-name-nav">{{ auth.user?.first_name || auth.user?.username }}</span>
-          </div>
-          <div v-if="showUserMenu" class="user-dropdown glass">
-            <div class="dropdown-header">
-              <strong>{{ auth.user?.first_name }} {{ auth.user?.last_name }}</strong>
-              <span class="dropdown-role">{{ auth.roleLabel }}</span>
+          <div class="user-menu-wrap">
+            <div class="user-pill" @click="showUserMenu = !showUserMenu">
+              <span class="user-initial">{{ auth.user?.first_name?.[0] || auth.user?.username?.[0] || '?' }}</span>
+              <span class="user-name-nav">{{ auth.user?.first_name || auth.user?.username }}</span>
             </div>
-            <router-link to="/dashboard" class="dropdown-item" @click="showUserMenu = false">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              Mi Dashboard
-            </router-link>
-            <button class="dropdown-item" @click="handleLogout">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Cerrar Sesión
-            </button>
+            <div v-if="showUserMenu" class="user-dropdown glass">
+              <div class="dropdown-header">
+                <strong>{{ auth.user?.first_name }} {{ auth.user?.last_name }}</strong>
+                <span class="dropdown-role">{{ auth.roleLabel }}</span>
+              </div>
+              <router-link to="/dashboard" class="dropdown-item" @click="showUserMenu = false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Mi Dashboard
+              </router-link>
+              <button class="dropdown-item" @click="handleLogout">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </template>
         <template v-else>
@@ -76,8 +78,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
@@ -86,10 +88,22 @@ import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
 const auth = useAuthStore()
 const themeStore = useThemeStore()
 const router = useRouter()
+const route = useRoute()
 const isScrolled = ref(false)
 const menuOpen = ref(false)
 // unreadCount moved to NotificationDropdown component
 const showUserMenu = ref(false)
+
+// Force dark navbar on talent profile page when global theme is light
+// Only while transparent (not scrolled) — once scrolled, revert to light
+const forceDarkNav = computed(() => {
+  return route.name === 'talent-profile' && !themeStore.isDark() && !isScrolled.value
+})
+
+// Lock body scroll when mobile menu is open
+watch(menuOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
 
 function handleScroll() {
   isScrolled.value = window.scrollY > 20
@@ -106,9 +120,11 @@ function handleLogout() {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
-  onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll)
-  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  document.body.style.overflow = ''
 })
 </script>
 
@@ -149,7 +165,7 @@ onMounted(() => {
   align-items: baseline;
   gap: 6px;
   text-decoration: none;
-  z-index: 10;
+  z-index: 1001;
   transition: all var(--transition-base);
 }
 
@@ -270,6 +286,7 @@ onMounted(() => {
 }
 
 /* User Dropdown */
+.user-menu-wrap { position: relative; }
 .user-dropdown {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -310,32 +327,39 @@ onMounted(() => {
 .menu-toggle {
   display: none;
   background: none;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   position: relative;
-  z-index: 10;
+  z-index: 1001;
+  padding: 0;
+  flex-shrink: 0;
 }
 
-.menu-toggle span,
-.menu-toggle span::before,
-.menu-toggle span::after {
+.menu-toggle span {
   display: block;
   width: 100%;
   height: 2px;
   background: var(--color-text-primary);
   border-radius: 2px;
   transition: all var(--transition-base);
+  position: relative;
 }
 
 .menu-toggle span::before,
 .menu-toggle span::after {
   content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--color-text-primary);
+  border-radius: 2px;
+  transition: all var(--transition-base);
   position: absolute;
   left: 0;
 }
 
-.menu-toggle span::before { top: -8px; }
-.menu-toggle span::after { bottom: -8px; }
+.menu-toggle span::before { top: -7px; }
+.menu-toggle span::after { top: 7px; }
 
 .menu-toggle span.active {
   background: transparent;
@@ -346,7 +370,7 @@ onMounted(() => {
 }
 .menu-toggle span.active::after {
   transform: rotate(-45deg);
-  bottom: 0;
+  top: 0;
 }
 
 @media (max-width: 768px) {
@@ -354,34 +378,111 @@ onMounted(() => {
     top: var(--space-2);
     left: var(--space-2);
     right: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    transition: all var(--transition-base);
   }
 
-  .menu-toggle {
-    display: block;
-  }
-
-  .nav-links {
-    position: fixed;
+  /* When menu is open, expand navbar to cover entire viewport */
+  .navbar.menu-open,
+  .navbar.menu-open.scrolled {
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--color-bg-primary);
+    border-radius: 0;
+    background: var(--color-bg-primary) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .navbar.menu-open .navbar-inner {
+    flex-shrink: 0;
+    padding-top: var(--space-2);
+  }
+
+  /* Nav links fills the entire expanded navbar and centers content */
+  .navbar.menu-open .nav-links.open {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    padding-top: 80px;
+  }
+
+  .logo-text {
+    font-size: 1.35rem;
+    letter-spacing: 2px;
+  }
+
+  .logo-sub {
+    font-size: 0.5rem;
+  }
+
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    margin-right: var(--space-3);
+  }
+
+  .nav-links {
+    display: none;
     flex-direction: column;
     justify-content: center;
-    gap: var(--space-6);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-base);
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-8);
+    flex: 1;
   }
 
   .nav-links.open {
-    opacity: 1;
-    pointer-events: auto;
+    display: flex;
   }
 
   .nav-links a:not(.btn) {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
+    padding: var(--space-3) var(--space-5);
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  .nav-links .btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  .user-menu-wrap {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .user-pill {
+    width: 100%;
+    justify-content: center;
+    padding: var(--space-3);
+  }
+
+  .user-dropdown {
+    position: relative;
+    top: var(--space-2);
+    width: 100%;
   }
 }
 
@@ -400,6 +501,7 @@ onMounted(() => {
   transition: all var(--transition-base);
   margin-left: var(--space-2);
   flex-shrink: 0;
+  z-index: 1001;
 }
 
 .theme-toggle:hover {
@@ -444,5 +546,117 @@ onMounted(() => {
 
 [data-theme="light"] .logo:hover .logo-text {
   text-shadow: none;
+}
+
+/* =============================================
+   Force Dark NavBar (Talent Profile in Light Mode)
+   ============================================= */
+.navbar--force-dark .logo-text {
+  color: #FFFFFF;
+}
+.navbar--force-dark .logo-sub {
+  color: rgba(255, 255, 255, 0.5);
+}
+.navbar--force-dark .logo:hover .logo-text {
+  color: #C1D82F;
+  text-shadow: 0 0 20px rgba(193, 216, 47, 0.4);
+}
+
+.navbar--force-dark .nav-links a:not(.btn) {
+  color: rgba(255, 255, 255, 0.8);
+}
+.navbar--force-dark .nav-links a:not(.btn):hover,
+.navbar--force-dark .nav-links a:not(.btn).router-link-active {
+  color: #C1D82F;
+  background: rgba(193, 216, 47, 0.06);
+  border-color: #C1D82F;
+}
+
+.navbar--force-dark .user-pill {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.navbar--force-dark .user-name-nav {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar--force-dark .theme-toggle {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}
+.navbar--force-dark .theme-toggle:hover {
+  border-color: #C1D82F;
+  color: #C1D82F;
+}
+
+.navbar--force-dark .btn-ghost {
+  color: rgba(255, 255, 255, 0.8);
+}
+.navbar--force-dark .btn-ghost:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar--force-dark .btn-cta {
+  color: #0d0d0d;
+}
+
+.navbar--force-dark :deep(.notif-bell) {
+  color: rgba(255, 255, 255, 0.8);
+}
+.navbar--force-dark :deep(.notif-bell:hover) {
+  color: #C1D82F;
+  background: rgba(193, 216, 47, 0.08);
+}
+.navbar--force-dark :deep(.notif-badge) {
+  border-color: transparent;
+}
+
+.navbar--force-dark.scrolled {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-color: rgba(193, 216, 47, 0.18);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+.navbar--force-dark .menu-toggle span,
+.navbar--force-dark .menu-toggle span::before,
+.navbar--force-dark .menu-toggle span::after {
+  background: #FFFFFF;
+}
+.navbar--force-dark .menu-toggle span.active {
+  background: transparent;
+}
+
+.navbar--force-dark .dropdown-header strong {
+  color: #FFFFFF;
+}
+.navbar--force-dark .user-dropdown {
+  background: rgba(10, 10, 10, 0.95);
+  border-color: rgba(193, 216, 47, 0.18);
+}
+.navbar--force-dark .dropdown-item {
+  color: rgba(255, 255, 255, 0.7);
+}
+.navbar--force-dark .dropdown-item:hover {
+  background: rgba(193, 216, 47, 0.08);
+  color: #C1D82F;
+}
+
+@media (max-width: 768px) {
+  .navbar--force-dark .nav-links {
+    background: #000000;
+  }
+
+  .navbar--force-dark .menu-toggle span,
+  .navbar--force-dark .menu-toggle span::before,
+  .navbar--force-dark .menu-toggle span::after {
+    background: #FFFFFF;
+  }
+  .navbar--force-dark .menu-toggle span.active {
+    background: transparent;
+  }
 }
 </style>

@@ -57,7 +57,8 @@ function toggleOpen() {
 async function fetchNotifications() {
   try {
     const { data } = await api.get('/notifications/')
-    notifications.value = data.slice(0, 15)
+    const items = data.results || data
+    notifications.value = Array.isArray(items) ? items.slice(0, 15) : []
   } catch { /* */ }
 }
 
@@ -174,7 +175,13 @@ onUnmounted(() => {
 .dropdown-leave-to { opacity: 0; transform: translateY(-4px) scale(0.98); }
 
 @media (max-width: 768px) {
-  .notif-dropdown { right: -20px; width: calc(100vw - 32px); }
+  .notif-wrapper { width: 100%; max-width: 280px; display: flex; justify-content: center; }
+  .notif-bell { width: 100%; display: flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); font-size: var(--font-size-lg); }
+  .notif-bell::after { content: 'Notificaciones'; font-family: var(--font-body); font-size: var(--font-size-base); }
+  .notif-badge { position: static; margin-left: var(--space-1); }
+  .notif-dropdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); right: auto; width: calc(100vw - 32px); max-width: 400px; max-height: 70vh; border-radius: var(--radius-xl); box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 9999; }
+  .dropdown-enter-from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  .dropdown-leave-to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
 }
 
 /* ---- Light Mode Overrides ---- */

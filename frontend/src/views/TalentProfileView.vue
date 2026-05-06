@@ -258,7 +258,14 @@ onMounted(async () => {
 .cover-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(transparent 40%, var(--color-bg-primary));
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 30%,
+      rgba(0, 0, 0, 0.15) 50%,
+      rgba(0, 0, 0, 0.3) 65%,
+      var(--color-bg-primary) 100%
+    );
 }
 
 .profile-layout {
@@ -343,6 +350,10 @@ onMounted(async () => {
 .detail-row strong { color: var(--color-accent); }
 
 /* Main content */
+.profile-main {
+  padding-top: var(--space-10);
+}
+
 .content-section {
   margin-bottom: var(--space-10);
 }

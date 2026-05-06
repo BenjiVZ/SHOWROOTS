@@ -48,14 +48,20 @@ class TalentCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TalentUpdateView(generics.UpdateAPIView):
-    """Update own talent profile."""
-    serializer_class = TalentCreateSerializer
+class TalentUpdateView(generics.RetrieveUpdateAPIView):
+    """Retrieve and update own talent profile."""
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
 
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return TalentCreateSerializer
+        return TalentDetailSerializer
+
     def get_object(self):
-        return TalentProfile.objects.get(user=self.request.user)
+        return TalentProfile.objects.select_related('user').prefetch_related(
+            'genres', 'media', 'experiences', 'availability'
+        ).get(user=self.request.user)
 
 
 class CoverPhotoUploadView(APIView):

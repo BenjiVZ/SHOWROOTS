@@ -13,7 +13,12 @@
           La plataforma #1 de talentos musicales
         </div>
         <h1 class="animate-fade-in-up" style="animation-delay: 0.1s">
-          Encuentra el<br><span class="text-gradient">talento perfecto</span><br>para tu evento
+          Encuentra el<br>
+          <span class="hero-highlight">
+            <span class="hero-highlight-glow"></span>
+            <span class="text-gradient hero-shimmer">talento perfecto</span>
+          </span>
+          <br>para tu evento
         </h1>
         <p class="hero-subtitle animate-fade-in-up" style="animation-delay: 0.2s">
           Conectamos DJs, músicos y bandas con personas que buscan la mejor experiencia musical.
@@ -321,6 +326,55 @@ onMounted(async () => {
   margin: 0 auto var(--space-12);
   font-weight: 300;
   line-height: 1.7;
+}
+
+/* Hero Highlight — Shimmer + Glow Effect */
+.hero-highlight {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-highlight-glow {
+  position: absolute;
+  inset: -8px -16px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(193, 216, 47, 0.2) 0%,
+    rgba(193, 216, 47, 0.05) 50%,
+    transparent 70%
+  );
+  border-radius: var(--radius-xl);
+  filter: blur(16px);
+  animation: glow-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-shimmer {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    #8BA320 0%,
+    #C1D82F 30%,
+    #E8E4B0 50%,
+    #C1D82F 70%,
+    #8BA320 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-sweep 4s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0%, 100% { background-position: 100% 50%; }
+  50% { background-position: 0% 50%; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
 /* Search Bar CTA */
@@ -636,7 +690,9 @@ onMounted(async () => {
 
   .hero-search {
     flex-direction: column;
+    align-items: stretch;
     padding: var(--space-4);
+    gap: var(--space-2);
   }
 
   .hide-mobile { display: none; }
@@ -658,39 +714,123 @@ onMounted(async () => {
   .stat strong { font-size: var(--font-size-2xl); }
 }
 
-/* ---- Light Mode Overrides ---- */
+/* ---- Light Mode Overrides — Premium Aesthetics ---- */
+
+/* Hero background: warm sophisticated gradient instead of flat */
+[data-theme="light"] .hero-bg {
+  background: linear-gradient(
+    180deg,
+    #FAF8F3 0%,
+    #F5F0E8 25%,
+    #EDE6D8 50%,
+    #F2EDE3 75%,
+    #FAF8F3 100%
+  );
+}
+
+/* Richer, more visible orbs in light mode */
 [data-theme="light"] .hero-orb-1 {
-  background: rgba(107, 138, 15, 0.08);
+  background: rgba(193, 216, 47, 0.15);
+  width: 700px;
+  height: 700px;
 }
 [data-theme="light"] .hero-orb-2 {
-  background: rgba(217, 74, 56, 0.06);
+  background: rgba(232, 93, 74, 0.1);
+  width: 500px;
+  height: 500px;
 }
 [data-theme="light"] .hero-orb-3 {
-  background: rgba(90, 90, 82, 0.04);
+  background: rgba(193, 175, 130, 0.12);
+  width: 400px;
+  height: 400px;
 }
 
+/* Hero badge — warm tinted pill */
+[data-theme="light"] .hero-badge {
+  background: rgba(193, 216, 47, 0.12);
+  border-color: rgba(193, 216, 47, 0.25);
+  color: #5a6e10;
+}
+
+/* Search bar — frosted glass with warm shadow */
+[data-theme="light"] .hero-search {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(193, 216, 47, 0.15);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Stats — subtle warm background */
+[data-theme="light"] .hero-stats {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-5) var(--space-8);
+}
+
+/* Category cards — elevated with warm shadows */
 [data-theme="light"] .category-card {
-  background: #FFFFFF;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  background: linear-gradient(145deg, #FFFFFF 0%, #FAFAF5 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
 [data-theme="light"] .category-card:hover {
-  box-shadow: 0 8px 24px rgba(107, 138, 15, 0.1);
+  border-color: rgba(193, 216, 47, 0.3);
+  box-shadow:
+    0 12px 40px rgba(107, 138, 15, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.06);
 }
 [data-theme="light"] .category-card::before {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, rgba(193, 216, 47, 0.08), rgba(107, 138, 15, 0.04));
+}
+[data-theme="light"] .category-icon-wrap {
+  background: linear-gradient(135deg, rgba(193, 216, 47, 0.15), rgba(193, 216, 47, 0.08));
+  box-shadow: 0 2px 8px rgba(193, 216, 47, 0.1);
 }
 
-[data-theme="light"] .cta-card {
-  background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
+/* Step cards — soft elevated style */
 [data-theme="light"] .step-card {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  background: linear-gradient(145deg, #FFFFFF 0%, #FDFCF8 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 [data-theme="light"] .step-card:hover {
-  box-shadow: 0 6px 20px rgba(107, 138, 15, 0.1);
+  box-shadow:
+    0 8px 32px rgba(107, 138, 15, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: rgba(193, 216, 47, 0.2);
+}
+
+/* CTA card — warm gradient instead of flat white */
+[data-theme="light"] .cta-card {
+  background: linear-gradient(135deg, #F8F4EC 0%, #F0EADB 50%, #EDE5D3 100%);
+  border: 1px solid rgba(193, 175, 130, 0.2);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+[data-theme="light"] .cta-glow {
+  background: radial-gradient(circle, rgba(193, 216, 47, 0.15) 0%, transparent 70%);
+}
+
+/* Sections background — alternating warm tones */
+[data-theme="light"] .categories-section {
+  background: linear-gradient(180deg, #FAF8F3 0%, #F5F1E9 100%);
+}
+[data-theme="light"] .featured-section {
+  background: #FFFFFF;
+}
+[data-theme="light"] .how-section {
+  background: linear-gradient(180deg, #F8F5EE 0%, #FAF8F3 100%);
 }
 </style>

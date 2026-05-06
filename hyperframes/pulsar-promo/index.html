@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0A0A08;
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* ---- Scene backgrounds ---- */
+      .scene-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+
+      /* ---- Scene 1: Brand Intro ---- */
+      #scene-1-bg {
+        background: radial-gradient(ellipse at 30% 40%, rgba(193,216,47,0.15) 0%, transparent 60%),
+                    radial-gradient(ellipse at 70% 70%, rgba(232,93,74,0.08) 0%, transparent 50%),
+                    #0A0A08;
+      }
+
+      .s1-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 100px 160px;
+        gap: 32px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .s1-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 28px;
+        background: rgba(193,216,47,0.1);
+        border: 1px solid rgba(193,216,47,0.25);
+        border-radius: 100px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #C1D82F;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .s1-star {
+        width: 20px;
+        height: 20px;
+        fill: #C1D82F;
+      }
+
+      .s1-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 130px;
+        font-weight: 700;
+        color: #FAFAF5;
+        line-height: 1.0;
+        letter-spacing: 0.02em;
+      }
+
+      .s1-title-accent {
+        font-style: italic;
+        background: linear-gradient(135deg, #C1D82F 0%, #A3B826 50%, #8BA320 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .s1-subtitle {
+        font-size: 32px;
+        font-weight: 300;
+        color: rgba(250,250,245,0.6);
+        max-width: 700px;
+        line-height: 1.6;
+      }
+
+      /* Decorative orbs */
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .orb-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: rgba(193,216,47,0.12); }
+      .orb-2 { width: 350px; height: 350px; bottom: -50px; right: -50px; background: rgba(232,93,74,0.08); }
+      .orb-3 { width: 280px; height: 280px; top: 50%; left: 60%; background: rgba(193,216,47,0.06); }
+
+      /* ---- Scene 2: Features ---- */
+      #scene-2-bg {
+        background: radial-gradient(ellipse at 50% 50%, rgba(193,216,47,0.1) 0%, transparent 60%),
+                    #0A0A08;
+      }
+
+      .s2-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 100px 120px;
+        gap: 64px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .s2-heading {
+        font-family: 'Playfair Display', serif;
+        font-size: 80px;
+        font-weight: 700;
+        color: #FAFAF5;
+        line-height: 1.1;
+      }
+
+      .s2-heading-accent {
+        background: linear-gradient(135deg, #C1D82F 0%, #8BA320 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .s2-cards {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+      }
+
+      .s2-card {
+        width: 360px;
+        padding: 48px 36px;
+        background: rgba(250,250,245,0.04);
+        border: 1px solid rgba(250,250,245,0.08);
+        border-radius: 24px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .s2-card-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+      }
+
+      .icon-green { background: linear-gradient(135deg, #C1D82F, #8BA320); }
+      .icon-warm { background: linear-gradient(135deg, #E85D4A, #C74A3A); }
+      .icon-gold { background: linear-gradient(135deg, #D4A843, #B8912E); }
+
+      .s2-card h3 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #FAFAF5;
+      }
+
+      .s2-card p {
+        font-size: 18px;
+        font-weight: 300;
+        color: rgba(250,250,245,0.5);
+        line-height: 1.6;
+      }
+
+      /* ---- Scene 3: CTA ---- */
+      #scene-3-bg {
+        background: radial-gradient(ellipse at 50% 40%, rgba(193,216,47,0.2) 0%, transparent 50%),
+                    radial-gradient(ellipse at 30% 80%, rgba(232,93,74,0.06) 0%, transparent 40%),
+                    #0A0A08;
+      }
+
+      .s3-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 100px 160px;
+        gap: 40px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .s3-logo {
+        font-family: 'Inter', sans-serif;
+        font-size: 36px;
+        font-weight: 300;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: rgba(250,250,245,0.4);
+      }
+
+      .s3-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 110px;
+        font-weight: 700;
+        color: #FAFAF5;
+        line-height: 1.05;
+      }
+
+      .s3-title-accent {
+        font-style: italic;
+        background: linear-gradient(135deg, #C1D82F 0%, #A3B826 50%, #E8E4B0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .s3-url {
+        font-size: 28px;
+        font-weight: 600;
+        color: #C1D82F;
+        letter-spacing: 0.05em;
+      }
+
+      .s3-tagline {
+        font-size: 24px;
+        font-weight: 300;
+        color: rgba(250,250,245,0.5);
+      }
+
+      /* Animated line */
+      .accent-line {
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, #C1D82F, #8BA320);
+        border-radius: 2px;
+      }
+
+      /* Pulse ring for CTA */
+      .pulse-ring {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        border: 1px solid rgba(193,216,47,0.1);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .pulse-ring-2 {
+        width: 900px;
+        height: 900px;
+        border-color: rgba(193,216,47,0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="15"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- SCENE 1: Brand Intro (0s - 5.5s) -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div id="scene-1" class="clip" data-start="0" data-duration="5.5" data-track-index="1"
+           style="position:absolute;inset:0;">
+        <div id="scene-1-bg" class="scene-bg">
+          <div class="orb orb-1" id="s1-orb-1"></div>
+          <div class="orb orb-2" id="s1-orb-2"></div>
+          <div class="orb orb-3" id="s1-orb-3"></div>
+        </div>
+        <div class="s1-content">
+          <div class="s1-badge" id="s1-badge">
+            <svg class="s1-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            ShowRoots
+          </div>
+          <div class="s1-title" id="s1-title">
+            <span id="s1-line1">Encuentra el</span><br>
+            <span class="s1-title-accent" id="s1-line2">talento perfecto</span>
+          </div>
+          <div class="s1-subtitle" id="s1-subtitle">
+            La plataforma #1 de talentos musicales en Panamá
+          </div>
+          <div class="accent-line" id="s1-line"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- SCENE 2: Features (5s - 10.5s) -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div id="scene-2" class="clip" data-start="5" data-duration="5.5" data-track-index="2"
+           style="position:absolute;inset:0;">
+        <div id="scene-2-bg" class="scene-bg"></div>
+        <div class="s2-content">
+          <div class="s2-heading" id="s2-heading">
+            DJs · Músicos · <span class="s2-heading-accent">Bandas</span>
+          </div>
+          <div class="s2-cards" id="s2-cards">
+            <div class="s2-card" id="s2-card-1">
+              <div class="s2-card-icon icon-green">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              </div>
+              <h3>Explora</h3>
+              <p>Encuentra artistas por género, ciudad y estilo</p>
+            </div>
+            <div class="s2-card" id="s2-card-2">
+              <div class="s2-card-icon icon-warm">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <h3>Cotiza</h3>
+              <p>Recibe propuestas personalizadas al instante</p>
+            </div>
+            <div class="s2-card" id="s2-card-3">
+              <div class="s2-card-icon icon-gold">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <h3>Disfruta</h3>
+              <p>Música profesional para tu evento perfecto</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- SCENE 3: CTA / Closer (10s - 15s) -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div id="scene-3" class="clip" data-start="10" data-duration="5" data-track-index="3"
+           style="position:absolute;inset:0;">
+        <div id="scene-3-bg" class="scene-bg">
+          <div class="pulse-ring" id="s3-ring-1"></div>
+          <div class="pulse-ring pulse-ring-2" id="s3-ring-2"></div>
+        </div>
+        <div class="s3-content">
+          <div class="s3-logo" id="s3-logo">PULSAR</div>
+          <div class="accent-line" id="s3-line"></div>
+          <div class="s3-title" id="s3-title">
+            Tu evento.<br>
+            <span class="s3-title-accent" id="s3-accent">Tu música.</span>
+          </div>
+          <div class="s3-url" id="s3-url">pulsar.showroots.com</div>
+          <div class="s3-tagline" id="s3-tagline">by ShowRoots</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ═══════════════════════════════════════════
+      // SCENE 1: Brand intro (0 - 5.5s)
+      // ═══════════════════════════════════════════
+
+      // Orb animations (subtle float)
+      tl.from("#s1-orb-1", { scale: 0.5, opacity: 0, duration: 2, ease: "power2.out" }, 0.1);
+      tl.from("#s1-orb-2", { scale: 0.6, opacity: 0, duration: 2.5, ease: "power2.out" }, 0.3);
+      tl.from("#s1-orb-3", { scale: 0.4, opacity: 0, duration: 2, ease: "expo.out" }, 0.5);
+
+      // Orb drift
+      tl.to("#s1-orb-1", { x: 30, y: -20, duration: 5, ease: "sine.inOut" }, 0);
+      tl.to("#s1-orb-2", { x: -20, y: 15, duration: 5, ease: "sine.inOut" }, 0);
+
+      // Badge entrance
+      tl.from("#s1-badge", { y: -30, opacity: 0, duration: 0.8, ease: "power3.out" }, 0.3);
+
+      // Title entrance — staggered lines
+      tl.from("#s1-line1", { y: 60, opacity: 0, duration: 0.9, ease: "expo.out" }, 0.5);
+      tl.from("#s1-line2", { y: 80, opacity: 0, duration: 1.0, ease: "expo.out" }, 0.7);
+
+      // Title shimmer on accent
+      tl.to("#s1-line2", {
+        backgroundPosition: "200% 50%",
+        duration: 1.5,
+        ease: "power1.inOut"
+      }, 2.0);
+
+      // Subtitle
+      tl.from("#s1-subtitle", { y: 40, opacity: 0, duration: 0.7, ease: "power3.out" }, 1.1);
+
+      // Accent line reveal
+      tl.from("#s1-line", { scaleX: 0, duration: 0.6, ease: "power2.out" }, 1.5);
+
+      // ═══════════════════════════════════════════
+      // TRANSITION 1→2: Crossfade (5.0 - 5.5s)
+      // ═══════════════════════════════════════════
+      tl.to("#scene-1", { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 5.0);
+
+      // ═══════════════════════════════════════════
+      // SCENE 2: Features (5.0 - 10.5s)
+      // ═══════════════════════════════════════════
+
+      // Heading entrance
+      tl.from("#s2-heading", { y: -50, opacity: 0, duration: 0.8, ease: "expo.out" }, 5.3);
+
+      // Cards staggered entrance
+      tl.from("#s2-card-1", { y: 80, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.4)" }, 5.8);
+      tl.from("#s2-card-2", { y: 80, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.4)" }, 6.0);
+      tl.from("#s2-card-3", { y: 80, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.4)" }, 6.2);
+
+      // Cards subtle hover float
+      tl.to("#s2-card-1", { y: -8, duration: 2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 7.0);
+      tl.to("#s2-card-2", { y: -12, duration: 2.2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 7.2);
+      tl.to("#s2-card-3", { y: -8, duration: 2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 7.4);
+
+      // Card glow on hover
+      tl.to("#s2-card-1", { borderColor: "rgba(193,216,47,0.3)", duration: 0.5, ease: "power2.out" }, 7.0);
+      tl.to("#s2-card-2", { borderColor: "rgba(232,93,74,0.3)", duration: 0.5, ease: "power2.out" }, 7.5);
+      tl.to("#s2-card-3", { borderColor: "rgba(212,168,67,0.3)", duration: 0.5, ease: "power2.out" }, 8.0);
+
+      // ═══════════════════════════════════════════
+      // TRANSITION 2→3: Crossfade (10.0 - 10.5s)
+      // ═══════════════════════════════════════════
+      tl.to("#scene-2", { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 10.0);
+
+      // ═══════════════════════════════════════════
+      // SCENE 3: CTA closer (10.0 - 15s)
+      // ═══════════════════════════════════════════
+
+      // Pulse rings entrance
+      tl.from("#s3-ring-1", { scale: 0.3, opacity: 0, duration: 1.2, ease: "power2.out" }, 10.2);
+      tl.from("#s3-ring-2", { scale: 0.2, opacity: 0, duration: 1.5, ease: "power2.out" }, 10.5);
+
+      // Pulse ring animation (after entrance completes)
+      tl.to("#s3-ring-1", { scale: 1.15, opacity: 0, duration: 2.5, ease: "power1.out", repeat: 0 }, 11.5);
+      tl.to("#s3-ring-2", { scale: 1.1, opacity: 0, duration: 2.5, ease: "power1.out", repeat: 0 }, 12.0);
+
+      // Logo
+      tl.from("#s3-logo", { letterSpacing: "0.8em", opacity: 0, duration: 1.0, ease: "expo.out" }, 10.3);
+
+      // Accent line
+      tl.from("#s3-line", { scaleX: 0, duration: 0.5, ease: "power3.out" }, 10.8);
+
+      // Title
+      tl.from("#s3-title", { y: 50, opacity: 0, duration: 0.8, ease: "expo.out" }, 11.0);
+
+      // Accent shimmer
+      tl.to("#s3-accent", {
+        backgroundPosition: "200% 50%",
+        duration: 1.5,
+        ease: "power1.inOut"
+      }, 12.0);
+
+      // URL
+      tl.from("#s3-url", { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 11.5);
+
+      // Tagline
+      tl.from("#s3-tagline", { opacity: 0, duration: 0.5, ease: "power2.out" }, 12.0);
+
+      // Final fade out (last scene only)
+      tl.to("#scene-3", { opacity: 0, duration: 1.0, ease: "power2.inOut" }, 14.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

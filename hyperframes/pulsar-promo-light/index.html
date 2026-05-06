@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #FAF8F3;
+        font-family: 'Inter', sans-serif;
+        color: #1A1A18;
+      }
+
+      .scene-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+
+      /* Grain overlay */
+      .grain {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      /* Geometric grid lines */
+      .geo-lines {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .geo-line {
+        position: absolute;
+        background: rgba(139,163,32,0.08);
+      }
+      .geo-h1 { width: 100%; height: 1px; top: 25%; }
+      .geo-h2 { width: 100%; height: 1px; top: 75%; }
+      .geo-v1 { width: 1px; height: 100%; left: 20%; }
+      .geo-v2 { width: 1px; height: 100%; right: 20%; }
+
+      /* Corner accents */
+      .corner-accent {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border: 2px solid rgba(139,163,32,0.15);
+        pointer-events: none;
+        z-index: 2;
+      }
+      .corner-tl { top: 60px; left: 60px; border-right: none; border-bottom: none; }
+      .corner-tr { top: 60px; right: 60px; border-left: none; border-bottom: none; }
+      .corner-bl { bottom: 60px; left: 60px; border-right: none; border-top: none; }
+      .corner-br { bottom: 60px; right: 60px; border-left: none; border-top: none; }
+
+      /* ---- Scene 1: Brand Intro ---- */
+      #scene-1-bg {
+        background:
+          radial-gradient(ellipse at 25% 30%, rgba(193,216,47,0.12) 0%, transparent 50%),
+          radial-gradient(ellipse at 75% 70%, rgba(212,168,67,0.08) 0%, transparent 45%),
+          radial-gradient(ellipse at 50% 100%, rgba(232,93,74,0.05) 0%, transparent 40%),
+          linear-gradient(180deg, #FAF8F3 0%, #F0EADB 40%, #EDE6D8 70%, #F5F0E8 100%);
+      }
+
+      .s1-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 100px 160px;
+        gap: 32px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .s1-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 28px;
+        background: rgba(193,216,47,0.12);
+        border: 1px solid rgba(193,216,47,0.3);
+        border-radius: 100px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #5A6E10;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .s1-star {
+        width: 20px;
+        height: 20px;
+        fill: #7A9A1A;
+      }
+
+      .s1-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 130px;
+        font-weight: 700;
+        color: #1A1A18;
+        line-height: 1.0;
+        letter-spacing: 0.02em;
+      }
+
+      .s1-title-accent {
+        font-style: italic;
+        background: linear-gradient(135deg, #7A9A1A 0%, #5A6E10 50%, #8BA320 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .s1-subtitle {
+        font-size: 32px;
+        font-weight: 300;
+        color: rgba(26,26,24,0.5);
+        max-width: 700px;
+        line-height: 1.6;
+      }
+
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        pointer-events: none;
+      }
+      .orb-1 { width: 700px; height: 700px; top: -150px; left: -100px; background: rgba(193,216,47,0.22); }
+      .orb-2 { width: 500px; height: 500px; bottom: -100px; right: -80px; background: rgba(232,93,74,0.14); }
+      .orb-3 { width: 400px; height: 400px; top: 35%; left: 55%; background: rgba(193,175,130,0.15); }
+      .orb-4 { width: 300px; height: 300px; top: 10%; right: 15%; background: rgba(212,168,67,0.1); }
+
+      /* ---- Scene 2: Features ---- */
+      #scene-2-bg {
+        background:
+          radial-gradient(ellipse at 50% 30%, rgba(193,216,47,0.08) 0%, transparent 50%),
+          radial-gradient(ellipse at 20% 80%, rgba(232,93,74,0.05) 0%, transparent 40%),
+          linear-gradient(180deg, #F5F1E9 0%, #EDE8DE 50%, #F5F1E9 100%);
+      }
+
+      .s2-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 100px 120px;
+        gap: 64px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .s2-heading {
+        font-family: 'Playfair Display', serif;
+        font-size: 80px;
+        font-weight: 700;
+        color: #1A1A18;
+        line-height: 1.1;
+      }
+
+      .s2-heading-accent {
+        background: linear-gradient(135deg, #7A9A1A 0%, #5A6E10 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .s2-cards {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+      }
+
+      .s2-card {
+        width: 360px;
+        padding: 48px 36px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.85) 0%, rgba(250,250,245,0.7) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-radius: 24px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        box-shadow:
+          0 8px 32px rgba(0,0,0,0.06),
+          0 2px 8px rgba(0,0,0,0.04),
+          inset 0 1px 0 rgba(255,255,255,0.95);
+      }
+
+      .s2-card-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .icon-green { background: linear-gradient(135deg, #8BA320, #6B8A0F); box-shadow: 0 4px 12px rgba(139,163,32,0.3); }
+      .icon-warm { background: linear-gradient(135deg, #D4654F, #C74A3A); box-shadow: 0 4px 12px rgba(212,101,79,0.3); }
+      .icon-gold { background: linear-gradient(135deg, #C49A36, #A8822A); box-shadow: 0 4px 12px rgba(196,154,54,0.3); }
+
+      .s2-card h3 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1A1A18;
+      }
+
+      .s2-card p {
+        font-size: 18px;
+        font-weight: 300;
+        color: rgba(26,26,24,0.5);
+        line-height: 1.6;
+      }
+
+      /* ---- Scene 3: CTA ---- */
+      #scene-3-bg {
+        background:
+          radial-gradient(ellipse at 50% 40%, rgba(193,216,47,0.15) 0%, transparent 45%),
+          radial-gradient(ellipse at 30% 80%, rgba(212,168,67,0.08) 0%, transparent 35%),
+          radial-gradient(ellipse at 70% 20%, rgba(232,93,74,0.05) 0%, transparent 30%),
+          linear-gradient(180deg, #F0EADB 0%, #E8E0D0 40%, #EDE6D8 100%);
+      }
+
+      .s3-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 100px 160px;
+        gap: 40px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .s3-logo {
+        font-family: 'Inter', sans-serif;
+        font-size: 36px;
+        font-weight: 300;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: rgba(26,26,24,0.35);
+      }
+
+      .s3-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 110px;
+        font-weight: 700;
+        color: #1A1A18;
+        line-height: 1.05;
+      }
+
+      .s3-title-accent {
+        font-style: italic;
+        background: linear-gradient(135deg, #7A9A1A 0%, #5A6E10 50%, #8BA320 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .s3-url {
+        font-size: 28px;
+        font-weight: 600;
+        color: #5A6E10;
+        letter-spacing: 0.05em;
+      }
+
+      .s3-tagline {
+        font-size: 24px;
+        font-weight: 300;
+        color: rgba(26,26,24,0.4);
+      }
+
+      .accent-line {
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, #8BA320, #5A6E10);
+        border-radius: 2px;
+      }
+
+      .pulse-ring {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        border: 2px solid rgba(139,163,32,0.15);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .pulse-ring-2 {
+        width: 900px;
+        height: 900px;
+        border-color: rgba(139,163,32,0.08);
+      }
+      .pulse-ring-3 {
+        width: 1200px;
+        height: 1200px;
+        border-color: rgba(139,163,32,0.04);
+      }
+
+      /* Floating diamond decorative */
+      .diamond {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid rgba(139,163,32,0.2);
+        transform: rotate(45deg);
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="15"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- SCENE 1: Brand Intro (0s - 5.5s) -->
+      <div id="scene-1" class="clip" data-start="0" data-duration="5.5" data-track-index="1"
+           style="position:absolute;inset:0;">
+        <div id="scene-1-bg" class="scene-bg">
+          <div class="orb orb-1" id="s1-orb-1"></div>
+          <div class="orb orb-2" id="s1-orb-2"></div>
+          <div class="orb orb-3" id="s1-orb-3"></div>
+          <div class="orb orb-4" id="s1-orb-4"></div>
+          <div class="grain"></div>
+          <div class="geo-lines" id="s1-geo">
+            <div class="geo-line geo-h1" id="s1-geo-h1"></div>
+            <div class="geo-line geo-h2" id="s1-geo-h2"></div>
+            <div class="geo-line geo-v1" id="s1-geo-v1"></div>
+            <div class="geo-line geo-v2" id="s1-geo-v2"></div>
+          </div>
+          <div class="corner-accent corner-tl" id="s1-ctl"></div>
+          <div class="corner-accent corner-tr" id="s1-ctr"></div>
+          <div class="corner-accent corner-bl" id="s1-cbl"></div>
+          <div class="corner-accent corner-br" id="s1-cbr"></div>
+        </div>
+        <div class="s1-content">
+          <div class="s1-badge" id="s1-badge">
+            <svg class="s1-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            ShowRoots
+          </div>
+          <div class="s1-title" id="s1-title">
+            <span id="s1-line1">Encuentra el</span><br>
+            <span class="s1-title-accent" id="s1-line2">talento perfecto</span>
+          </div>
+          <div class="s1-subtitle" id="s1-subtitle">
+            La plataforma #1 de talentos musicales en Panamá
+          </div>
+          <div class="accent-line" id="s1-line"></div>
+        </div>
+      </div>
+
+      <!-- SCENE 2: Features (5s - 10.5s) -->
+      <div id="scene-2" class="clip" data-start="5" data-duration="5.5" data-track-index="2"
+           style="position:absolute;inset:0;">
+        <div id="scene-2-bg" class="scene-bg">
+          <div class="grain"></div>
+          <div class="diamond" id="s2-d1" style="top:15%;left:12%"></div>
+          <div class="diamond" id="s2-d2" style="top:20%;right:15%"></div>
+          <div class="diamond" id="s2-d3" style="bottom:18%;left:8%"></div>
+          <div class="diamond" id="s2-d4" style="bottom:15%;right:10%"></div>
+        </div>
+        <div class="s2-content">
+          <div class="s2-heading" id="s2-heading">
+            DJs · Músicos · <span class="s2-heading-accent">Bandas</span>
+          </div>
+          <div class="s2-cards" id="s2-cards">
+            <div class="s2-card" id="s2-card-1">
+              <div class="s2-card-icon icon-green">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              </div>
+              <h3>Explora</h3>
+              <p>Encuentra artistas por género, ciudad y estilo</p>
+            </div>
+            <div class="s2-card" id="s2-card-2">
+              <div class="s2-card-icon icon-warm">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <h3>Cotiza</h3>
+              <p>Recibe propuestas personalizadas al instante</p>
+            </div>
+            <div class="s2-card" id="s2-card-3">
+              <div class="s2-card-icon icon-gold">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <h3>Disfruta</h3>
+              <p>Música profesional para tu evento perfecto</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 3: CTA / Closer (10s - 15s) -->
+      <div id="scene-3" class="clip" data-start="10" data-duration="5" data-track-index="3"
+           style="position:absolute;inset:0;">
+        <div id="scene-3-bg" class="scene-bg">
+          <div class="grain"></div>
+          <div class="pulse-ring" id="s3-ring-1"></div>
+          <div class="pulse-ring pulse-ring-2" id="s3-ring-2"></div>
+          <div class="pulse-ring pulse-ring-2 pulse-ring-3" id="s3-ring-3"></div>
+          <div class="corner-accent corner-tl" id="s3-ctl"></div>
+          <div class="corner-accent corner-br" id="s3-cbr"></div>
+        </div>
+        <div class="s3-content">
+          <div class="s3-logo" id="s3-logo">PULSAR</div>
+          <div class="accent-line" id="s3-line"></div>
+          <div class="s3-title" id="s3-title">
+            Tu evento.<br>
+            <span class="s3-title-accent" id="s3-accent">Tu música.</span>
+          </div>
+          <div class="s3-url" id="s3-url">pulsar.showroots.com</div>
+          <div class="s3-tagline" id="s3-tagline">by ShowRoots</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // SCENE 1: Brand intro (0 - 5.5s)
+      // Orbs
+      tl.from("#s1-orb-1", { scale: 0.5, opacity: 0, duration: 2, ease: "power2.out" }, 0.1);
+      tl.from("#s1-orb-2", { scale: 0.6, opacity: 0, duration: 2.5, ease: "power2.out" }, 0.3);
+      tl.from("#s1-orb-3", { scale: 0.4, opacity: 0, duration: 2, ease: "expo.out" }, 0.5);
+      tl.from("#s1-orb-4", { scale: 0.3, opacity: 0, duration: 2.2, ease: "power3.out" }, 0.4);
+      tl.to("#s1-orb-1", { x: 40, y: -25, duration: 5, ease: "sine.inOut" }, 0);
+      tl.to("#s1-orb-2", { x: -25, y: 20, duration: 5, ease: "sine.inOut" }, 0);
+      tl.to("#s1-orb-4", { x: -15, y: -10, duration: 4.5, ease: "sine.inOut" }, 0.2);
+
+      // Geo lines reveal
+      tl.from("#s1-geo-h1", { scaleX: 0, duration: 1.2, ease: "power3.out" }, 0.2);
+      tl.from("#s1-geo-h2", { scaleX: 0, duration: 1.2, ease: "power3.out" }, 0.4);
+      tl.from("#s1-geo-v1", { scaleY: 0, duration: 1.0, ease: "expo.out" }, 0.3);
+      tl.from("#s1-geo-v2", { scaleY: 0, duration: 1.0, ease: "expo.out" }, 0.5);
+
+      // Corner accents
+      tl.from("#s1-ctl", { opacity: 0, x: -20, y: -20, duration: 0.8, ease: "power3.out" }, 0.6);
+      tl.from("#s1-ctr", { opacity: 0, x: 20, y: -20, duration: 0.8, ease: "power3.out" }, 0.7);
+      tl.from("#s1-cbl", { opacity: 0, x: -20, y: 20, duration: 0.8, ease: "power3.out" }, 0.8);
+      tl.from("#s1-cbr", { opacity: 0, x: 20, y: 20, duration: 0.8, ease: "power3.out" }, 0.9);
+
+      // Badge
+      tl.from("#s1-badge", { y: -30, opacity: 0, scale: 0.9, duration: 0.8, ease: "back.out(1.5)" }, 0.5);
+
+      // Title
+      tl.from("#s1-line1", { y: 60, opacity: 0, duration: 0.9, ease: "expo.out" }, 0.7);
+      tl.from("#s1-line2", { y: 80, opacity: 0, duration: 1.0, ease: "expo.out" }, 0.9);
+      tl.to("#s1-line2", { backgroundPosition: "200% 50%", duration: 1.5, ease: "power1.inOut" }, 2.2);
+
+      // Subtitle + line
+      tl.from("#s1-subtitle", { y: 40, opacity: 0, duration: 0.7, ease: "power3.out" }, 1.3);
+      tl.from("#s1-line", { scaleX: 0, duration: 0.6, ease: "power2.out" }, 1.7);
+
+      // TRANSITION 1 -> 2
+      tl.to("#scene-1", { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 5.0);
+
+      // SCENE 2: Features (5.0 - 10.5s)
+      // Diamonds float in
+      tl.from("#s2-d1", { opacity: 0, rotation: 0, scale: 0, duration: 0.8, ease: "back.out(2)" }, 5.2);
+      tl.from("#s2-d2", { opacity: 0, rotation: 0, scale: 0, duration: 0.8, ease: "back.out(2)" }, 5.4);
+      tl.from("#s2-d3", { opacity: 0, rotation: 0, scale: 0, duration: 0.8, ease: "back.out(2)" }, 5.6);
+      tl.from("#s2-d4", { opacity: 0, rotation: 0, scale: 0, duration: 0.8, ease: "back.out(2)" }, 5.8);
+      // Diamonds float
+      tl.to("#s2-d1", { y: -15, rotation: 90, duration: 4, ease: "sine.inOut" }, 6.0);
+      tl.to("#s2-d2", { y: 12, rotation: 135, duration: 4.5, ease: "sine.inOut" }, 6.2);
+      tl.to("#s2-d3", { y: -10, rotation: 90, duration: 3.8, ease: "sine.inOut" }, 6.4);
+      tl.to("#s2-d4", { y: 14, rotation: 180, duration: 4.2, ease: "sine.inOut" }, 6.1);
+
+      // Heading
+      tl.from("#s2-heading", { y: -50, opacity: 0, duration: 0.8, ease: "expo.out" }, 5.3);
+
+      // Cards
+      tl.from("#s2-card-1", { y: 80, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.4)" }, 5.8);
+      tl.from("#s2-card-2", { y: 80, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.4)" }, 6.0);
+      tl.from("#s2-card-3", { y: 80, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.4)" }, 6.2);
+      tl.to("#s2-card-1", { y: -10, duration: 2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 7.0);
+      tl.to("#s2-card-2", { y: -14, duration: 2.2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 7.2);
+      tl.to("#s2-card-3", { y: -10, duration: 2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 7.4);
+      tl.to("#s2-card-1", { boxShadow: "0 12px 40px rgba(139,163,32,0.2)", borderColor: "rgba(139,163,32,0.2)", duration: 0.6, ease: "power2.out" }, 7.0);
+      tl.to("#s2-card-2", { boxShadow: "0 12px 40px rgba(212,101,79,0.2)", borderColor: "rgba(212,101,79,0.15)", duration: 0.6, ease: "power2.out" }, 7.5);
+      tl.to("#s2-card-3", { boxShadow: "0 12px 40px rgba(196,154,54,0.2)", borderColor: "rgba(196,154,54,0.15)", duration: 0.6, ease: "power2.out" }, 8.0);
+
+      // TRANSITION 2 -> 3
+      tl.to("#scene-2", { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 10.0);
+
+      // SCENE 3: CTA closer (10.0 - 15s)
+      tl.from("#s3-ring-1", { scale: 0.3, opacity: 0, duration: 1.2, ease: "power2.out" }, 10.2);
+      tl.from("#s3-ring-2", { scale: 0.2, opacity: 0, duration: 1.5, ease: "power2.out" }, 10.5);
+      tl.from("#s3-ring-3", { scale: 0.15, opacity: 0, duration: 1.8, ease: "power2.out" }, 10.7);
+      tl.to("#s3-ring-1", { scale: 1.15, opacity: 0, duration: 2.5, ease: "power1.out", repeat: 0 }, 11.5);
+      tl.to("#s3-ring-2", { scale: 1.1, opacity: 0, duration: 2.5, ease: "power1.out", repeat: 0 }, 12.0);
+
+      // Corner accents scene 3
+      tl.from("#s3-ctl", { opacity: 0, x: -20, y: -20, duration: 0.7, ease: "power3.out" }, 10.4);
+      tl.from("#s3-cbr", { opacity: 0, x: 20, y: 20, duration: 0.7, ease: "power3.out" }, 10.6);
+
+      // Logo
+      tl.from("#s3-logo", { letterSpacing: "0.8em", opacity: 0, duration: 1.0, ease: "expo.out" }, 10.3);
+      tl.from("#s3-line", { scaleX: 0, duration: 0.5, ease: "power3.out" }, 10.8);
+      tl.from("#s3-title", { y: 50, opacity: 0, duration: 0.8, ease: "expo.out" }, 11.0);
+      tl.to("#s3-accent", { backgroundPosition: "200% 50%", duration: 1.5, ease: "power1.inOut" }, 12.0);
+      tl.from("#s3-url", { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 11.5);
+      tl.from("#s3-tagline", { opacity: 0, duration: 0.5, ease: "power2.out" }, 12.0);
+
+      // Final fade
+      tl.to("#scene-3", { opacity: 0, duration: 1.0, ease: "power2.inOut" }, 14.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

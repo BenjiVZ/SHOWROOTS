@@ -55,21 +55,23 @@
           </div>
 
           <!-- Additional Services (from multi-step booking) -->
-          <div v-if="booking.additional_services && Object.keys(booking.additional_services).length" class="info-card glass">
+          <div v-if="normalizedServices.length" class="info-card glass">
             <h3>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               Servicios de Producción
             </h3>
             <div class="services-grid">
-              <div v-for="(config, service) in booking.additional_services" :key="service" class="service-item">
+              <div v-for="(item, idx) in normalizedServices" :key="idx" class="service-item">
                 <div class="service-header">
-                  <span class="service-icon">{{ serviceIcons[service] || '🎵' }}</span>
-                  <strong>{{ serviceLabels[service] || service }}</strong>
+                  <span class="service-icon" v-html="serviceIconsSvg[item.service] || '🎵'"></span>
+                  <strong>{{ serviceLabels[item.service] || item.service }}</strong>
                 </div>
-                <div v-if="typeof config === 'object'" class="service-details">
-                  <div v-for="(val, key) in config" :key="key" class="service-detail-row">
-                    <span class="info-label">{{ formatDetailKey(key) }}</span>
-                    <span>{{ val }}</span>
+                <div v-if="item.details && Object.keys(item.details).length" class="service-details">
+                  <div v-for="(val, key) in item.details" :key="key" class="service-detail-row">
+                    <template v-if="val !== '' && val !== null && val !== undefined">
+                      <span class="info-label">{{ formatDetailKey(key) }}</span>
+                      <span>{{ typeof val === 'boolean' ? (val ? 'Sí' : 'No') : val }}</span>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -276,22 +278,63 @@ const reviewComment = ref('')
 const chatContainer = ref(null)
 
 const serviceLabels = {
+  sound: 'Sonido',
   sonido: 'Sonido',
+  lights: 'Luces',
   iluminacion: 'Iluminación',
+  booth: 'DJ Booth',
   tarima: 'Tarima / Booth',
+  microphone: 'Micrófono',
+  screens: 'Pantallas LED',
   pantallas: 'Pantallas LED',
+  ledfloor: 'Piso LED',
+  technician: 'Técnico',
   efectos: 'Efectos Especiales',
 }
-const serviceIcons = {
-  sonido: '🔊',
-  iluminacion: '💡',
-  tarima: '🎪',
-  pantallas: '📺',
-  efectos: '✨',
+const serviceIconsSvg = {
+  sound: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>',
+  sonido: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>',
+  lights: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  iluminacion: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  booth: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>',
+  microphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
+  screens: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  pantallas: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>',
+  ledfloor: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>',
+  technician: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
+}
+
+// Normalize additional_services to always be an array of {service, details}
+// Handles both array format: [{service: "lights", details: {...}}]
+// and legacy dict format: {"sonido": {...}, "iluminacion": {...}}
+const normalizedServices = computed(() => {
+  const raw = booking.value?.additional_services
+  if (!raw) return []
+  if (Array.isArray(raw)) {
+    return raw.map(item => ({
+      service: item.service || 'unknown',
+      details: item.details || {}
+    }))
+  }
+  // Legacy dict format
+  return Object.entries(raw).map(([key, val]) => ({
+    service: key,
+    details: typeof val === 'object' ? val : {}
+  }))
+})
+
+const detailKeyLabels = {
+  capacity: 'Capacidad',
+  microphone: 'Micrófono',
+  level: 'Nivel',
+  type: 'Tipo',
+  purpose: 'Propósito',
+  hasContent: 'Incluye Contenido',
+  schedule: 'Horario',
 }
 
 function formatDetailKey(key) {
-  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  return detailKeyLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 const isTalentView = computed(() => auth.user?.role === 'talent')
@@ -514,18 +557,34 @@ onMounted(async () => {
 /* Chat */
 .chat-card { padding: var(--space-6); border-radius: var(--radius-xl); }
 .chat-card h3 { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-base); margin-bottom: var(--space-4); }
-.chat-messages { max-height: 400px; overflow-y: auto; margin-bottom: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.chat-messages { max-height: 400px; overflow-y: auto; margin-bottom: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-2); }
 .chat-empty { text-align: center; padding: var(--space-8); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 .chat-msg { display: flex; }
 .chat-msg.mine { justify-content: flex-end; }
 .msg-bubble {
-  max-width: 70%; padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-lg); background: var(--color-bg-elevated);
+  max-width: 75%; padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
-.chat-msg.mine .msg-bubble { background: rgba(193,216,47,0.15); }
+/* Other person's messages: subtle distinct background */
+.chat-msg:not(.mine) .msg-bubble {
+  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+}
+/* Own messages: solid primary-tinted background with strong contrast */
+.chat-msg.mine .msg-bubble {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+}
+.chat-msg.mine .msg-sender { color: rgba(0,0,0,0.65); }
+.chat-msg.mine .msg-bubble p { color: #000; }
+.chat-msg.mine .msg-time { color: rgba(0,0,0,0.5); }
+
 .msg-sender { font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary); display: block; margin-bottom: 2px; }
-.msg-bubble p { font-size: var(--font-size-sm); }
-.msg-time { font-size: 10px; color: var(--color-text-muted); margin-top: 2px; display: block; }
+.msg-bubble p { font-size: var(--font-size-sm); margin: 0; }
+.msg-time { font-size: 10px; color: var(--color-text-muted); margin-top: 2px; display: block; text-align: right; }
 
 .chat-input-row { display: flex; gap: var(--space-2); }
 .chat-input-row .form-input { flex: 1; }
