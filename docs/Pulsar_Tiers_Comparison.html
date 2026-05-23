@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pulsar · Standard vs Pro vs Premium — Comparación visual</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #141414;
+    --bg-card-2: #1a1a1a;
+    --border: #262626;
+    --border-light: #333;
+    --lime: #c8f04a;
+    --cyan: #22d3ee;
+    --gold: #f59e0b;
+    --gold-glow: rgba(245,158,11,0.3);
+    --white: #ffffff;
+    --text: #e5e5e5;
+    --text-muted: #8a8a8a;
+    --text-dim: #555;
+    --green: #10b981;
+    --red: #ef4444;
+    --pink: #ec4899;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* PAGE HEADER */
+  .page-header {
+    text-align: center;
+    padding: 40px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #14141a 0%, var(--bg) 100%);
+  }
+  .page-header h1 {
+    font-size: 32px;
+    color: var(--white);
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .page-header h1 span.lime { color: var(--lime); }
+  .page-header h1 span.cyan { color: var(--cyan); }
+  .page-header h1 span.gold { color: var(--gold); }
+  .page-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .layout {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  /* TIER HEADERS (sticky on scroll) */
+  .tier-headers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    padding: 16px 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .tier-head {
+    text-align: center;
+    padding: 14px;
+    border-radius: 12px;
+    position: relative;
+  }
+  .tier-head.standard {
+    background: rgba(140,140,140,0.05);
+    border: 1px solid var(--border-light);
+  }
+  .tier-head.pro {
+    background: rgba(34,211,238,0.06);
+    border: 1px solid rgba(34,211,238,0.25);
+  }
+  .tier-head.premium {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.4);
+    box-shadow: 0 0 24px var(--gold-glow);
+  }
+  .tier-head h2 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+  }
+  .tier-head.standard h2 { color: var(--text-muted); }
+  .tier-head.pro h2 { color: var(--cyan); }
+  .tier-head.premium h2 { color: var(--gold); }
+  .tier-head .comm {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+  .tier-head .comm strong {
+    font-size: 16px;
+    color: var(--white);
+    margin-left: 4px;
+  }
+
+  /* SECTION TITLE BAR */
+  .section-bar {
+    grid-column: 1 / -1;
+    background: var(--bg-card);
+    border-left: 4px solid var(--lime);
+    padding: 12px 18px;
+    margin: 32px 0 16px;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-bar .num {
+    background: var(--lime);
+    color: var(--bg);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 12px;
+  }
+
+  /* COMPARISON GRID */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* GENERIC CARDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    overflow: hidden;
+  }
+  .card.pro { border-color: rgba(34,211,238,0.25); }
+  .card.premium {
+    border-color: rgba(245,158,11,0.4);
+    box-shadow: 0 0 24px rgba(245,158,11,0.08);
+  }
+
+  /* SEARCH RESULT CARD */
+  .search-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .search-card.pro {
+    border: 1.5px solid var(--cyan);
+  }
+  .search-card.premium {
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 30px rgba(245,158,11,0.15);
+  }
+  .search-thumb {
+    aspect-ratio: 16/10;
+    background: linear-gradient(135deg, #2a1a3e, #1a2a3e);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    opacity: 0.6;
+  }
+  .search-card.premium .search-thumb {
+    background: linear-gradient(135deg, #3a2a1e, #1a1a3a);
+  }
+  .search-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.6);
+    color: var(--white);
+  }
+  .search-badge.tier-pro {
+    background: var(--cyan);
+    color: var(--bg);
+  }
+  .search-badge.tier-premium {
+    background: var(--gold);
+    color: var(--bg);
+  }
+  .search-info { padding: 14px; }
+  .search-name {
+    color: var(--white);
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .search-curated {
+    color: var(--gold);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .search-meta {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  .search-genres {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .search-genres span {
+    background: rgba(200,240,74,0.1);
+    color: var(--lime);
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+  }
+  .search-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .search-rating { color: var(--gold); }
+  .search-rating span { color: var(--text-muted); }
+  .search-price { color: var(--red); font-weight: 700; }
+
+  /* HERO BANNER PER TIER */
+  .tier-hero {
+    height: 100px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .tier-hero.standard {
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  }
+  .tier-hero.pro {
+    background:
+      linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.6)),
+      linear-gradient(135deg, #1a2a4e, #2a1a3e);
+  }
+  .tier-hero.premium {
+    background:
+      linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.7)),
+      linear-gradient(135deg, #3a1a2e 0%, #1a1a3a 50%, #3a2a1e 100%);
+    box-shadow: inset 0 0 30px rgba(245,158,11,0.1);
+  }
+  .tier-hero .label {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.5);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .tier-hero.premium .label {
+    background: rgba(245,158,11,0.2);
+    color: var(--gold);
+  }
+
+  /* PROFILE HEADER COMPACT */
+  .profile-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .ph-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid var(--text-dim);
+    background: linear-gradient(135deg, #2a1a3e, #1a2a3e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .ph-avatar.standard { border-color: var(--text-dim); color: var(--text-muted); }
+  .ph-avatar.pro { border-color: var(--cyan); color: var(--cyan); }
+  .ph-avatar.premium {
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 16px var(--gold-glow);
+  }
+  .ph-name {
+    color: var(--white);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .ph-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ph-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .ph-badge.basic { background: rgba(140,140,140,0.15); color: var(--text-muted); }
+  .ph-badge.dj { background: rgba(200,240,74,0.15); color: var(--lime); }
+  .ph-badge.pro { background: var(--cyan); color: var(--bg); }
+  .ph-badge.premium { background: var(--gold); color: var(--bg); }
+  .ph-curated {
+    color: var(--gold);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  /* PROFILE STATS COMPACT */
+  .ph-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .ph-stat { text-align: center; }
+  .ph-stat-num { color: var(--white); font-weight: 700; font-size: 13px; }
+  .ph-stat-label { color: var(--text-dim); font-size: 9px; text-transform: uppercase; }
+
+  /* PRICING */
+  .ph-pricing {
+    background: rgba(200,240,74,0.05);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .ph-pricing-main { color: var(--white); font-weight: 700; font-size: 16px; }
+  .ph-pricing-sub { color: var(--text-muted); font-size: 10px; }
+
+  /* CTA */
+  .ph-cta {
+    width: 100%;
+    background: var(--lime);
+    color: var(--bg);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .ph-cta-2 {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* INNER SECTION */
+  .inner-sec { margin-top: 14px; }
+  .inner-sec-title {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .inner-sec-title .icon { color: var(--lime); }
+
+  /* MIX ITEMS COMPACT */
+  .mini-mix {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .mini-mix-cover {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--lime), #2a3a10);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .mini-mix-info { flex: 1; min-width: 0; }
+  .mini-mix-title { color: var(--white); font-weight: 600; font-size: 11px; }
+  .mini-mix-meta { color: var(--text-dim); font-size: 9px; }
+  .mini-mix-play {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--lime);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  /* FEATURED MIX */
+  .featured-mix {
+    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .featured-mix .label {
+    color: var(--gold);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  /* VIDEO PLACEHOLDER */
+  .mini-video {
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #2a1a3e, #1a2a3e);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    opacity: 0.6;
+    position: relative;
+  }
+  .mini-video::after {
+    content: '▶';
+    position: absolute;
+    width: 32px; height: 32px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lime);
+    font-size: 12px;
+  }
+  .video-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+  /* GALLERY MINI */
+  .mini-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .mini-gallery.cols-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .mini-gallery-item {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #2a1a3e, #1a3a4a);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .mini-gallery-item:nth-child(2n) { background: linear-gradient(135deg, #3a1a2e, #1a2a3a); }
+  .mini-gallery-item:nth-child(3n) { background: linear-gradient(135deg, #1a3a2e, #3a1a4a); }
+  .gallery-more {
+    background: rgba(245,158,11,0.1) !important;
+    color: var(--gold) !important;
+    font-weight: 700;
+    font-size: 10px !important;
+  }
+
+  /* PACKS MINI */
+  .mini-pack {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 6px;
+  }
+  .mini-pack.featured { border-color: var(--gold); position: relative; }
+  .mini-pack-name { color: var(--white); font-weight: 700; font-size: 11px; }
+  .mini-pack-price { color: var(--lime); font-weight: 800; font-size: 14px; margin-top: 2px; }
+  .mini-pack-price span { color: var(--text-muted); font-size: 9px; font-weight: 400; }
+  .mini-pack-meta { color: var(--text-dim); font-size: 9px; margin-top: 4px; }
+
+  /* REVIEW BREAKDOWN */
+  .review-summary-mini {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .review-big-num { font-size: 28px; font-weight: 800; color: var(--white); line-height: 1; }
+  .review-stars-mini { color: var(--gold); font-size: 11px; }
+  .review-count-mini { color: var(--text-muted); font-size: 10px; }
+  .review-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .review-bar-mini { display: flex; align-items: center; gap: 6px; font-size: 9px; color: var(--text-muted); }
+  .review-bar-mini .bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .review-bar-mini .fill { height: 100%; background: var(--lime); }
+  .review-bar-mini.dim .fill { background: var(--text-dim); }
+
+  .mini-review {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .mini-review-head { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .mini-review-name { color: var(--white); font-weight: 600; font-size: 10px; }
+  .mini-review-meta { color: var(--text-dim); font-size: 9px; }
+  .mini-review-text { color: var(--text-muted); font-size: 10px; line-height: 1.4; }
+  .mini-review-reply {
+    background: rgba(245,158,11,0.06);
+    border-left: 2px solid var(--gold);
+    padding: 6px 8px;
+    margin-top: 6px;
+    border-radius: 0 4px 4px 0;
+    font-size: 10px;
+    color: var(--text);
+  }
+  .mini-review-reply b { color: var(--gold); }
+
+  /* TAGS COMPACT */
+  .tags-mini { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tags-mini span {
+    background: rgba(200,240,74,0.1);
+    color: var(--lime);
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+  }
+  .tags-mini.mood span { background: rgba(236,72,153,0.1); color: var(--pink); }
+
+  /* CALENDAR MINI */
+  .mini-cal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+  }
+  .mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .mini-cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    font-size: 9px;
+    color: var(--text);
+  }
+  .mini-cal-day.avail { background: rgba(16,185,129,0.15); color: var(--green); }
+  .mini-cal-day.busy { background: rgba(239,68,68,0.1); color: var(--red); text-decoration: line-through; }
+  .mini-cal-day.empty { color: var(--text-dim); }
+  .mini-cal-sync {
+    color: var(--gold);
+    font-size: 9px;
+    margin-top: 6px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* TRUST CARD */
+  .trust-mini {
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 10px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .trust-mini .icon { color: var(--green); flex-shrink: 0; }
+
+  /* PERKS LIST (premium-only sections) */
+  .perks-list { display: flex; flex-direction: column; gap: 6px; }
+  .perk-item {
+    background: rgba(245,158,11,0.06);
+    border-left: 2px solid var(--gold);
+    padding: 8px 10px;
+    border-radius: 0 6px 6px 0;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .perk-item b { color: var(--gold); }
+
+  /* EMPTY STATE / NOT INCLUDED */
+  .not-included {
+    background: rgba(140,140,140,0.05);
+    border: 1px dashed var(--border-light);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-style: italic;
+  }
+  .not-included .icon { font-size: 18px; display: block; margin-bottom: 4px; opacity: 0.5; }
+
+  /* MARKETING BADGE PREVIEW */
+  .marketing-badge {
+    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text);
+  }
+  .marketing-badge .icon { font-size: 20px; color: var(--gold); display: block; margin-bottom: 4px; }
+  .marketing-badge b { color: var(--gold); display: block; font-size: 11px; margin: 4px 0; }
+
+  /* PROGRESS LADDER (shown at bottom) */
+  .ladder-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 40px;
+  }
+  .ladder-title {
+    color: var(--white);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .ladder-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ladder-row:last-child { border-bottom: none; }
+  .ladder-tier {
+    width: 100px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+  .ladder-tier.std { color: var(--text-muted); }
+  .ladder-tier.pro { color: var(--cyan); }
+  .ladder-tier.prem { color: var(--gold); }
+  .ladder-criteria {
+    flex: 1;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .ladder-perks {
+    width: 400px;
+    color: var(--text);
+    font-size: 12px;
+  }
+
+  /* SUMMARY TABLE */
+  .summary-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+  }
+  table.summary {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.summary th, table.summary td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.summary th {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  table.summary th.std { color: var(--text-muted); }
+  table.summary th.pro { color: var(--cyan); }
+  table.summary th.prem { color: var(--gold); }
+  table.summary td:first-child {
+    color: var(--white);
+    font-weight: 600;
+    width: 22%;
+  }
+  table.summary td.feature-group {
+    color: var(--lime);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(200,240,74,0.03);
+  }
+  .check { color: var(--green); }
+  .x { color: var(--red); }
+  .partial { color: var(--gold); }
+
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Perfil del DJ · <span class="lime">Standard</span> vs <span class="cyan">Pro</span> vs <span class="gold">Premium</span></h1>
+  <p>El mismo DJ ("Rubs DJ") renderizado en los 3 niveles. Lo que está en Standard funciona; lo que se agrega en Pro y Premium genera diferenciación. Scrollea hacia abajo para ver cada sección comparada.</p>
+</header>
+
+<div class="layout">
+
+  <!-- STICKY HEADERS -->
+  <div class="tier-headers">
+    <div class="tier-head standard">
+      <h2>STANDARD</h2>
+      <div class="comm">Comisión <strong>22%</strong> · Entrada</div>
+    </div>
+    <div class="tier-head pro">
+      <h2>★ PRO</h2>
+      <div class="comm">Comisión <strong>15%</strong> · Verificado</div>
+    </div>
+    <div class="tier-head premium">
+      <h2>★★ PREMIUM</h2>
+      <div class="comm">Comisión <strong>12%</strong> · Por invitación</div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 1: CARD EN BÚSQUEDA =================== -->
+  <div class="section-bar"><span class="num">1</span> Card en resultados de búsqueda</div>
+  <div class="grid-3">
+    <!-- STANDARD CARD -->
+    <div class="search-card">
+      <div class="search-thumb">🎧</div>
+      <div class="search-info">
+        <div class="search-name">Rubs DJ</div>
+        <div class="search-meta">📍 Ciudad de Panamá</div>
+        <div class="search-genres">
+          <span>Electrónica</span>
+          <span>House</span>
+        </div>
+        <div class="search-footer">
+          <span class="search-rating">Nuevo · <span>3 eventos</span></span>
+          <span class="search-price">Desde $400</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRO CARD -->
+    <div class="search-card pro">
+      <div class="search-thumb">
+        🎧
+        <span class="search-badge tier-pro">★ PRO</span>
+      </div>
+      <div class="search-info">
+        <div class="search-name">Rubs DJ ✓</div>
+        <div class="search-meta">📍 Ciudad de Panamá · ⚡ Responde en 6h</div>
+        <div class="search-genres">
+          <span>Electrónica</span>
+          <span>House</span>
+          <span>Latin</span>
+        </div>
+        <div class="search-footer">
+          <span class="search-rating">★ 4.8 <span>(24)</span></span>
+          <span class="search-price">Desde $500</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREMIUM CARD -->
+    <div class="search-card premium">
+      <div class="search-thumb">
+        🎧
+        <span class="search-badge tier-premium">★★ PREMIUM</span>
+      </div>
+      <div class="search-info">
+        <div class="search-name">Rubs DJ ✓</div>
+        <div class="search-curated">CURADO POR PULSAR</div>
+        <div class="search-meta">📍 Ciudad de Panamá · ⚡ 3h · 🌐 ES/EN</div>
+        <div class="search-genres">
+          <span>Electrónica</span>
+          <span>House</span>
+          <span>Latin</span>
+          <span>Lounge</span>
+        </div>
+        <div class="search-footer">
+          <span class="search-rating">★ 4.9 <span>(87)</span></span>
+          <span class="search-price">Desde $700</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 2: HEADER DEL PERFIL =================== -->
+  <div class="section-bar"><span class="num">2</span> Banner + Header del perfil</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="tier-hero standard">
+        <span class="label">Sin banner personalizado</span>
+      </div>
+      <div class="profile-head">
+        <div class="ph-avatar standard">🎧</div>
+        <div>
+          <div class="ph-name">Rubs DJ</div>
+          <div class="ph-badges">
+            <span class="ph-badge dj">DJ</span>
+            <span class="ph-badge basic">Nuevo en Pulsar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="tier-hero pro">
+        <span class="label">Banner propio · 1 imagen</span>
+      </div>
+      <div class="profile-head">
+        <div class="ph-avatar pro">🎧</div>
+        <div>
+          <div class="ph-name">Rubs DJ ✓</div>
+          <div class="ph-badges">
+            <span class="ph-badge dj">DJ</span>
+            <span class="ph-badge pro">★ PRO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="tier-hero premium">
+        <span class="label">★ Foto pro por Pulsar · video opcional</span>
+      </div>
+      <div class="profile-head">
+        <div class="ph-avatar premium">🎧</div>
+        <div>
+          <div class="ph-name">Rubs DJ ✓</div>
+          <div class="ph-curated">CURADO POR PULSAR</div>
+          <div class="ph-badges">
+            <span class="ph-badge dj">DJ</span>
+            <span class="ph-badge premium">★★ PREMIUM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 3: STATS Y PRICING =================== -->
+  <div class="section-bar"><span class="num">3</span> Stats de confianza + pricing</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="ph-stats">
+        <div class="ph-stat"><div class="ph-stat-num">3</div><div class="ph-stat-label">Eventos</div></div>
+        <div class="ph-stat"><div class="ph-stat-num">—</div><div class="ph-stat-label">Respuesta</div></div>
+        <div class="ph-stat"><div class="ph-stat-num">2026</div><div class="ph-stat-label">Desde</div></div>
+      </div>
+      <div class="ph-pricing">
+        <div class="ph-pricing-main">$100<span style="color:var(--text-muted); font-size:11px;">/hora</span></div>
+        <div class="ph-pricing-sub">Solo tarifa por hora</div>
+      </div>
+      <button class="ph-cta">Reservar Ahora</button>
+      <button class="ph-cta-2">Enviar consulta</button>
+      <div class="trust-mini">
+        <span class="icon">🛡️</span> Pago protegido por Pulsar
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="ph-stats">
+        <div class="ph-stat"><div class="ph-stat-num">24</div><div class="ph-stat-label">Eventos</div></div>
+        <div class="ph-stat"><div class="ph-stat-num">6h</div><div class="ph-stat-label">Respuesta</div></div>
+        <div class="ph-stat"><div class="ph-stat-num">2026</div><div class="ph-stat-label">Desde</div></div>
+      </div>
+      <div class="ph-pricing">
+        <div class="ph-pricing-main">$500<span style="color:var(--text-muted); font-size:11px;"> desde / 4hrs</span></div>
+        <div class="ph-pricing-sub">+ 1 pack custom disponible</div>
+      </div>
+      <button class="ph-cta">Reservar Ahora</button>
+      <button class="ph-cta-2">Enviar consulta</button>
+      <div class="trust-mini">
+        <span class="icon">🛡️</span> Pago protegido por Pulsar
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="ph-stats">
+        <div class="ph-stat"><div class="ph-stat-num">87</div><div class="ph-stat-label">Eventos</div></div>
+        <div class="ph-stat"><div class="ph-stat-num">3h</div><div class="ph-stat-label">Respuesta</div></div>
+        <div class="ph-stat"><div class="ph-stat-num">95%</div><div class="ph-stat-label">Repeat clients</div></div>
+      </div>
+      <div class="ph-pricing">
+        <div class="ph-pricing-main">$700<span style="color:var(--text-muted); font-size:11px;"> desde / 4hrs</span></div>
+        <div class="ph-pricing-sub">5 packs custom + pricing dinámico</div>
+      </div>
+      <button class="ph-cta">Reservar Ahora</button>
+      <button class="ph-cta-2">Enviar consulta</button>
+      <div class="trust-mini">
+        <span class="icon">🛡️</span> Pago protegido por Pulsar
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 4: MIXES =================== -->
+  <div class="section-bar"><span class="num">4</span> Mixes de audio</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">🎵</span> Mixes (1/2 permitidos)</div>
+      <div class="mini-mix">
+        <div class="mini-mix-cover">🎵</div>
+        <div class="mini-mix-info">
+          <div class="mini-mix-title">My First Mix</div>
+          <div class="mini-mix-meta">42 min</div>
+        </div>
+        <div class="mini-mix-play">▶</div>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">🎵</span> Mixes (4/4 permitidos)</div>
+      <div class="mini-mix">
+        <div class="mini-mix-cover">🎵</div>
+        <div class="mini-mix-info">
+          <div class="mini-mix-title">Wedding Mix · Beach Vibes</div>
+          <div class="mini-mix-meta">62 min · Latin</div>
+        </div>
+        <div class="mini-mix-play">▶</div>
+      </div>
+      <div class="mini-mix">
+        <div class="mini-mix-cover">🎛</div>
+        <div class="mini-mix-info">
+          <div class="mini-mix-title">Corporate Cocktail Set</div>
+          <div class="mini-mix-meta">48 min · Deep House</div>
+        </div>
+        <div class="mini-mix-play">▶</div>
+      </div>
+      <div class="mini-mix">
+        <div class="mini-mix-cover">⚡</div>
+        <div class="mini-mix-info">
+          <div class="mini-mix-title">Peak Time</div>
+          <div class="mini-mix-meta">75 min · Tech House</div>
+        </div>
+        <div class="mini-mix-play">▶</div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">🎵</span> Mixes ilimitados</div>
+      <div class="featured-mix">
+        <div class="label">★ MIX DESTACADO</div>
+        <div class="mini-mix" style="background:transparent; border:none; padding:0; margin:0;">
+          <div class="mini-mix-cover">⚡</div>
+          <div class="mini-mix-info">
+            <div class="mini-mix-title">Signature Sunset Mix 2025</div>
+            <div class="mini-mix-meta">90 min · Deep House / Melodic</div>
+          </div>
+          <div class="mini-mix-play">▶</div>
+        </div>
+      </div>
+      <div class="mini-mix">
+        <div class="mini-mix-cover">🎵</div>
+        <div class="mini-mix-info">
+          <div class="mini-mix-title">Wedding Mix · Beach Vibes</div>
+          <div class="mini-mix-meta">62 min</div>
+        </div>
+        <div class="mini-mix-play">▶</div>
+      </div>
+      <div class="mini-mix">
+        <div class="mini-mix-cover">🎛</div>
+        <div class="mini-mix-info">
+          <div class="mini-mix-title">Corporate Set + 4 más</div>
+          <div class="mini-mix-meta">+ ver todos (8)</div>
+        </div>
+        <div class="mini-mix-play">▶</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 5: VIDEO =================== -->
+  <div class="section-bar"><span class="num">5</span> Video en vivo</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">🎬</span> Video</div>
+      <div class="not-included">
+        <span class="icon">🎬</span>
+        Sección de video no incluida en Standard.<br>
+        <small>Sube a Pro para activar.</small>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">🎬</span> 1 clip permitido</div>
+      <div class="mini-video">🎉</div>
+      <div style="text-align:center; color:var(--text-dim); font-size:10px; margin-top:4px;">Boda · 2025</div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">🎬</span> Hasta 4 clips + video bio</div>
+      <div class="featured-mix" style="padding:8px;">
+        <div class="label">VIDEO BIO</div>
+        <div class="mini-video" style="margin-bottom:0;">👤</div>
+      </div>
+      <div class="video-grid-2">
+        <div class="mini-video">🎉</div>
+        <div class="mini-video">🪩</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 6: BIO =================== -->
+  <div class="section-bar"><span class="num">6</span> Bio</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">👤</span> Bio (máx 200 caracteres)</div>
+      <div style="color:var(--text); font-size:12px; line-height:1.6;">
+        DJ panameño con experiencia en bodas y eventos privados. Especializado en electrónica y house.
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">👤</span> Bio + bullets (500 caracteres)</div>
+      <div style="color:var(--text); font-size:12px; line-height:1.6; margin-bottom:8px;">
+        DJ con 8 años de experiencia en Panamá. Bodas, corporativo y residencias premium.
+      </div>
+      <ul style="color:var(--text-muted); font-size:11px; padding-left:18px; line-height:1.6;">
+        <li>Bilingüe ES/EN</li>
+        <li>Más de 100 eventos completados</li>
+        <li>Residente actual en venue de Casco Antiguo</li>
+      </ul>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">👤</span> Bio rica + video bio</div>
+      <div style="color:var(--text); font-size:12px; line-height:1.6; margin-bottom:8px;">
+        DJ con 8 años de experiencia en Panamá, especializado en bodas y eventos corporativos premium. He tocado en Casco Antiguo, Costa del Este y los principales hoteles.
+      </div>
+      <div style="color:var(--text-muted); font-size:11px; line-height:1.6; margin-bottom:8px;">
+        Mi enfoque: leer el ambiente y construir un viaje musical, no imponer un setlist fijo.
+      </div>
+      <div style="background:rgba(245,158,11,0.06); border-left:2px solid var(--gold); padding:6px 10px; border-radius:0 4px 4px 0; color:var(--gold); font-size:10px;">
+        🎬 Ver video bio (45s)
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 7: PACKS =================== -->
+  <div class="section-bar"><span class="num">7</span> Paquetes de precio</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">📦</span> Solo tarifa por hora</div>
+      <div class="mini-pack">
+        <div class="mini-pack-name">Cotizar (custom)</div>
+        <div class="mini-pack-price">$100<span>/hora</span></div>
+        <div class="mini-pack-meta">Mínimo 3 horas · sin add-ons en el sistema</div>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">📦</span> 1 pack custom permitido</div>
+      <div class="mini-pack">
+        <div class="mini-pack-name">Tarifa por hora</div>
+        <div class="mini-pack-price">$125<span>/hora</span></div>
+      </div>
+      <div class="mini-pack featured">
+        <div class="mini-pack-name">Pack Boda Esencial</div>
+        <div class="mini-pack-price">$600<span> · 4 hrs</span></div>
+        <div class="mini-pack-meta">DJ + sonido básico + micrófono</div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">📦</span> Packs ilimitados + dinámico</div>
+      <div class="mini-pack featured">
+        <div class="mini-pack-name">Pack Boda Premium</div>
+        <div class="mini-pack-price">$900<span> · 5 hrs</span></div>
+      </div>
+      <div class="mini-pack">
+        <div class="mini-pack-name">Pack Corporativo</div>
+        <div class="mini-pack-price">$650<span> · 3 hrs · MC bilingüe</span></div>
+      </div>
+      <div class="mini-pack">
+        <div class="mini-pack-name">+3 packs más</div>
+        <div class="mini-pack-meta" style="margin-top:0;">Cumpleaños, Cocktail, Lanzamiento</div>
+      </div>
+      <div style="background:rgba(245,158,11,0.06); border:1px solid var(--gold); padding:6px 10px; border-radius:6px; color:var(--gold); font-size:10px; margin-top:6px; text-align:center;">
+        ⚡ Pricing dinámico: alta temporada +15%
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 8: GALLERY =================== -->
+  <div class="section-bar"><span class="num">8</span> Galería de fotos</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">📸</span> 3 fotos (máx 5)</div>
+      <div class="mini-gallery">
+        <div class="mini-gallery-item">🎉</div>
+        <div class="mini-gallery-item">🎛</div>
+        <div class="mini-gallery-item">💍</div>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">📸</span> 10 fotos permitidas</div>
+      <div class="mini-gallery">
+        <div class="mini-gallery-item">🎉</div>
+        <div class="mini-gallery-item">🎛</div>
+        <div class="mini-gallery-item">💍</div>
+        <div class="mini-gallery-item">🪩</div>
+        <div class="mini-gallery-item">🏢</div>
+        <div class="mini-gallery-item">🍸</div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">📸</span> Ilimitado · sesión Pulsar incluida</div>
+      <div class="mini-gallery cols-5">
+        <div class="mini-gallery-item">🎉</div>
+        <div class="mini-gallery-item">🎛</div>
+        <div class="mini-gallery-item">💍</div>
+        <div class="mini-gallery-item">🪩</div>
+        <div class="mini-gallery-item">🏢</div>
+        <div class="mini-gallery-item">🍸</div>
+        <div class="mini-gallery-item">🎂</div>
+        <div class="mini-gallery-item">🎤</div>
+        <div class="mini-gallery-item">🎧</div>
+        <div class="mini-gallery-item gallery-more">+18</div>
+      </div>
+      <div style="background:rgba(245,158,11,0.06); border-left:2px solid var(--gold); padding:6px 10px; border-radius:0 4px 4px 0; margin-top:8px; font-size:10px; color:var(--gold);">
+        📸 Sesión fotos pro · cortesía Pulsar
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 9: GÉNEROS Y EVENTOS =================== -->
+  <div class="section-bar"><span class="num">9</span> Géneros + Mood + Tipos de evento</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">🎶</span> Solo géneros</div>
+      <div class="tags-mini">
+        <span>Electrónica</span>
+        <span>House</span>
+        <span>Latin</span>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">🎶</span> Géneros + mood</div>
+      <div class="tags-mini" style="margin-bottom:8px;">
+        <span>Electrónica</span>
+        <span>House</span>
+        <span>Latin</span>
+        <span>Funk</span>
+      </div>
+      <div class="tags-mini mood">
+        <span>Boda elegante</span>
+        <span>Cumpleaños hype</span>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">🎶</span> Géneros + mood + eventos</div>
+      <div class="tags-mini" style="margin-bottom:6px;">
+        <span>Electrónica</span>
+        <span>House</span>
+        <span>Latin</span>
+        <span>Funk</span>
+        <span>Lounge</span>
+        <span>Deep House</span>
+      </div>
+      <div class="tags-mini mood" style="margin-bottom:6px;">
+        <span>Boda elegante</span>
+        <span>Cocktail formal</span>
+        <span>After party</span>
+        <span>Corporativo</span>
+      </div>
+      <div class="tags-mini" style="background:none;">
+        <span style="background:rgba(245,158,11,0.1); color:var(--gold);">💍 Bodas</span>
+        <span style="background:rgba(245,158,11,0.1); color:var(--gold);">🏢 Corporativo</span>
+        <span style="background:rgba(245,158,11,0.1); color:var(--gold);">🪩 Residencia</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 10: RESEÑAS =================== -->
+  <div class="section-bar"><span class="num">10</span> Reseñas</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">⭐</span> Reseñas (sin breakdown)</div>
+      <div class="review-summary-mini">
+        <div>
+          <div class="review-big-num">—</div>
+          <div class="review-stars-mini">☆☆☆☆☆</div>
+          <div class="review-count-mini">Aún sin reseñas</div>
+        </div>
+      </div>
+      <div class="not-included" style="padding:10px;">
+        🌟 Sé el primero en reseñar a Rubs DJ
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">⭐</span> Reseñas + breakdown</div>
+      <div class="review-summary-mini">
+        <div>
+          <div class="review-big-num">4.8</div>
+          <div class="review-stars-mini">★★★★★</div>
+          <div class="review-count-mini">24 reseñas</div>
+        </div>
+        <div class="review-bars">
+          <div class="review-bar-mini"><span style="width:60px;">Puntualidad</span><span class="bar"><span class="fill" style="width:100%"></span></span></div>
+          <div class="review-bar-mini"><span style="width:60px;">Musical</span><span class="bar"><span class="fill" style="width:96%"></span></span></div>
+          <div class="review-bar-mini"><span style="width:60px;">Técnica</span><span class="bar"><span class="fill" style="width:94%"></span></span></div>
+        </div>
+      </div>
+      <div class="mini-review">
+        <div class="mini-review-head">
+          <span class="mini-review-name">María G.</span>
+          <span class="mini-review-meta">Boda · Abr 2026</span>
+        </div>
+        <div class="mini-review-text">"Profesional de principio a fin. Leyó el ambiente perfecto."</div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">⭐</span> Reseñas + breakdown + respuesta del DJ</div>
+      <div class="review-summary-mini">
+        <div>
+          <div class="review-big-num">4.9</div>
+          <div class="review-stars-mini">★★★★★</div>
+          <div class="review-count-mini">87 reseñas</div>
+        </div>
+        <div class="review-bars">
+          <div class="review-bar-mini"><span style="width:60px;">Puntualidad</span><span class="bar"><span class="fill" style="width:100%"></span></span></div>
+          <div class="review-bar-mini"><span style="width:60px;">Musical</span><span class="bar"><span class="fill" style="width:98%"></span></span></div>
+          <div class="review-bar-mini"><span style="width:60px;">Técnica</span><span class="bar"><span class="fill" style="width:96%"></span></span></div>
+          <div class="review-bar-mini"><span style="width:60px;">Lectura</span><span class="bar"><span class="fill" style="width:98%"></span></span></div>
+        </div>
+      </div>
+      <div class="mini-review">
+        <div class="mini-review-head">
+          <span class="mini-review-name">María G. ✓</span>
+          <span class="mini-review-meta">Boda · Abr 2026</span>
+        </div>
+        <div class="mini-review-text">"Una de las mejores decisiones del evento. Set bilingüe perfecto."</div>
+        <div class="mini-review-reply">
+          <b>↪ Respuesta de Rubs DJ:</b> Gracias María, fue un placer tocar para tu boda.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 11: CALENDARIO =================== -->
+  <div class="section-bar"><span class="num">11</span> Calendario de disponibilidad</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">📅</span> Disponible / Ocupado</div>
+      <div class="mini-cal">
+        <div class="mini-cal-grid">
+          <div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day busy">1</div><div class="mini-cal-day busy">2</div>
+          <div class="mini-cal-day avail">3</div><div class="mini-cal-day avail">4</div><div class="mini-cal-day avail">5</div><div class="mini-cal-day avail">6</div><div class="mini-cal-day avail">7</div><div class="mini-cal-day busy">8</div><div class="mini-cal-day avail">9</div>
+          <div class="mini-cal-day avail">10</div><div class="mini-cal-day avail">11</div><div class="mini-cal-day avail">12</div><div class="mini-cal-day avail">13</div><div class="mini-cal-day avail">14</div><div class="mini-cal-day avail">15</div><div class="mini-cal-day avail">16</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">📅</span> + Bloqueo por tipo de evento</div>
+      <div class="mini-cal">
+        <div class="mini-cal-grid">
+          <div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day busy">1</div><div class="mini-cal-day busy">2</div>
+          <div class="mini-cal-day avail">3</div><div class="mini-cal-day avail">4</div><div class="mini-cal-day avail">5</div><div class="mini-cal-day avail">6</div><div class="mini-cal-day avail">7</div><div class="mini-cal-day busy">8</div><div class="mini-cal-day avail">9</div>
+        </div>
+        <div style="font-size:9px; color:var(--text-muted); margin-top:6px;">⚡ Sábados solo bodas · Viernes corporativos</div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">📅</span> + Sync con Google/Apple Calendar</div>
+      <div class="mini-cal">
+        <div class="mini-cal-grid">
+          <div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day busy">1</div><div class="mini-cal-day busy">2</div>
+          <div class="mini-cal-day avail">3</div><div class="mini-cal-day avail">4</div><div class="mini-cal-day avail">5</div><div class="mini-cal-day avail">6</div><div class="mini-cal-day avail">7</div><div class="mini-cal-day busy">8</div><div class="mini-cal-day avail">9</div>
+        </div>
+        <div class="mini-cal-sync">🔄 Sincronizado con Google Calendar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 12: FAQ =================== -->
+  <div class="section-bar"><span class="num">12</span> FAQ del DJ</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title"><span class="icon">❓</span> FAQ</div>
+      <div class="not-included">
+        <span class="icon">❓</span>
+        FAQ no disponible en Standard
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title"><span class="icon">❓</span> Hasta 3 preguntas</div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; margin-bottom:4px; font-size:11px; color:var(--white);">
+        ¿Tomas requests del público? <span style="float:right; color:var(--text-dim);">↓</span>
+      </div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; margin-bottom:4px; font-size:11px; color:var(--white);">
+        ¿Cuánto tiempo de setup? <span style="float:right; color:var(--text-dim);">↓</span>
+      </div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:11px; color:var(--white);">
+        ¿MC en inglés? <span style="float:right; color:var(--text-dim);">↓</span>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title"><span class="icon">❓</span> Ilimitado · Pulsar te ayuda a redactar</div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; margin-bottom:4px; font-size:11px; color:var(--white);">¿Puedo enviarte mi playlist? <span style="float:right; color:var(--text-dim);">↓</span></div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; margin-bottom:4px; font-size:11px; color:var(--white);">¿Tomas requests del público? <span style="float:right; color:var(--text-dim);">↓</span></div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; margin-bottom:4px; font-size:11px; color:var(--white);">¿Cuánto tiempo de setup? <span style="float:right; color:var(--text-dim);">↓</span></div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; margin-bottom:4px; font-size:11px; color:var(--white);">¿Hablas inglés en MC? <span style="float:right; color:var(--text-dim);">↓</span></div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:11px; color:var(--white);">+ 4 preguntas más</div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 13: BENEFICIOS EXCLUSIVOS =================== -->
+  <div class="section-bar"><span class="num">13</span> Beneficios exclusivos de Pulsar (lo que NO se ve en el perfil público, pero el DJ recibe)</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="inner-sec-title">⚡ Lo que Pulsar hace por ti</div>
+      <div class="perks-list">
+        <div class="perk-item" style="background:rgba(140,140,140,0.05); border-color:var(--text-dim);">
+          Apareces en búsquedas (orden por relevancia)
+        </div>
+        <div class="perk-item" style="background:rgba(140,140,140,0.05); border-color:var(--text-dim);">
+          Recibes leads que matchean tu género
+        </div>
+        <div class="perk-item" style="background:rgba(140,140,140,0.05); border-color:var(--text-dim);">
+          Soporte vía email (24-48h)
+        </div>
+        <div class="perk-item" style="background:rgba(140,140,140,0.05); border-color:var(--text-dim);">
+          Newsletter mensual con tips
+        </div>
+      </div>
+    </div>
+
+    <div class="card pro">
+      <div class="inner-sec-title">⚡ Lo que Pulsar hace por ti</div>
+      <div class="perks-list">
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          <b style="color:var(--cyan);">Prioridad en orden de búsqueda</b>
+        </div>
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          <b style="color:var(--cyan);">Lead alerts 24h antes</b> que Standard
+        </div>
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          Sesión fotos con descuento 50%
+        </div>
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          Badge "Verified Pro" para tu IG/web
+        </div>
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          Posts ocasionales en Pulsar IG
+        </div>
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          Email priorizado · respuesta 12h
+        </div>
+        <div class="perk-item" style="border-color:var(--cyan); background:rgba(34,211,238,0.06);">
+          Townhall trimestral con el equipo
+        </div>
+      </div>
+    </div>
+
+    <div class="card premium">
+      <div class="inner-sec-title">⚡ Lo que Pulsar hace por ti</div>
+      <div class="perks-list">
+        <div class="perk-item"><b>Slot permanente en home</b> "Talentos Destacados"</div>
+        <div class="perk-item"><b>Top 3 de tu categoría</b> en búsquedas</div>
+        <div class="perk-item"><b>Lead alerts 48h antes</b> + leads corporativos exclusivos</div>
+        <div class="perk-item"><b>Sesión fotos pro GRATIS</b> (valor $300)</div>
+        <div class="perk-item"><b>Kit marketing co-branded</b> + microsite personal</div>
+        <div class="perk-item"><b>Music supervisor</b> te ayuda con setlists grandes</div>
+        <div class="perk-item"><b>Reels y stories dedicados</b> mensual</div>
+        <div class="perk-item"><b>Acceso prioritario a venues</b> partner</div>
+        <div class="perk-item"><b>WhatsApp directo</b> con manager asignado</div>
+        <div class="perk-item"><b>1-on-1 mensual</b> con cofounder</div>
+      </div>
+      <div class="marketing-badge" style="margin-top:10px;">
+        <span class="icon">🏆</span>
+        <b>★★ PREMIUM</b>
+        Verified by Pulsar
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SUMMARY TABLE ===================== -->
+  <div class="summary-section">
+    <div class="ladder-title">📋 Cuadro resumen — qué incluye cada tier</div>
+    <table class="summary">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="std">STANDARD</th>
+          <th class="pro">PRO</th>
+          <th class="prem">PREMIUM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="feature-group" colspan="4">PRESENCIA</td></tr>
+        <tr><td>Banner / hero</td><td>Gradiente default</td><td>1 imagen propia</td><td class="check">Sesión fotos Pulsar + video opcional</td></tr>
+        <tr><td>Badge en card</td><td>Sin badge / "Nuevo"</td><td>★ PRO (cyan)</td><td>★★ PREMIUM + "Curado por Pulsar"</td></tr>
+        <tr><td>Posición en búsqueda</td><td>Por relevancia</td><td>Prioridad sort</td><td class="check">Siempre top 3 + featured en home</td></tr>
+
+        <tr><td class="feature-group" colspan="4">CONTENIDO</td></tr>
+        <tr><td>Mixes de audio</td><td>1-2 mixes</td><td>Hasta 4</td><td class="check">Ilimitado + mix destacado</td></tr>
+        <tr><td>Videos</td><td class="x">No</td><td>1 clip</td><td class="check">Hasta 4 + video bio</td></tr>
+        <tr><td>Galería</td><td>3-5 fotos</td><td>Hasta 10</td><td class="check">Ilimitado + fotos pro</td></tr>
+        <tr><td>Bio</td><td>200 chars</td><td>500 chars + bullets</td><td class="check">Rica + video bio</td></tr>
+        <tr><td>FAQ del DJ</td><td class="x">No</td><td>3 preguntas</td><td class="check">Ilimitadas + ayuda Pulsar</td></tr>
+
+        <tr><td class="feature-group" colspan="4">PRICING</td></tr>
+        <tr><td>Packs custom</td><td>0</td><td>1</td><td class="check">5 + pricing dinámico</td></tr>
+        <tr><td>Tarifa</td><td>Solo $/hora</td><td>$/hora + 1 pack</td><td class="check">Múltiples packs</td></tr>
+
+        <tr><td class="feature-group" colspan="4">RESEÑAS</td></tr>
+        <tr><td>Total visible</td><td class="check">Todas</td><td class="check">Todas</td><td class="check">Todas</td></tr>
+        <tr><td>Breakdown por dimensión</td><td class="x">No</td><td class="check">Sí</td><td class="check">Sí + filtros</td></tr>
+        <tr><td>Respuesta del DJ a reseñas</td><td class="x">No</td><td class="x">No</td><td class="check">Sí</td></tr>
+
+        <tr><td class="feature-group" colspan="4">SERVICIOS DE PULSAR</td></tr>
+        <tr><td>Sesión fotos pro</td><td>$150 paga</td><td>$75 con descuento</td><td class="check">GRATIS</td></tr>
+        <tr><td>Lead alerts adelantados</td><td>Mismo tiempo</td><td>24h antes</td><td class="check">48h antes + corporativos</td></tr>
+        <tr><td>Music supervisor</td><td class="x">No</td><td class="x">No</td><td class="check">Sí (eventos grandes)</td></tr>
+        <tr><td>Kit marketing</td><td class="x">No</td><td>Badge para IG/web</td><td class="check">Co-branded + microsite</td></tr>
+        <tr><td>Co-promo en Pulsar IG</td><td class="x">No</td><td>Ocasional</td><td class="check">Mensual dedicado</td></tr>
+        <tr><td>Soporte</td><td>Email 48h</td><td>Email 12h prioritario</td><td class="check">WhatsApp · manager dedicado</td></tr>
+        <tr><td>1-on-1 con cofounder</td><td class="x">No</td><td>Townhall trimestral</td><td class="check">Mensual</td></tr>
+
+        <tr><td class="feature-group" colspan="4">HERRAMIENTAS</td></tr>
+        <tr><td>Sync de calendario</td><td>Manual</td><td>Manual + filtros</td><td class="check">Google/Apple sync</td></tr>
+        <tr><td>Customización visual</td><td class="x">No</td><td>1 color de acento</td><td class="check">Tema completo</td></tr>
+
+        <tr><td class="feature-group" colspan="4">PROTECCIÓN (igual para todos — regla de oro)</td></tr>
+        <tr><td>Escrow / pago protegido</td><td class="check">Sí</td><td class="check">Sí</td><td class="check">Sí</td></tr>
+        <tr><td>Anti-desintermediación</td><td class="check">Sí</td><td class="check">Sí</td><td class="check">Sí</td></tr>
+        <tr><td>Reembolso si no se presenta</td><td class="check">100%</td><td class="check">100%</td><td class="check">100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- =================== LADDER =================== -->
+  <div class="ladder-section">
+    <div class="ladder-title">🪜 Cómo se sube de tier</div>
+    <div class="ladder-row">
+      <div class="ladder-tier std">STANDARD</div>
+      <div class="ladder-criteria">Aplicas, pasas evaluación inicial, te aceptan</div>
+      <div class="ladder-perks">Perfil funcional, búsqueda orgánica, comisión 22%</div>
+    </div>
+    <div class="ladder-row">
+      <div class="ladder-tier pro">→ PRO</div>
+      <div class="ladder-criteria">10+ eventos completados · Rating ≥ 4.5 · 0 cancelaciones en 6 meses</div>
+      <div class="ladder-perks">Badge ★ PRO, lead priority, kit marketing, comisión 15%</div>
+    </div>
+    <div class="ladder-row">
+      <div class="ladder-tier prem">→ PREMIUM</div>
+      <div class="ladder-criteria">20+ eventos · Rating ≥ 4.7 · 0 cancelaciones en 6 meses · <b>Invitación del equipo Pulsar</b></div>
+      <div class="ladder-perks">Slot home, fotos pro gratis, music supervisor, comisión 12%</div>
+    </div>
+    <div style="background:rgba(245,158,11,0.06); border:1px solid var(--gold); padding:14px; border-radius:10px; margin-top:16px; color:var(--text); font-size:13px;">
+      <strong style="color:var(--gold);">📌 Regla clave:</strong> Premium es <em>siempre por invitación de Pulsar</em>, no por métrica automática. Esto preserva la marca "curado" y permite veto si hay quejas que no salen en métricas. Es lo que hace a Premium realmente premium.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

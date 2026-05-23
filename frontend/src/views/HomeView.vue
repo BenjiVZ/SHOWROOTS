@@ -37,7 +37,7 @@
           </div>
           <div class="search-field">
             <label>Ciudad</label>
-            <input v-model="searchCity" type="text" class="input-field" placeholder="Ej: Caracas" />
+            <input v-model="searchCity" type="text" class="input-field" placeholder="Ej: Panamá" />
           </div>
           <div class="search-field hide-mobile">
             <label>Género musical</label>

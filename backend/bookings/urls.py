@@ -26,6 +26,35 @@ urlpatterns = [
     path('bookings/<int:booking_id>/review/', views.ReviewCreateView.as_view(), name='booking-review'),
     path('talents/<int:talent_id>/reviews/', views.TalentReviewsView.as_view(), name='talent-reviews'),
 
+    # Client credits
+    path('credits/', views.ClientCreditsView.as_view(), name='client-credits'),
+
+    # Cancellation policy
+    path('bookings/<int:booking_id>/cancel-preview/', views.CancellationPreviewView.as_view(), name='booking-cancel-preview'),
+
+    # Review response (Premium only)
+    path('reviews/<int:pk>/response/', views.ReviewResponseView.as_view(), name='review-response'),
+
+    # Premium invitations
+    path('premium/invitations/', views.PremiumInvitationListCreateView.as_view(), name='premium-invitations'),
+    path('premium/invitations/<int:pk>/action/', views.PremiumInvitationActionView.as_view(), name='premium-invitation-action'),
+    path('premium/my-invitation/', views.MyPremiumInvitationView.as_view(), name='my-premium-invitation'),
+
+    # Admin flagged messages
+    path('admin/flagged-messages/', views.FlaggedMessagesView.as_view(), name='admin-flagged-messages'),
+    path('admin/flagged-messages/stats/', views.FlaggedMessagesStatsView.as_view(), name='admin-flagged-stats'),
+
+    # Talent payout
+    path('talents/me/payout/', views.TalentPayoutView.as_view(), name='talent-payout'),
+
+    # Disputes / modify / contract / admin refund / CSV
+    path('bookings/<int:booking_id>/dispute/', views.DisputeCreateView.as_view(), name='booking-dispute'),
+    path('bookings/<int:pk>/modify/', views.BookingModifyView.as_view(), name='booking-modify'),
+    path('bookings/<int:booking_id>/contract/', views.BookingContractView.as_view(), name='booking-contract'),
+    path('admin/bookings/<int:booking_id>/refund/', views.AdminProcessRefundView.as_view(), name='admin-refund'),
+    path('admin/disputes/', views.DisputeListView.as_view(), name='admin-disputes'),
+    path('admin/bookings/export/', views.BookingsExportCSV.as_view(), name='admin-bookings-export'),
+
     # Partner
     path('partner/dashboard/', views.PartnerDashboardView.as_view(), name='partner-dashboard'),
 

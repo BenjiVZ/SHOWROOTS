@@ -18,6 +18,7 @@ class Booking(models.Model):
         ('confirmada', 'Confirmada'),
         ('completada', 'Completada'),
         ('cancelada', 'Cancelada'),
+        ('en_disputa', 'En Disputa'),
     ]
 
     EVENT_TYPE_CHOICES = [
@@ -128,6 +129,17 @@ class Booking(models.Model):
         max_digits=10, decimal_places=2, default=Decimal('0.00'),
         help_text='Fee de gestión y garantía cobrado al cliente'
     )
+    # Panamá ITBMS (7%)
+    tax_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
+        help_text='ITBMS 7% calculado sobre el total'
+    )
+
+    # Public booking code (ej: PUL-2026-05-A8F3)
+    booking_code = models.CharField(
+        max_length=24, blank=True, unique=True, db_index=True,
+        help_text='Código público corto para mostrar al cliente'
+    )
 
     # Status & notes
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='solicitud_enviada')
@@ -158,6 +170,89 @@ class Booking(models.Model):
             self.precio_estimado = self.talent.hourly_rate * self.event_duration_hours
             return self.precio_estimado
         return None
+
+    def calculate_tax(self, rate=Decimal('0.07')):
+        """Calculate Panama ITBMS (7%) over the service_fee base."""
+        base = self.service_fee or Decimal('0.00')
+        self.tax_amount = (base * rate).quantize(Decimal('0.01'))
+        return self.tax_amount
+
+    @property
+    def total_to_pay(self):
+        """Total que el cliente paga: precio + service fee + ITBMS."""
+        base = self.quoted_price or self.precio_estimado or Decimal('0.00')
+        return (base + (self.service_fee or Decimal('0.00')) + (self.tax_amount or Decimal('0.00'))).quantize(Decimal('0.01'))
+
+    def cancellation_refund(self, when=None):
+        """
+        Compute refund amount if cancelled at `when` (default now).
+        Returns dict with refund_amount, refund_rate, window_label.
+        """
+        from datetime import datetime
+        from django.utils import timezone as _tz
+        config = PlatformConfig.get_config()
+        when = when or _tz.now()
+        # Días al evento
+        event_dt = datetime.combine(self.event_date, self.event_time_start)
+        if _tz.is_aware(when) and _tz.is_naive(event_dt):
+            event_dt = _tz.make_aware(event_dt)
+        days_to_event = (event_dt - when).days
+        paid = Decimal(str(self.amount_paid or 0))
+
+        if days_to_event >= config.cancel_full_refund_days:
+            rate = Decimal('1.00')
+            label = f'Más de {config.cancel_full_refund_days} días — reembolso 100%'
+        elif days_to_event >= config.cancel_partial_refund_days:
+            rate = config.cancel_partial_refund_rate
+            label = f'Entre {config.cancel_partial_refund_days} y {config.cancel_full_refund_days} días — reembolso {int(rate*100)}%'
+        else:
+            rate = Decimal('0.00')
+            label = f'Menos de {config.cancel_partial_refund_days} días — sin reembolso'
+
+        return {
+            'days_to_event': days_to_event,
+            'refund_rate': str(rate),
+            'refund_amount': str((paid * rate).quantize(Decimal('0.01'))),
+            'window_label': label,
+            'paid': str(paid),
+        }
+
+    def is_high_season(self):
+        """Check si el evento cae en alta temporada (mes en high_season_months)."""
+        config = PlatformConfig.get_config()
+        months = config.high_season_months or []
+        if not self.event_date or not months:
+            return False
+        return self.event_date.month in months
+
+    def calculate_dynamic_surcharge(self):
+        """Sobreprecio Premium en alta temporada (sólo si talent_level == 'premium')."""
+        if self.talent.talent_level != 'premium':
+            return Decimal('0.00')
+        if not self.is_high_season():
+            return Decimal('0.00')
+        config = PlatformConfig.get_config()
+        base = self.quoted_price or self.precio_estimado or Decimal('0.00')
+        return (base * config.high_season_surcharge_rate).quantize(Decimal('0.01'))
+
+    @staticmethod
+    def generate_booking_code():
+        """Generate code like PUL-2026-05-A8F3."""
+        import secrets, string
+        from datetime import datetime
+        now = datetime.now()
+        rand = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+        return f"PUL-{now.year}-{now.month:02d}-{rand}"
+
+    def save(self, *args, **kwargs):
+        if not self.booking_code:
+            # Try up to 5 times in case of collision
+            for _ in range(5):
+                code = self.generate_booking_code()
+                if not Booking.objects.filter(booking_code=code).exists():
+                    self.booking_code = code
+                    break
+        super().save(*args, **kwargs)
 
     def calculate_service_fee(self):
         """
@@ -271,9 +366,10 @@ class Payment(models.Model):
     def calculate_commissions(self, platform_rate=None, partner_rate=None):
         """
         Calculate commission breakdown using configurable rates from PlatformConfig.
-        Uses talent level to determine the correct commission rate:
-          - Standard: 20% (higher commission, lower visibility)
-          - Premium:  15% (lower commission, higher visibility)
+        Comisión por tier:
+          - Standard: 22% (entrada)
+          - Pro:      15% (después de 10+ eventos + rating ≥4.5)
+          - Premium:  12% (por invitación de Pulsar)
         """
         from bookings.models import PlatformConfig
         config = PlatformConfig.get_config()
@@ -283,6 +379,8 @@ class Payment(models.Model):
             talent_level = self.booking.talent.talent_level
             if talent_level == 'premium':
                 platform_rate = config.premium_commission_rate
+            elif talent_level == 'pro':
+                platform_rate = config.pro_commission_rate
             else:
                 platform_rate = config.standard_commission_rate
 
@@ -327,6 +425,16 @@ class Message(models.Model):
         related_name='sent_messages'
     )
     content = models.TextField()
+    raw_content = models.TextField(
+        blank=True, help_text='Texto original antes del scanner anti-desintermediación'
+    )
+    flagged = models.BooleanField(
+        default=False, help_text='True si el scanner anti-disinter detectó intento de contacto fuera de plataforma'
+    )
+    flagged_categories = models.JSONField(
+        default=list, blank=True,
+        help_text='Categorías detectadas (phone, email, whatsapp, etc.)'
+    )
     file_url = models.URLField(blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -334,6 +442,18 @@ class Message(models.Model):
     class Meta:
         db_table = 'messages'
         ordering = ['created_at']
+
+    def save(self, *args, **kwargs):
+        # Run anti-disintermediation scanner on the content
+        if self.content and not self.pk:
+            from .anti_disinter import sanitize
+            clean, findings = sanitize(self.content)
+            if findings:
+                self.raw_content = self.content
+                self.content = clean
+                self.flagged = True
+                self.flagged_categories = list({cat for cat, _ in findings})
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Msg from {self.sender} on Booking #{self.booking_id}"
@@ -353,6 +473,9 @@ class Notification(models.Model):
         ('new_message', 'Nuevo Mensaje'),
         ('reminder', 'Recordatorio'),
         ('system', 'Sistema'),
+        ('tier_upgrade', 'Subida de Tier'),
+        ('premium_invitation', 'Invitación Premium'),
+        ('flagged_warning', 'Advertencia de Mensaje'),
     ]
 
     user = models.ForeignKey(
@@ -392,7 +515,38 @@ class Review(models.Model):
     rating = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
+    # Dimension scores (1-5) — opcionales para mantener compatibilidad con reseñas viejas
+    rating_punctuality = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text='Puntualidad'
+    )
+    rating_music_selection = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text='Selección musical'
+    )
+    rating_crowd_reading = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text='Lectura del público'
+    )
+    rating_technique = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text='Técnica'
+    )
+    rating_communication = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text='Comunicación pre-evento'
+    )
     comment = models.TextField()
+    # Respuesta pública del talento (sólo Premium puede responder según business rule).
+    response = models.TextField(
+        blank=True, help_text='Respuesta pública del talento a la reseña (sólo Premium)'
+    )
+    response_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -435,18 +589,53 @@ class PlatformConfig(models.Model):
         ('tiered', 'Escalonado por monto'),
     ]
 
-    # ── Commission rates ──
+    # ── Commission rates por tier ──
     standard_commission_rate = models.DecimalField(
         max_digits=5, decimal_places=4, default=Decimal('0.2000'),
-        help_text='Comisión para talentos Standard (ej: 0.20 = 20%)'
+        help_text='Comisión Standard (ej: 0.20 = 20%)'
+    )
+    pro_commission_rate = models.DecimalField(
+        max_digits=5, decimal_places=4, default=Decimal('0.1500'),
+        help_text='Comisión Pro (ej: 0.15 = 15%)'
     )
     premium_commission_rate = models.DecimalField(
-        max_digits=5, decimal_places=4, default=Decimal('0.1500'),
-        help_text='Comisión para talentos Premium (ej: 0.15 = 15%)'
+        max_digits=5, decimal_places=4, default=Decimal('0.1200'),
+        help_text='Comisión Premium (ej: 0.12 = 12%)'
     )
     partner_commission_rate = models.DecimalField(
         max_digits=5, decimal_places=4, default=Decimal('0.3000'),
         help_text='Comisión del partner sobre la comisión de la plataforma (ej: 0.30 = 30%)'
+    )
+
+    # ── Auto-promoción Standard → Pro ──
+    auto_promote_min_events = models.PositiveIntegerField(
+        default=10, help_text='Eventos mínimos completados para promoción auto a Pro'
+    )
+    auto_promote_min_rating = models.DecimalField(
+        max_digits=3, decimal_places=2, default=Decimal('4.50'),
+        help_text='Rating promedio mínimo para promoción a Pro'
+    )
+
+    # ── Cancellation policy windows (días antes del evento) ──
+    cancel_full_refund_days = models.PositiveIntegerField(
+        default=7, help_text='Días antes del evento con reembolso 100%'
+    )
+    cancel_partial_refund_days = models.PositiveIntegerField(
+        default=2, help_text='Días antes del evento con reembolso 50%'
+    )
+    cancel_partial_refund_rate = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('0.50'),
+        help_text='Porcentaje de reembolso en el rango parcial (ej: 0.50 = 50%)'
+    )
+
+    # ── Pricing dinámico Premium ──
+    high_season_months = models.JSONField(
+        default=list, blank=True,
+        help_text='Meses de alta temporada (1-12). Ej: [11, 12, 1] = nov-dic-ene'
+    )
+    high_season_surcharge_rate = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('0.15'),
+        help_text='Sobreprecio en alta temporada para Premium (ej: 0.15 = +15%)'
     )
 
     # ── Service fee ("Gestión y garantía") ──
@@ -500,3 +689,194 @@ class PlatformConfig(models.Model):
             f"Premium: {self.premium_commission_rate*100}% | "
             f"Partner: {self.partner_commission_rate*100}%"
         )
+
+
+class ClientCredit(models.Model):
+    """Crédito Pulsar acumulado por un cliente (ej: $50 al dejar una reseña)."""
+
+    REASON_CHOICES = [
+        ('review_reward', 'Recompensa por dejar reseña'),
+        ('referral', 'Referencia'),
+        ('refund', 'Reembolso'),
+        ('promo', 'Promoción'),
+        ('manual', 'Ajuste manual'),
+    ]
+
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='credits'
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES, default='manual')
+    booking = models.ForeignKey(
+        Booking, null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='credits_generated'
+    )
+    used = models.BooleanField(default=False, help_text='Si el crédito ya fue redimido')
+    used_on = models.ForeignKey(
+        Booking, null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='credits_redeemed'
+    )
+    note = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'client_credits'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"${self.amount} · {self.client} · {self.get_reason_display()}"
+
+
+class PremiumInvitation(models.Model):
+    """Invitación de Pulsar a un talento para subir a Premium. No es automática."""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('accepted', 'Aceptada'),
+        ('declined', 'Rechazada'),
+        ('expired', 'Expirada'),
+        ('revoked', 'Revocada'),
+    ]
+
+    talent = models.ForeignKey(
+        'talents.TalentProfile',
+        on_delete=models.CASCADE,
+        related_name='premium_invitations'
+    )
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='premium_invitations_sent',
+        help_text='Admin que envió la invitación'
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(
+        blank=True,
+        help_text='Mensaje opcional al talento explicando la invitación'
+    )
+    sent_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'premium_invitations'
+        ordering = ['-sent_at']
+
+    def __str__(self):
+        return f"{self.talent.stage_name} · {self.get_status_display()}"
+
+    def accept(self):
+        from django.utils import timezone as _tz
+        self.status = 'accepted'
+        self.responded_at = _tz.now()
+        self.talent.talent_level = 'premium'
+        self.talent.save(update_fields=['talent_level', 'updated_at'])
+        self.save()
+        # Notify
+        Notification.objects.create(
+            user=self.talent.user,
+            notification_type='tier_upgrade',
+            title='¡Eres Premium!',
+            message='Has aceptado la invitación a Pulsar Premium. Ya estás en el tier más alto.',
+            link='/talent-dashboard'
+        )
+
+    def decline(self):
+        from django.utils import timezone as _tz
+        self.status = 'declined'
+        self.responded_at = _tz.now()
+        self.save()
+
+
+class Dispute(models.Model):
+    """Reporte de problema en un booking. Retiene el pago al talento hasta resolución."""
+
+    REASON_CHOICES = [
+        ('no_show', 'No se presentó'),
+        ('late', 'Llegó muy tarde'),
+        ('poor_service', 'Servicio deficiente'),
+        ('different_artist', 'Vino un artista distinto'),
+        ('equipment_failure', 'Fallas con el equipo'),
+        ('other', 'Otro'),
+    ]
+
+    STATUS_CHOICES = [
+        ('open', 'Abierta'),
+        ('investigating', 'En revisión'),
+        ('resolved_refund', 'Resuelta — reembolso'),
+        ('resolved_paid', 'Resuelta — pago al talento'),
+        ('resolved_split', 'Resuelta — repartido'),
+        ('closed', 'Cerrada sin acción'),
+    ]
+
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='dispute')
+    reported_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='disputes_reported'
+    )
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    admin_notes = models.TextField(blank=True)
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='disputes_resolved'
+    )
+    refund_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text='Monto reembolsado al cliente'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'disputes'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Disputa booking #{self.booking_id} · {self.get_status_display()}"
+
+
+class AuditLog(models.Model):
+    """Trail de acciones administrativas. Quién hizo qué y cuándo."""
+
+    ACTION_CHOICES = [
+        ('talent_approve', 'Aprobar talento'),
+        ('talent_reject', 'Rechazar talento'),
+        ('booking_refund', 'Emitir reembolso'),
+        ('dispute_resolve', 'Resolver disputa'),
+        ('premium_invite', 'Invitar a Premium'),
+        ('user_ban', 'Banear usuario'),
+        ('user_warn', 'Advertir usuario (flagged)'),
+        ('config_change', 'Cambiar config plataforma'),
+        ('other', 'Otra'),
+    ]
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='audit_actions'
+    )
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    target_type = models.CharField(max_length=50, blank=True, help_text='Tipo del objeto afectado (booking, talent, user, etc.)')
+    target_id = models.PositiveIntegerField(null=True, blank=True)
+    details = models.JSONField(default=dict, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'audit_logs'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.actor} · {self.get_action_display()} · {self.created_at:%Y-%m-%d %H:%M}"

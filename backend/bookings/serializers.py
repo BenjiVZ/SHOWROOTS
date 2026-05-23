@@ -1,20 +1,62 @@
 from rest_framework import serializers
 from accounts.serializers import UserSerializer
 from talents.serializers import TalentListSerializer
-from .models import Booking, Payment, Message, Notification, Review, PlatformConfig
+from .models import (
+    Booking, Payment, Message, Notification, Review, PlatformConfig,
+    PremiumInvitation, ClientCredit,
+)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.get_full_name', read_only=True)
     client_avatar = serializers.ImageField(source='client.avatar', read_only=True)
+    event_type_display = serializers.CharField(source='booking.get_event_type_display', read_only=True)
+    event_guest_count = serializers.IntegerField(source='booking.guest_count', read_only=True)
+    event_date = serializers.DateField(source='booking.event_date', read_only=True)
+    is_verified = serializers.SerializerMethodField()
+
+    def get_is_verified(self, obj):
+        # Una reseña existe sólo si el booking fue completado → siempre verificada
+        return obj.booking.status == 'completada'
 
     class Meta:
         model = Review
         fields = [
             'id', 'booking', 'client', 'client_name', 'client_avatar',
-            'talent', 'rating', 'comment', 'created_at'
+            'talent', 'rating',
+            'rating_punctuality', 'rating_music_selection',
+            'rating_crowd_reading', 'rating_technique', 'rating_communication',
+            'comment', 'response', 'response_at', 'created_at',
+            'event_type_display', 'event_guest_count', 'event_date', 'is_verified',
         ]
-        read_only_fields = ['id', 'client', 'talent', 'created_at']
+        read_only_fields = ['id', 'client', 'talent', 'response_at', 'created_at']
+
+
+class PremiumInvitationSerializer(serializers.ModelSerializer):
+    talent_name = serializers.CharField(source='talent.stage_name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = PremiumInvitation
+        fields = [
+            'id', 'talent', 'talent_name', 'invited_by', 'status', 'status_display',
+            'message', 'sent_at', 'expires_at', 'responded_at',
+        ]
+        read_only_fields = ['id', 'invited_by', 'sent_at', 'responded_at']
+
+
+class FlaggedMessageSerializer(serializers.ModelSerializer):
+    """Para admin: ver mensajes que el scanner anti-disinter capturó."""
+    sender_name = serializers.CharField(source='sender.get_full_name', read_only=True)
+    booking_code = serializers.CharField(source='booking.booking_code', read_only=True)
+
+    class Meta:
+        model = Message
+        fields = [
+            'id', 'booking', 'booking_code', 'sender', 'sender_name',
+            'content', 'raw_content', 'flagged', 'flagged_categories',
+            'created_at',
+        ]
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -112,12 +154,12 @@ class BookingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'client_name', 'talent_name', 'talent_avatar',
+            'id', 'booking_code', 'client_name', 'talent_name', 'talent_avatar',
             'event_type', 'event_type_display', 'event_name',
             'event_date', 'event_time_start', 'event_time_end',
             'event_location', 'event_city', 'guest_count',
             'budget', 'precio_estimado', 'quoted_price', 'amount_paid',
-            'service_fee', 'total_client_cost', 'remaining_balance',
+            'service_fee', 'tax_amount', 'total_client_cost', 'remaining_balance',
             'booking_type', 'description',
             'additional_services', 'expires_at',
             'status', 'status_display',
@@ -147,7 +189,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'client', 'talent', 'partner', 'booking_type',
+            'id', 'booking_code', 'client', 'talent', 'partner', 'booking_type',
             'event_type', 'event_type_display',
             'event_name', 'event_date', 'event_time_start', 'event_time_end',
             'event_duration_hours', 'event_location', 'event_city',
@@ -155,7 +197,8 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'client_final_name', 'client_final_email', 'client_final_phone',
             'budget', 'precio_estimado', 'quoted_price',
             'deposit_percentage', 'amount_paid',
-            'service_fee', 'service_fee_name', 'total_client_cost', 'remaining_balance',
+            'service_fee', 'service_fee_name', 'tax_amount',
+            'total_client_cost', 'remaining_balance',
             'additional_services', 'additional_services_notes', 'expires_at',
             'status', 'status_display',
             'talent_notes', 'client_notes',

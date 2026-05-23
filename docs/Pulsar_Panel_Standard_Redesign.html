@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pulsar · Panel del DJ (Plan Standard) — Rediseño</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #000000;
+    --bg-soft: #0a0a0a;
+    --bg-card: #141414;
+    --bg-card-2: #1a1a1a;
+    --border: #222;
+    --border-light: #2a2a2a;
+    --lime: #c8f04a;
+    --lime-soft: rgba(200,240,74,0.1);
+    --lime-bg: #1a2010;
+    --cyan: #22d3ee;
+    --gold: #f59e0b;
+    --pink: #ec4899;
+    --orange: #fb923c;
+    --red: #ef4444;
+    --green: #10b981;
+    --white: #ffffff;
+    --text: #e5e5e5;
+    --text-muted: #888;
+    --text-dim: #555;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* HEADER NOTE */
+  .legend {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 1000;
+    max-width: 260px;
+  }
+  .legend h4 { color: var(--white); margin-bottom: 8px; font-size: 12px; }
+  .legend .row { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+  .legend .num { background: var(--lime); color: var(--bg); width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; flex-shrink: 0; }
+
+  /* NAV */
+  nav {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { font-weight: 900; font-size: 20px; color: var(--white); letter-spacing: 1px; }
+  .logo span { color: var(--text-muted); font-weight: 400; font-size: 11px; margin-left: 6px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-link { color: var(--text-muted); font-size: 14px; cursor: pointer; }
+  .nav-link.active { color: var(--lime); border: 1px solid var(--lime); padding: 6px 14px; border-radius: 999px; }
+  .nav-bell { position: relative; cursor: pointer; color: var(--text); }
+  .nav-account {
+    background: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--white);
+    padding: 4px 14px 4px 4px;
+    border-radius: 999px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-account .avatar {
+    width: 26px;
+    height: 26px;
+    background: var(--lime);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* MAIN */
+  main { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .head h1 { font-size: 36px; color: var(--white); font-weight: 700; margin-bottom: 6px; }
+  .head h1 span { color: var(--lime); }
+  .head p { color: var(--text-muted); font-size: 14px; }
+  .btn { background: var(--lime); color: var(--bg); border: none; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn.outline { background: transparent; border: 1px solid var(--border-light); color: var(--text); }
+
+  /* ============ FIX #4: PLAN PROGRESS BLOCK ============ */
+  .plan-progress {
+    background: linear-gradient(135deg, rgba(200,240,74,0.08), rgba(200,240,74,0.02));
+    border: 1px solid rgba(200,240,74,0.3);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+  }
+  .plan-progress .annotate-badge {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--lime);
+    color: var(--bg);
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .plan-badge-block {
+    text-align: center;
+    padding: 4px 12px;
+  }
+  .plan-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--bg-card);
+    border: 2px solid var(--lime);
+    color: var(--lime);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 auto 6px;
+  }
+  .plan-name { color: var(--white); font-weight: 800; font-size: 12px; letter-spacing: 2px; }
+  .plan-comm { color: var(--text-muted); font-size: 10px; }
+
+  .plan-body { padding: 0 12px; }
+  .plan-headline { color: var(--white); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .plan-headline span { color: var(--cyan); }
+  .plan-sub { color: var(--text-muted); font-size: 12px; margin-bottom: 10px; }
+  .plan-bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .plan-bar-fill { height: 100%; background: linear-gradient(90deg, var(--lime), var(--cyan)); width: 30%; }
+  .plan-criteria { display: flex; gap: 18px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; }
+  .plan-criteria .item { display: flex; align-items: center; gap: 5px; }
+  .plan-criteria .check { color: var(--green); }
+  .plan-criteria .pending { color: var(--text-dim); }
+
+  .plan-cta {
+    text-align: right;
+  }
+  .plan-cta a { color: var(--cyan); font-size: 12px; text-decoration: none; }
+  .plan-cta a:hover { color: var(--lime); }
+
+  /* ============ KPI CARDS WITH CONTEXTUAL TEXT (FIX #3) ============ */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .kpi-icon.orange { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .kpi-icon.red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .kpi-icon.green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .kpi-icon.gold { background: rgba(245,158,11,0.15); color: var(--gold); }
+  .kpi-info { flex: 1; min-width: 0; }
+  .kpi-value {
+    color: var(--white);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .kpi-label { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+  .kpi-hint {
+    color: var(--lime);
+    font-size: 10px;
+    margin-top: 6px;
+    background: rgba(200,240,74,0.06);
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .kpi-hint.muted {
+    color: var(--text-muted);
+    background: rgba(140,140,140,0.06);
+  }
+
+  /* TABS WITH LOCK INDICATORS (FIX #5) */
+  .tabs {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 6px;
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .tab.active {
+    background: var(--lime-soft);
+    color: var(--lime);
+    border: 1px solid rgba(200,240,74,0.3);
+  }
+  .tab.locked {
+    color: var(--text-dim);
+    position: relative;
+  }
+  .tab.locked .lock {
+    background: rgba(34,211,238,0.15);
+    color: var(--cyan);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    letter-spacing: 0.5px;
+  }
+  .tab .badge {
+    background: var(--red);
+    color: var(--white);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-left: 2px;
+  }
+  .tab small {
+    color: var(--text-dim);
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .tab.active small { color: var(--lime); opacity: 0.8; }
+
+  /* ============ TAB CONTENT ============ */
+  .tab-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    min-height: 360px;
+  }
+
+  /* ============ FIX #3: BETTER EMPTY STATE ============ */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    position: relative;
+  }
+  .empty-state .annotate-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--lime);
+    color: var(--bg);
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(16,185,129,0.1);
+    color: var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 16px;
+  }
+  .empty-state h3 {
+    color: var(--white);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .empty-state .desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 460px;
+    margin: 0 auto 20px;
+    line-height: 1.6;
+  }
+  .empty-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* CHECKLIST OF FIRST STEPS */
+  .first-steps {
+    max-width: 480px;
+    margin: 28px auto 0;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: left;
+  }
+  .first-steps h4 {
+    color: var(--white);
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .first-steps h4 span {
+    background: var(--lime);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 13px;
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border-light);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .step-check.done {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--bg);
+  }
+  .step-check.todo { color: var(--text-dim); }
+  .step-text { color: var(--text); flex: 1; }
+  .step-item.done .step-text { color: var(--text-muted); text-decoration: line-through; }
+  .step-action { color: var(--cyan); font-size: 11px; cursor: pointer; }
+  .step-action:hover { color: var(--lime); }
+
+  /* MODAL PREVIEW (FOR LOCKED TAB DEMO) */
+  .locked-preview {
+    background: var(--bg-soft);
+    border: 2px dashed var(--cyan);
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .locked-preview .icon { font-size: 40px; color: var(--cyan); margin-bottom: 10px; }
+  .locked-preview h3 { color: var(--white); font-size: 18px; margin-bottom: 8px; }
+  .locked-preview p { color: var(--text-muted); font-size: 13px; max-width: 440px; margin: 0 auto 14px; }
+
+  /* ANNOTATION INLINE */
+  .annotate {
+    position: relative;
+  }
+  .annotate-tag {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background: var(--lime);
+    color: var(--bg);
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    z-index: 5;
+  }
+
+  /* RED FIX BANNER */
+  .fix-banner {
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-size: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .fix-banner .icon { color: var(--green); font-size: 18px; }
+  .fix-banner strong { color: var(--white); }
+
+</style>
+</head>
+<body>
+
+<div class="legend">
+  <h4>5 cambios aplicados</h4>
+  <div class="row"><span class="num">1</span> Mensaje de video reescrito (no aparece al cargar)</div>
+  <div class="row"><span class="num">2</span> "Paquetes" → "Mis Tarifas"</div>
+  <div class="row"><span class="num">3</span> Empty states con CTA y motivación</div>
+  <div class="row"><span class="num">4</span> Bloque "Tu Plan" arriba</div>
+  <div class="row"><span class="num">5</span> FAQ con candado (no se oculta)</div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-dim);">Plan: <strong style="color:var(--lime);">Standard</strong> · Comisión 22%</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">PULSAR <span>by ShowRoots</span></div>
+  <div class="nav-links">
+    <span class="nav-link">🔍 Talentos</span>
+    <span class="nav-link">🏠 Venues</span>
+    <span class="nav-link active">📋 Dashboard</span>
+    <span class="nav-bell">🔔</span>
+    <span class="nav-account"><span class="avatar">R</span> Ruben</span>
+  </div>
+</nav>
+
+<main>
+
+  <!-- FIX BANNER -->
+  <div class="fix-banner">
+    <span class="icon">✓</span>
+    <span><strong>Tu perfil está publicado.</strong> Ya apareces en búsquedas. Las primeras solicitudes pueden tardar unos días en llegar.</span>
+  </div>
+
+  <!-- HEAD -->
+  <div class="head">
+    <div>
+      <h1>Panel de <span>Talento</span></h1>
+      <p>Gestiona tu perfil, reservas y disponibilidad</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn outline">👁 Ver mi perfil público</button>
+      <button class="btn">+ Bloquear fecha</button>
+    </div>
+  </div>
+
+  <!-- ========== FIX #4: BLOQUE TU PLAN ========== -->
+  <div class="plan-progress annotate">
+    <span class="annotate-badge">NUEVO · FIX #4</span>
+
+    <div class="plan-badge-block">
+      <div class="plan-icon">S</div>
+      <div class="plan-name">STANDARD</div>
+      <div class="plan-comm">Comisión 22%</div>
+    </div>
+
+    <div class="plan-body">
+      <div class="plan-headline">Tu camino para llegar al plan <span>PRO</span></div>
+      <div class="plan-sub">Con plan Pro tu comisión baja a 15%, recibes prioridad en búsquedas y desbloqueas video, FAQ y más fotos.</div>
+      <div class="plan-bar">
+        <div class="plan-bar-fill"></div>
+      </div>
+      <div class="plan-criteria">
+        <div class="item">
+          <span class="pending">○</span>
+          <span>0/10 eventos completados</span>
+        </div>
+        <div class="item">
+          <span class="check">✓</span>
+          <span>Perfil 70% completo</span>
+        </div>
+        <div class="item">
+          <span class="pending">○</span>
+          <span>Rating mínimo 4.5</span>
+        </div>
+        <div class="item">
+          <span class="pending">○</span>
+          <span>0 cancelaciones en 6 meses</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="plan-cta">
+      <a href="#">Ver requisitos completos →</a>
+    </div>
+  </div>
+
+  <!-- ========== KPIs CON TEXTO CONTEXTUAL (FIX #3 parcial) ========== -->
+  <div class="kpi-grid annotate">
+    <span class="annotate-tag">FIX #3</span>
+
+    <div class="kpi-card">
+      <div class="kpi-icon orange">⚡</div>
+      <div class="kpi-info">
+        <div class="kpi-value">0</div>
+        <div class="kpi-label">Solicitudes pendientes</div>
+        <span class="kpi-hint muted">Llegan cuando los clientes te encuentren</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon red">📅</div>
+      <div class="kpi-info">
+        <div class="kpi-value">0</div>
+        <div class="kpi-label">Reservas activas</div>
+        <span class="kpi-hint muted">Tu perfil acaba de salir al aire</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green">✓</div>
+      <div class="kpi-info">
+        <div class="kpi-value">0</div>
+        <div class="kpi-label">Eventos completados</div>
+        <span class="kpi-hint">Aplica al Founding DJ Program</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon gold">★</div>
+      <div class="kpi-info">
+        <div class="kpi-value">—</div>
+        <div class="kpi-label">Rating · sin reseñas aún</div>
+        <span class="kpi-hint muted">Tu primer cliente la genera</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TABS CON LOCK (FIX #5) Y RENAME (FIX #2) ========== -->
+  <div class="tabs annotate">
+    <span class="annotate-tag">FIX #2 + #5</span>
+    <button class="tab active">⚡ Solicitudes</button>
+    <button class="tab">📅 Reservas</button>
+    <button class="tab">💰 Ingresos</button>
+    <button class="tab">🗓 Calendario</button>
+    <button class="tab">🖼 Galería <small>0/3</small></button>
+    <button class="tab">💲 Mis Tarifas</button>
+    <button class="tab locked">❓ FAQ <span class="lock">PRO 🔒</span></button>
+    <button class="tab">👤 Mi Perfil <small>70%</small></button>
+  </div>
+
+  <!-- ========== TAB CONTENT: EMPTY STATE MEJORADO ========== -->
+  <div class="tab-content annotate">
+    <span class="annotate-tag">FIX #3</span>
+
+    <div class="empty-state">
+      <div class="empty-icon">🎉</div>
+      <h3>Tu perfil está publicado</h3>
+      <p class="desc">
+        Las solicitudes empezarán a llegar cuando los clientes te encuentren en búsquedas.
+        Mientras tanto, completa estos pasos para aparecer más arriba en los resultados y aumentar tus chances de booking.
+      </p>
+
+      <div class="empty-actions">
+        <button class="btn">Completar mi perfil</button>
+        <button class="btn outline">Ver mi perfil público</button>
+      </div>
+
+      <!-- CHECKLIST -->
+      <div class="first-steps">
+        <h4>Tus primeros pasos <span>3 de 7</span></h4>
+
+        <div class="step-item done">
+          <div class="step-check done">✓</div>
+          <div class="step-text">Foto de perfil</div>
+        </div>
+        <div class="step-item done">
+          <div class="step-check done">✓</div>
+          <div class="step-text">Géneros musicales (3)</div>
+        </div>
+        <div class="step-item done">
+          <div class="step-check done">✓</div>
+          <div class="step-text">Tarifa base configurada</div>
+        </div>
+        <div class="step-item">
+          <div class="step-check todo">○</div>
+          <div class="step-text">Sube tu primer mix <small style="color:var(--text-dim);">(0/2)</small></div>
+          <div class="step-action">Subir →</div>
+        </div>
+        <div class="step-item">
+          <div class="step-check todo">○</div>
+          <div class="step-text">Escribe tu bio <small style="color:var(--text-dim);">(50 caracteres mínimo)</small></div>
+          <div class="step-action">Escribir →</div>
+        </div>
+        <div class="step-item">
+          <div class="step-check todo">○</div>
+          <div class="step-text">Sube 3 fotos a la galería <small style="color:var(--text-dim);">(0/3)</small></div>
+          <div class="step-action">Subir →</div>
+        </div>
+        <div class="step-item">
+          <div class="step-check todo">○</div>
+          <div class="step-text">Configura disponibilidad del mes</div>
+          <div class="step-action">Configurar →</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; color:var(--text-dim); font-size:11px;">
+        💡 Los DJs con perfil completo reciben <strong style="color:var(--lime);">3x más solicitudes</strong> que los incompletos.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PREVIEW DE OTRAS TABS ========== -->
+  <div style="margin-top:48px; padding-bottom:12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+    <div style="background:var(--gold); color:var(--bg); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;">📌</div>
+    <div>
+      <div style="color:var(--white); font-size:18px; font-weight:700;">Preview de tabs adicionales</div>
+      <div style="color:var(--text-muted); font-size:12px;">Lo que verá el DJ Standard al hacer click en cada tab.</div>
+    </div>
+  </div>
+
+  <!-- TAB: MIS TARIFAS (FIX #2 detalle) -->
+  <div style="margin-top:24px;">
+    <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Tab "Mis Tarifas" <span style="color:var(--lime);">(antes "Paquetes")</span></div>
+
+    <div class="tab-content annotate">
+      <span class="annotate-tag">FIX #2</span>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+        <div>
+          <h3 style="color:var(--white); font-size:18px; margin-bottom:4px;">Mis Tarifas</h3>
+          <p style="color:var(--text-muted); font-size:13px;">Define cuánto cobras por evento. Estas son las tarifas que verá el cliente cuando te contrate.</p>
+        </div>
+        <button class="btn">+ Nueva tarifa</button>
+      </div>
+
+      <!-- Cards de tarifas -->
+      <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; display:grid; grid-template-columns: 60px 1fr auto; gap:14px; align-items:center;">
+        <div style="width:60px; height:60px; background:var(--lime-bg); color:var(--lime); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px;">⏱</div>
+        <div>
+          <div style="color:var(--white); font-weight:600; font-size:14px;">Tarifa por hora</div>
+          <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">Mínimo 3 horas · Para eventos cortos o flexibles</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:var(--lime); font-weight:800; font-size:20px;">$100</div>
+          <div style="color:var(--text-muted); font-size:11px;">por hora</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; display:grid; grid-template-columns: 60px 1fr auto; gap:14px; align-items:center;">
+        <div style="width:60px; height:60px; background:rgba(245,158,11,0.15); color:var(--gold); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px;">💍</div>
+        <div>
+          <div style="color:var(--white); font-weight:600; font-size:14px;">Tarifa Boda</div>
+          <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">4 horas · Para bodas y eventos formales</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:var(--lime); font-weight:800; font-size:20px;">$600</div>
+          <div style="color:var(--text-muted); font-size:11px;">por evento</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(34,211,238,0.05); border:1px solid rgba(34,211,238,0.25); border-radius:10px; padding:14px; margin-top:14px; font-size:12px; color:var(--text);">
+        <div style="color:var(--cyan); font-weight:700; margin-bottom:4px;">💡 Importante: estas son tarifas de tu performance</div>
+        <div style="color:var(--text-muted);">
+          Las tarifas que ves aquí son solo del DJ (tu show). El sonido, luces y demás producción se cotizan aparte.
+          <br><br>
+          ¿Tienes equipo propio de sonido? <a style="color:var(--cyan); font-weight:600;">Activa tu rol Partner →</a> para ofrecer también paquetes de producción y ganar más por evento.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: FAQ LOCKED -->
+  <div style="margin-top:32px;">
+    <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Tab "FAQ" al hacer click <span style="color:var(--cyan);">(plan Standard no incluye FAQ)</span></div>
+
+    <div class="tab-content annotate">
+      <span class="annotate-tag" style="background:var(--cyan); color:var(--bg);">FIX #5</span>
+
+      <div class="locked-preview">
+        <div class="icon">🔒</div>
+        <h3>FAQ está disponible en plan PRO</h3>
+        <p>Responde preguntas comunes de tus clientes ("¿Tomas requests?", "¿Cuánto tiempo de setup necesitas?") en tu perfil público. Descarga preguntas repetidas a tu chat.</p>
+
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px; max-width:440px; margin:0 auto; text-align:left;">
+          <div style="color:var(--cyan); font-size:11px; font-weight:700; margin-bottom:8px;">PARA DESBLOQUEAR FAQ</div>
+          <div style="font-size:12px; color:var(--text-muted); line-height:1.7;">
+            ✓ Completa <strong style="color:var(--white);">10 eventos</strong> (tienes 0)<br>
+            ✓ Mantén rating ≥ 4.5 (sin reseñas aún)<br>
+            ✓ Cero cancelaciones en 6 meses
+          </div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <button class="btn outline">Ver requisitos del plan Pro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: GALERÍA con límite -->
+  <div style="margin-top:32px;">
+    <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Tab "Galería" — límite de 3 fotos en plan Standard</div>
+
+    <div class="tab-content">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+        <div>
+          <h3 style="color:var(--white); font-size:18px; margin-bottom:4px;">Galería · 0 de 3 fotos</h3>
+          <p style="color:var(--text-muted); font-size:13px;">Sube fotos profesionales de tus eventos. Las galerías completas reciben más solicitudes.</p>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+        <div style="aspect-ratio:1; background:var(--bg-soft); border:2px dashed var(--border-light); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted); cursor:pointer;">
+          <div style="font-size:30px; margin-bottom:6px;">📸</div>
+          <div style="font-size:12px;">Subir foto 1</div>
+        </div>
+        <div style="aspect-ratio:1; background:var(--bg-soft); border:2px dashed var(--border-light); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted); cursor:pointer;">
+          <div style="font-size:30px; margin-bottom:6px;">📸</div>
+          <div style="font-size:12px;">Subir foto 2</div>
+        </div>
+        <div style="aspect-ratio:1; background:var(--bg-soft); border:2px dashed var(--border-light); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted); cursor:pointer;">
+          <div style="font-size:30px; margin-bottom:6px;">📸</div>
+          <div style="font-size:12px;">Subir foto 3</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(34,211,238,0.05); border:1px solid rgba(34,211,238,0.25); border-radius:10px; padding:14px; margin-top:16px; display:flex; align-items:center; gap:12px;">
+        <div style="color:var(--cyan); font-size:20px;">🖼</div>
+        <div style="flex:1; font-size:12px; color:var(--text);">
+          Con plan <strong style="color:var(--cyan);">PRO</strong> puedes subir hasta 10 fotos.
+          Con <strong style="color:var(--gold);">PREMIUM</strong>, ilimitado + sesión de fotos profesional incluida.
+        </div>
+        <button class="btn outline" style="font-size:11px;">Ver planes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: MI PERFIL - aquí es donde aparecía el alert -->
+  <div style="margin-top:32px;">
+    <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Tab "Mi Perfil" — donde antes aparecía el alert de video <span style="color:var(--lime);">(FIX #1)</span></div>
+
+    <div class="tab-content annotate">
+      <span class="annotate-tag">FIX #1</span>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+        <div>
+          <h3 style="color:var(--white); font-size:18px; margin-bottom:4px;">Mi Perfil · 70% completo</h3>
+          <p style="color:var(--text-muted); font-size:13px;">Mientras más completo tu perfil, más alto apareces en búsquedas.</p>
+        </div>
+      </div>
+
+      <!-- Lista de campos editables -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+
+        <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; background:rgba(16,185,129,0.15); color:var(--green); border-radius:8px; display:flex; align-items:center; justify-content:center;">✓</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px; font-weight:600;">Foto de perfil</div>
+            <div style="color:var(--text-muted); font-size:11px;">Carlos_DJ.jpg subida</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; background:rgba(16,185,129,0.15); color:var(--green); border-radius:8px; display:flex; align-items:center; justify-content:center;">✓</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px; font-weight:600;">Géneros musicales</div>
+            <div style="color:var(--text-muted); font-size:11px;">3 géneros configurados</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; background:rgba(251,146,60,0.15); color:var(--orange); border-radius:8px; display:flex; align-items:center; justify-content:center;">!</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px; font-weight:600;">Mixes (0/2)</div>
+            <div style="color:var(--text-muted); font-size:11px;">Sin mixes subidos</div>
+          </div>
+          <a style="color:var(--cyan); font-size:11px;">Subir →</a>
+        </div>
+
+        <!-- AQUÍ EL FIX DEL VIDEO -->
+        <div style="background:var(--bg-soft); border:1px solid rgba(34,211,238,0.3); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; background:rgba(34,211,238,0.15); color:var(--cyan); border-radius:8px; display:flex; align-items:center; justify-content:center;">🔒</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px; font-weight:600;">Video en vivo</div>
+            <div style="color:var(--cyan); font-size:11px;">Disponible en plan Pro · Muestra tu show a clientes</div>
+          </div>
+          <a style="color:var(--cyan); font-size:11px;">Ver Pro →</a>
+        </div>
+
+        <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; background:rgba(251,146,60,0.15); color:var(--orange); border-radius:8px; display:flex; align-items:center; justify-content:center;">!</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px; font-weight:600;">Bio profesional</div>
+            <div style="color:var(--text-muted); font-size:11px;">Vacía · 200 caracteres máx</div>
+          </div>
+          <a style="color:var(--cyan); font-size:11px;">Escribir →</a>
+        </div>
+
+        <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; background:rgba(16,185,129,0.15); color:var(--green); border-radius:8px; display:flex; align-items:center; justify-content:center;">✓</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px; font-weight:600;">Tarifa base</div>
+            <div style="color:var(--text-muted); font-size:11px;">$100/hora configurado</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px 14px; margin-top:16px; font-size:12px; color:var(--text); display:flex; align-items:center; gap:10px;">
+        <span style="color:var(--gold); font-size:18px;">💡</span>
+        <span><strong style="color:var(--white);">Tip:</strong> Los DJs con bio escrita y al menos 1 mix subido reciben <strong style="color:var(--lime);">3x más solicitudes</strong>.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER NOTE -->
+  <div style="background:var(--bg-card); border:1px dashed var(--border-light); border-radius:16px; padding:24px; margin:40px 0 20px; color:var(--text-muted); font-size:13px;">
+    <h3 style="color:var(--white); margin-bottom:12px;">📋 Resumen de los 5 fixes (para tu primo)</h3>
+    <ol style="padding-left:20px; line-height:2;">
+      <li>
+        <strong style="color:var(--lime);">Mensaje de video reescrito.</strong> El "Alcanzaste el límite (0/0)" desaparece del top. Solo aparece dentro de "Mi Perfil" como un campo bloqueado con copy positivo: "Disponible en plan Pro · Muestra tu show a clientes".
+      </li>
+      <li>
+        <strong style="color:var(--lime);">"Paquetes" → "Mis Tarifas".</strong> Renombrar la tab. Adentro, mostrar tarifas de performance (por hora, por boda, etc.) NO packs de producción. Agregar mensaje sobre rol Partner para los DJs con equipo.
+      </li>
+      <li>
+        <strong style="color:var(--lime);">Empty states con CTA.</strong> El estado vacío de Solicitudes deja de ser un heartbeat plano. Ahora tiene checkmark grande, copy motivacional, botones de acción, y checklist de "Tus primeros pasos" (3/7 completados).
+      </li>
+      <li>
+        <strong style="color:var(--lime);">Bloque "Tu Plan" arriba de los KPIs.</strong> Muestra plan actual (Standard), comisión, barra de progreso hacia el plan Pro, y 4 criterios para subir. Esto activa el sistema de planes que de otra forma es invisible.
+      </li>
+      <li>
+        <strong style="color:var(--lime);">FAQ con candado, no oculto.</strong> El DJ Standard ve la tab FAQ pero con un indicador "PRO 🔒". Al hacer click, ve preview de la feature y los requisitos para desbloquearla. Mismo patrón aplica al video.
+      </li>
+    </ol>
+    <p style="margin-top:16px; color:var(--text);">
+      <strong style="color:var(--gold);">Notas importantes:</strong>
+    </p>
+    <ul style="padding-left:20px; line-height:1.8; margin-top:6px;">
+      <li>El idioma del UI está en español neutro latinoamericano (sin formas argentinas tipo "podés", "tenés", "vení").</li>
+      <li>La palabra "Tier" no aparece en ningún lado. Se usa "Plan" en su lugar.</li>
+      <li>El esqueleto del dashboard actual (header + KPIs + tabs + tab content) se respeta. Solo se mejora lo que está ahí.</li>
+      <li>Las anotaciones rojas/verdes ("FIX #X") en el mockup son guía para el dev. NO van en producción.</li>
+    </ul>
+  </div>
+
+</main>
+
+</body>
+</html>

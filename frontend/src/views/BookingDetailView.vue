@@ -17,6 +17,7 @@
           <div class="detail-header glass">
             <div class="header-top">
               <div>
+                <code v-if="booking.booking_code" class="header-code">{{ booking.booking_code }}</code>
                 <h1>{{ booking.event_name || booking.event_type_display }}</h1>
                 <p class="event-date">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -25,12 +26,27 @@
               </div>
               <span class="status-badge" :class="statusClass(booking.status)">{{ statusLabel(booking.status) }}</span>
             </div>
+
+            <!-- Countdown banner (solo si confirmada y evento futuro) -->
+            <div v-if="countdown" class="countdown-banner">
+              <span class="cd-label">Faltan</span>
+              <div class="cd-units">
+                <div class="cd-unit"><strong>{{ countdown.days }}</strong><span>días</span></div>
+                <div class="cd-unit"><strong>{{ countdown.hours }}</strong><span>horas</span></div>
+                <div class="cd-unit"><strong>{{ countdown.minutes }}</strong><span>min</span></div>
+              </div>
+              <span class="cd-escrow">🛡 ${{ Number(booking.amount_paid || 0).toFixed(2) }} en custodia</span>
+            </div>
           </div>
 
           <!-- Event Details -->
           <div class="info-card glass">
             <h3>Detalles del Evento</h3>
             <div class="info-grid">
+              <div v-if="booking.event_type_display || booking.event_type" class="info-item">
+                <span class="info-label">Tipo de evento</span>
+                <span>{{ booking.event_type_display || booking.event_type }}</span>
+              </div>
               <div class="info-item">
                 <span class="info-label">Ubicación</span>
                 <span>{{ booking.event_location }}</span>
@@ -47,10 +63,52 @@
                 <span class="info-label">Duración</span>
                 <span>{{ booking.event_duration_hours }} horas</span>
               </div>
+              <div v-if="booking.event_indoor !== null && booking.event_indoor !== undefined" class="info-item">
+                <span class="info-label">Espacio</span>
+                <span>{{ booking.event_indoor ? '🏠 Interior' : '🌤 Exterior' }}</span>
+              </div>
+              <div v-if="booking.genre_preference" class="info-item">
+                <span class="info-label">Género / ambiente</span>
+                <span>{{ booking.genre_preference }}</span>
+              </div>
+              <div v-if="booking.budget" class="info-item">
+                <span class="info-label">Presupuesto</span>
+                <span>${{ booking.budget }}</span>
+              </div>
             </div>
             <div v-if="booking.description" class="info-description">
               <span class="info-label">Descripción</span>
               <p>{{ booking.description }}</p>
+            </div>
+            <div v-if="booking.client_notes" class="info-description">
+              <span class="info-label">Mensaje del cliente</span>
+              <p>{{ booking.client_notes }}</p>
+            </div>
+            <div v-if="booking.talent_notes" class="info-description">
+              <span class="info-label">Notas del talento</span>
+              <p>{{ booking.talent_notes }}</p>
+            </div>
+          </div>
+
+          <!-- Cliente final (sólo si reserva por Partner) -->
+          <div v-if="booking.booking_type === 'partner' && (booking.client_final_name || booking.client_final_email || booking.client_final_phone)" class="info-card glass">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              Cliente Final
+            </h3>
+            <div class="info-grid">
+              <div v-if="booking.client_final_name" class="info-item">
+                <span class="info-label">Nombre</span>
+                <span>{{ booking.client_final_name }}</span>
+              </div>
+              <div v-if="booking.client_final_email" class="info-item">
+                <span class="info-label">Email</span>
+                <span>{{ booking.client_final_email }}</span>
+              </div>
+              <div v-if="booking.client_final_phone" class="info-item">
+                <span class="info-label">Teléfono</span>
+                <span>{{ booking.client_final_phone }}</span>
+              </div>
             </div>
           </div>
 
@@ -106,39 +164,35 @@
           </div>
 
           <!-- Client Actions (pay) -->
-          <div v-if="isClientView && booking.status === 'pendiente_pago'" class="action-card glass">
-            <h3>Confirmar Reserva</h3>
-            <p class="action-desc">El talento aceptó tu solicitud. Realiza el pago para confirmar.</p>
-            <div class="price-final">
-              <span>Total a pagar</span>
-              <span class="price-big">${{ booking.quoted_price || booking.precio_estimado }}</span>
+          <div v-if="isClientView && booking.status === 'pendiente_pago'" class="action-card glass action-pay-card">
+            <div class="pay-cta-row">
+              <div>
+                <h3>¡Tu propuesta fue aceptada!</h3>
+                <p class="action-desc">Completa el pago para confirmar tu reserva. Tu dinero queda en custodia hasta el evento.</p>
+              </div>
+              <div class="pay-price-block">
+                <span>Total</span>
+                <strong>${{ Number(booking.quoted_price || booking.precio_estimado || 0).toFixed(2) }}</strong>
+              </div>
             </div>
             <div v-if="booking.talent_notes" class="talent-notes-box">
               <strong>Notas del talento:</strong>
               <p>{{ booking.talent_notes }}</p>
             </div>
-            <div class="action-buttons">
-              <button @click="processPayment('full')" class="btn btn-primary" :disabled="actionLoading">
-                Pagar Total
-              </button>
-              <button @click="processPayment('deposit')" class="btn btn-ghost" :disabled="actionLoading">
-                Pagar 50% Depósito
-              </button>
-            </div>
+            <router-link :to="`/dashboard/bookings/${booking.id}/pay`" class="btn btn-cta btn-lg btn-go-pay">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Ir a pagar con Pulsar Escrow
+            </router-link>
           </div>
 
-          <!-- Review (if completed) -->
-          <div v-if="isClientView && booking.status === 'completada' && !booking.review" class="action-card glass">
-            <h3>Deja tu Reseña</h3>
-            <div class="review-form">
-              <div class="star-rating">
-                <button v-for="s in 5" :key="s" @click="reviewRating = s" class="star-btn" :class="{ active: s <= reviewRating }">★</button>
-              </div>
-              <textarea v-model="reviewComment" class="form-input" rows="3" placeholder="¿Cómo fue tu experiencia?"></textarea>
-              <button @click="submitReview" class="btn btn-primary" :disabled="actionLoading || !reviewRating">
-                Enviar Reseña
-              </button>
-            </div>
+          <!-- Review (if completed) - usa componente completo con 5 dimensiones + crédito -->
+          <div v-if="isClientView && booking.status === 'completada' && !booking.review">
+            <ReviewForm
+              :booking-id="booking.id"
+              :talent-name="booking.talent?.stage_name || 'el talento'"
+              @submitted="onReviewSubmitted"
+              @cancel="() => {}"
+            />
           </div>
 
           <!-- Admin/Talent: Mark as completed -->
@@ -168,21 +222,34 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               Chat
             </h3>
+            <div class="chat-disclaimer">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Toda comunicación queda dentro de Pulsar. No compartas teléfonos, emails ni redes.
+            </div>
             <div class="chat-messages" ref="chatContainer">
               <div v-if="!messages.length" class="chat-empty">
                 <p>Aún no hay mensajes. Inicia la conversación.</p>
               </div>
-              <div v-for="msg in messages" :key="msg.id" class="chat-msg" :class="{ mine: msg.sender === auth.user?.id }">
+              <div v-for="msg in messages" :key="msg.id" class="chat-msg" :class="{ mine: msg.sender === auth.user?.id, flagged: msg.flagged }">
                 <div class="msg-bubble">
                   <span class="msg-sender">{{ msg.sender === auth.user?.id ? 'Tú' : msg.sender_name }}</span>
                   <p>{{ msg.content }}</p>
+                  <span v-if="msg.flagged" class="msg-flagged-tag">⚠ Mensaje filtrado por anti-desintermediación</span>
                   <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
                 </div>
               </div>
             </div>
+            <div v-if="chatViolationMsg" class="anti-disinter-warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ chatViolationMsg }}
+            </div>
             <div class="chat-input-row">
-              <input v-model="newMessage" @keyup.enter="sendMessage" type="text" class="form-input" placeholder="Escribe un mensaje...">
-              <button @click="sendMessage" class="btn btn-primary btn-send" :disabled="!newMessage.trim()">
+              <input v-model="newMessage" @keyup.enter="sendMessage" type="text"
+                class="form-input"
+                :class="{ 'form-input-warn': chatViolations.length }"
+                placeholder="Escribe un mensaje..."
+              >
+              <button @click="sendMessage" class="btn btn-primary btn-send" :disabled="!newMessage.trim() || chatViolations.length">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </div>
@@ -244,23 +311,160 @@
             </div>
           </div>
 
-          <!-- Cancel -->
-          <div v-if="canCancel" class="sidebar-card glass">
-            <button @click="updateStatus('cancelada')" class="btn btn-ghost btn-danger btn-full" :disabled="actionLoading">
+          <!-- Cancel / Modify / Report / Download contract -->
+          <div v-if="canCancel || canModify || canReport || canDownloadContract" class="sidebar-card glass actions-sidebar-card">
+            <button v-if="canDownloadContract" @click="downloadContract" class="btn btn-ghost btn-full btn-action">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+              Descargar contrato
+            </button>
+            <button v-if="canModify" @click="modifyModal.open = true" class="btn btn-ghost btn-full btn-action">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modificar fecha/hora
+            </button>
+            <button v-if="canReport" @click="reportModal.open = true" class="btn btn-ghost btn-full btn-action btn-report">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Reportar problema
+            </button>
+            <button v-if="canCancel" @click="openCancelModal" class="btn btn-ghost btn-danger btn-full" :disabled="actionLoading">
               Cancelar Reserva
             </button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Cancellation Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="cancelModal.open" class="cancel-modal-backdrop" @click.self="cancelModal.open = false">
+          <div class="cancel-modal glass">
+            <h3>Cancelar reserva</h3>
+            <p class="cancel-policy-label">Política de cancelación de Pulsar</p>
+
+            <div v-if="cancelModal.loading" class="cancel-loading">Calculando reembolso...</div>
+
+            <div v-else-if="cancelModal.preview" class="cancel-preview">
+              <div class="cancel-window-card">
+                <strong>{{ cancelModal.preview.window_label }}</strong>
+                <p class="cancel-days">Faltan {{ cancelModal.preview.days_to_event }} días al evento</p>
+              </div>
+
+              <div class="cancel-amounts">
+                <div class="cancel-row">
+                  <span>Pagado a la fecha</span>
+                  <span>${{ Number(cancelModal.preview.paid).toFixed(2) }}</span>
+                </div>
+                <div class="cancel-row total">
+                  <span>Te devolvemos</span>
+                  <strong class="cancel-refund">${{ Number(cancelModal.preview.refund_amount).toFixed(2) }}</strong>
+                </div>
+                <p class="cancel-rate-note">Tasa de reembolso: {{ Math.round(Number(cancelModal.preview.refund_rate) * 100) }}%</p>
+              </div>
+
+              <p class="cancel-warning">
+                ⚠ Esta acción no se puede deshacer. El talento será notificado y la fecha quedará disponible.
+              </p>
+            </div>
+
+            <div v-if="cancelModal.error" class="cancel-error">{{ cancelModal.error }}</div>
+
+            <div class="cancel-actions">
+              <button class="btn btn-ghost btn-sm" @click="cancelModal.open = false">No cancelar</button>
+              <button class="btn btn-danger btn-sm" :disabled="cancelModal.loading || actionLoading" @click="confirmCancel">
+                Confirmar cancelación
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Modify Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="modifyModal.open" class="cancel-modal-backdrop" @click.self="modifyModal.open = false">
+          <div class="cancel-modal glass">
+            <h3>Modificar fecha del evento</h3>
+            <p class="cancel-policy-label">Cambia fecha u hora · el talento debe re-confirmar</p>
+            <div class="modify-grid">
+              <div class="form-group">
+                <label class="form-label">Nueva fecha</label>
+                <input v-model="modifyModal.event_date" type="date" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hora inicio</label>
+                <input v-model="modifyModal.event_time_start" type="time" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hora fin</label>
+                <input v-model="modifyModal.event_time_end" type="time" class="form-input" />
+              </div>
+            </div>
+            <p class="modify-note">⚠ Al modificar, el booking vuelve a "pendiente de respuesta" y el talento debe re-confirmar.</p>
+            <p v-if="modifyModal.error" class="cancel-error">{{ modifyModal.error }}</p>
+            <div class="cancel-actions">
+              <button class="btn btn-ghost btn-sm" @click="modifyModal.open = false">Cancelar</button>
+              <button class="btn btn-primary btn-sm" :disabled="modifyModal.loading || !canSubmitModify" @click="submitModify">
+                {{ modifyModal.loading ? 'Enviando...' : 'Solicitar cambio' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Report Problem Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="reportModal.open" class="cancel-modal-backdrop" @click.self="reportModal.open = false">
+          <div class="cancel-modal glass">
+            <h3>Reportar problema</h3>
+            <p class="cancel-policy-label">Pulsar revisará y retendrá el pago al talento</p>
+
+            <div class="form-group">
+              <label class="form-label">¿Qué pasó?</label>
+              <select v-model="reportModal.reason" class="form-input">
+                <option value="">Selecciona...</option>
+                <option value="no_show">No se presentó</option>
+                <option value="late">Llegó muy tarde</option>
+                <option value="poor_service">Servicio deficiente</option>
+                <option value="different_artist">Vino un artista distinto</option>
+                <option value="equipment_failure">Fallas con el equipo</option>
+                <option value="other">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Descripción detallada</label>
+              <textarea v-model="reportModal.description" rows="4" class="form-input" placeholder="Cuéntanos qué sucedió. Mientras más detalle, más rápido resolvemos."></textarea>
+            </div>
+
+            <p class="modify-note">
+              🛡 Al reportar, el pago queda retenido y nuestro equipo revisará en máximo 48h. Si tu reporte es válido, recibes reembolso 100%.
+            </p>
+
+            <p v-if="reportModal.error" class="cancel-error">{{ reportModal.error }}</p>
+
+            <div class="cancel-actions">
+              <button class="btn btn-ghost btn-sm" @click="reportModal.open = false">Cancelar</button>
+              <button class="btn btn-danger btn-sm" :disabled="reportModal.loading || !canSubmitReport" @click="submitReport">
+                {{ reportModal.loading ? 'Enviando...' : 'Reportar problema' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import ReviewForm from '@/components/booking/ReviewForm.vue'
+import { scan as antiScan, violationsMessage } from '@/utils/antiDisinter'
 
 const route = useRoute()
 const router = useRouter()
@@ -276,6 +480,171 @@ const talentNotes = ref('')
 const reviewRating = ref(0)
 const reviewComment = ref('')
 const chatContainer = ref(null)
+
+// ── Anti-desintermediación en chat ──
+const chatViolations = ref([])
+watch(newMessage, (val) => {
+  chatViolations.value = antiScan(val)
+})
+const chatViolationMsg = computed(() => violationsMessage(chatViolations.value))
+
+// ── Countdown banner ──
+const now = ref(Date.now())
+let countdownTimer = null
+const countdown = computed(() => {
+  if (!booking.value || booking.value.status !== 'confirmada') return null
+  if (!booking.value.event_date || !booking.value.event_time_start) return null
+  const target = new Date(`${booking.value.event_date}T${booking.value.event_time_start}`).getTime()
+  const diff = target - now.value
+  if (diff <= 0) return null
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+  }
+})
+onMounted(() => { countdownTimer = setInterval(() => { now.value = Date.now() }, 30000) })
+onUnmounted(() => { if (countdownTimer) clearInterval(countdownTimer) })
+
+function onReviewSubmitted(review) {
+  if (booking.value) booking.value.review = review
+}
+
+// ── Cancellation modal ──
+const cancelModal = ref({
+  open: false,
+  loading: false,
+  preview: null,
+  error: '',
+})
+
+async function openCancelModal() {
+  cancelModal.value = { open: true, loading: true, preview: null, error: '' }
+  try {
+    const { data } = await api.get(`/bookings/${booking.value.id}/cancel-preview/`)
+    cancelModal.value.preview = data
+  } catch (err) {
+    cancelModal.value.error = err.response?.data?.error || 'No se pudo calcular el reembolso.'
+  } finally {
+    cancelModal.value.loading = false
+  }
+}
+
+async function confirmCancel() {
+  await updateStatus('cancelada')
+  cancelModal.value.open = false
+}
+
+// ── Modify booking modal ──
+const modifyModal = ref({
+  open: false,
+  event_date: '',
+  event_time_start: '',
+  event_time_end: '',
+  loading: false,
+  error: '',
+})
+
+const canModify = computed(() => {
+  if (!booking.value) return false
+  if (!isClientView.value) return false
+  return ['aceptada', 'pendiente_pago', 'confirmada'].includes(booking.value.status)
+})
+
+const canSubmitModify = computed(() => {
+  return modifyModal.value.event_date
+    && modifyModal.value.event_time_start
+    && modifyModal.value.event_time_end
+})
+
+watch(() => modifyModal.value.open, (open) => {
+  if (open && booking.value) {
+    modifyModal.value.event_date = booking.value.event_date || ''
+    modifyModal.value.event_time_start = (booking.value.event_time_start || '').slice(0, 5)
+    modifyModal.value.event_time_end = (booking.value.event_time_end || '').slice(0, 5)
+    modifyModal.value.error = ''
+  }
+})
+
+async function submitModify() {
+  if (!canSubmitModify.value) return
+  modifyModal.value.loading = true
+  modifyModal.value.error = ''
+  try {
+    const { data } = await api.patch(`/bookings/${booking.value.id}/modify/`, {
+      event_date: modifyModal.value.event_date,
+      event_time_start: modifyModal.value.event_time_start,
+      event_time_end: modifyModal.value.event_time_end,
+    })
+    booking.value = data
+    modifyModal.value.open = false
+  } catch (err) {
+    modifyModal.value.error = err.response?.data?.error || 'No se pudo modificar.'
+  } finally {
+    modifyModal.value.loading = false
+  }
+}
+
+// ── Report problem (dispute) modal ──
+const reportModal = ref({
+  open: false,
+  reason: '',
+  description: '',
+  loading: false,
+  error: '',
+})
+
+const canReport = computed(() => {
+  if (!booking.value || !isClientView.value) return false
+  if (['en_disputa', 'cancelada', 'rechazada'].includes(booking.value.status)) return false
+  return ['confirmada', 'completada'].includes(booking.value.status)
+})
+
+const canSubmitReport = computed(() => {
+  return reportModal.value.reason && reportModal.value.description.trim().length >= 20
+})
+
+// ── Descargar contrato ──
+const canDownloadContract = computed(() => {
+  if (!booking.value) return false
+  return ['aceptada', 'pendiente_pago', 'confirmada', 'completada'].includes(booking.value.status)
+})
+
+function downloadContract() {
+  const token = localStorage.getItem('access_token')
+  fetch(`/api/bookings/${booking.value.id}/contract/`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(r => r.blob()).then(blob => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `contrato-${booking.value.booking_code || booking.value.id}.html`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }).catch(() => alert('No se pudo descargar el contrato.'))
+}
+
+async function submitReport() {
+  if (!canSubmitReport.value) return
+  reportModal.value.loading = true
+  reportModal.value.error = ''
+  try {
+    await api.post(`/bookings/${booking.value.id}/dispute/`, {
+      reason: reportModal.value.reason,
+      description: reportModal.value.description,
+    })
+    booking.value.status = 'en_disputa'
+    reportModal.value.open = false
+    reportModal.value.reason = ''
+    reportModal.value.description = ''
+  } catch (err) {
+    reportModal.value.error = err.response?.data?.error || 'No se pudo enviar el reporte.'
+  } finally {
+    reportModal.value.loading = false
+  }
+}
 
 const serviceLabels = {
   sound: 'Sonido',
@@ -426,6 +795,10 @@ async function processPayment(type) {
 
 async function sendMessage() {
   if (!newMessage.value.trim()) return
+  if (chatViolations.value.length) {
+    // El backend también lo filtra, pero damos feedback inmediato
+    return
+  }
   try {
     const { data } = await api.post('/messages/send/', {
       booking: booking.value.id,
@@ -539,6 +912,40 @@ onMounted(async () => {
 .price-final { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
 .price-big { font-size: var(--font-size-3xl); font-weight: 800; color: var(--color-primary); }
 
+.action-pay-card {
+  background: linear-gradient(135deg, rgba(16,185,129,0.05), rgba(193,216,47,0.02));
+  border: 1px solid rgba(16,185,129,0.35) !important;
+}
+.pay-cta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.pay-price-block { text-align: right; }
+.pay-price-block span {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.pay-price-block strong {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.8rem;
+  color: var(--color-primary);
+}
+.btn-go-pay {
+  width: 100%;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: var(--space-3);
+}
+
 .talent-notes-box { background: var(--color-bg-elevated); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm); }
 .talent-notes-box p { color: var(--color-text-secondary); margin-top: var(--space-1); }
 
@@ -589,6 +996,228 @@ onMounted(async () => {
 .chat-input-row { display: flex; gap: var(--space-2); }
 .chat-input-row .form-input { flex: 1; }
 .btn-send { padding: var(--space-3); flex-shrink: 0; }
+
+/* Chat anti-disinter */
+.chat-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin-bottom: var(--space-3);
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border-radius: var(--radius-md);
+  font-size: 0.72rem;
+}
+.anti-disinter-warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-2);
+  padding: 8px 12px;
+  background: rgba(232, 93, 74, 0.08);
+  border: 1px solid rgba(232, 93, 74, 0.3);
+  border-radius: 8px;
+  color: #E85D4A;
+  font-size: 0.78rem;
+}
+.form-input-warn { border-color: #E85D4A !important; }
+.chat-msg.flagged .msg-bubble {
+  border: 1px solid rgba(232, 93, 74, 0.3);
+  background: rgba(232, 93, 74, 0.05);
+}
+.msg-flagged-tag {
+  display: block;
+  font-size: 10px;
+  color: #E85D4A;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Header booking code */
+.header-code {
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
+}
+
+/* Countdown banner */
+.countdown-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(193, 216, 47, 0.05));
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-lg);
+}
+.cd-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.cd-units { display: flex; gap: var(--space-4); }
+.cd-unit { text-align: center; }
+.cd-unit strong {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.cd-unit span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.cd-escrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #10b981;
+}
+@media (max-width: 768px) {
+  .countdown-banner { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+}
+
+/* Cancellation Modal */
+.cancel-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--space-4);
+}
+.cancel-modal {
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-6);
+  border-radius: var(--radius-2xl);
+}
+.cancel-modal h3 {
+  font-size: 1.25rem;
+  margin-bottom: var(--space-2);
+}
+.cancel-policy-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-4);
+}
+.cancel-loading { padding: var(--space-6); text-align: center; color: var(--color-text-muted); }
+
+.cancel-window-card {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(232, 93, 74, 0.06);
+  border: 1px solid rgba(232, 93, 74, 0.25);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+.cancel-window-card strong {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+.cancel-days {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+.cancel-amounts {
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+.cancel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  padding: 6px 0;
+}
+.cancel-row.total {
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+.cancel-refund {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.4rem;
+  color: var(--color-primary);
+}
+.cancel-rate-note {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  text-align: right;
+}
+.cancel-warning {
+  font-size: 0.78rem;
+  color: #E85D4A;
+  padding: 8px 12px;
+  background: rgba(232, 93, 74, 0.06);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+.cancel-error {
+  font-size: 0.85rem;
+  color: #E85D4A;
+  margin-bottom: var(--space-3);
+}
+.cancel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* Sidebar actions */
+.actions-sidebar-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.btn-action {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-report { color: #f59e0b; }
+.btn-report:hover { background: rgba(245,158,11,0.08); }
+
+/* Modify modal */
+.modify-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.modify-grid .form-group:first-child { grid-column: 1 / -1; }
+.modify-note {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  padding: 8px 12px;
+  background: rgba(245,158,11,0.06);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  margin-top: var(--space-2);
+}
 
 /* Sidebar */
 .detail-sidebar { display: flex; flex-direction: column; gap: var(--space-4); position: sticky; top: 100px; }

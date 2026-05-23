@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations bookings talents)",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py makemigrations talents)",
+      "Bash(python -c \"from talents import views; import inspect; src = inspect.getsource\\(views\\); print\\(len\\(src.splitlines\\(\\)\\)\\)\")",
+      "Bash(python manage.py makemigrations bookings)",
+      "Bash(powershell -Command \"\\(Get-Content AdminDashboardView.vue\\).Count\")",
+      "Bash(python manage.py migrate bookings)",
+      "Bash(python manage.py shell -c \"from rest_framework import status; print\\(status.HTTP_200_OK\\)\")"
+    ]
+  }
+}

@@ -19,6 +19,18 @@ class User(AbstractUser):
     country = models.CharField(max_length=50, default='Venezuela')
     bio = models.TextField(blank=True)
     is_verified = models.BooleanField(default=False)
+    discovery_source = models.CharField(
+        max_length=20, blank=True,
+        choices=[
+            ('friend', 'Amigo o colega'),
+            ('search_engine', 'Buscadores'),
+            ('social_media', 'Redes sociales'),
+            ('website', 'Sitio web o blog'),
+            ('event', 'Evento o showcase'),
+            ('other', 'Otro'),
+        ],
+        help_text='¿Cómo descubriste Pulsar?'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

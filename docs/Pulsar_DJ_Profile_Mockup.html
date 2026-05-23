@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pulsar · Perfil DJ — Mockup de Referencia</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #141414;
+    --bg-card-hover: #1a1a1a;
+    --border: #262626;
+    --border-light: #333;
+    --lime: #c8f04a;
+    --lime-dark: #a8d030;
+    --lime-bg: #2a3a10;
+    --amber: #f59e0b;
+    --pink: #ec4899;
+    --white: #ffffff;
+    --text: #e5e5e5;
+    --text-muted: #8a8a8a;
+    --text-dim: #666;
+    --green-trust: #10b981;
+    --red: #ef4444;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  /* ANNOTATIONS */
+  .legend {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: #1a1a1a;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 1000;
+    max-width: 240px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .legend h4 { color: var(--white); margin-bottom: 6px; font-size: 12px; }
+  .legend .item { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-red { background: var(--red); }
+  .dot-yellow { background: var(--amber); }
+  .dot-green { background: var(--green-trust); }
+
+  .priority-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .priority-tag.must { background: #5a1a1a; color: #ff8888; }
+  .priority-tag.high { background: #5a3a10; color: #ffc878; }
+  .priority-tag.nice { background: #103a2a; color: #78ffc8; }
+
+  /* NAVBAR */
+  nav {
+    background: rgba(10,10,10,0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { font-weight: 900; font-size: 22px; letter-spacing: 2px; color: var(--white); }
+  .logo span { color: var(--text-muted); font-weight: 400; font-size: 12px; letter-spacing: 0; margin-left: 6px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-link { color: var(--text); font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .nav-link:hover { color: var(--lime); }
+  .nav-account {
+    background: var(--lime);
+    color: var(--bg);
+    padding: 6px 14px 6px 6px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-account .avatar { width: 26px; height: 26px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+  /* HERO BANNER */
+  .hero {
+    position: relative;
+    height: 320px;
+    background: linear-gradient(135deg, #1a0a2e 0%, #0a0a0a 60%, #2a1a10 100%);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 50%, rgba(200,240,74,0.15), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(236,72,153,0.1), transparent 50%);
+  }
+  .hero-img-placeholder {
+    position: absolute;
+    inset: 0;
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect fill='%23ffffff05' width='100' height='100'/><circle cx='30' cy='30' r='3' fill='%23ffffff10'/><circle cx='70' cy='60' r='2' fill='%23ffffff08'/><circle cx='50' cy='80' r='4' fill='%23ffffff12'/></svg>");
+    opacity: 0.6;
+  }
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 30%, var(--bg) 100%);
+  }
+  .hero-actions {
+    position: absolute;
+    top: 24px;
+    right: 32px;
+    display: flex;
+    gap: 12px;
+    z-index: 2;
+  }
+  .badge-secure {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid var(--green-trust);
+    color: var(--green-trust);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-share {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border-light);
+    color: var(--white);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* MAIN CONTENT */
+  .container {
+    max-width: 1400px;
+    margin: -80px auto 64px;
+    padding: 0 32px;
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 32px;
+  }
+
+  /* LEFT SIDEBAR */
+  .sidebar {
+    align-self: start;
+    position: sticky;
+    top: 88px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+  }
+  .avatar-big {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--lime);
+    background: linear-gradient(135deg, #2a1a3e, #1a2a3e);
+    margin: -64px auto 16px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: var(--lime);
+    overflow: hidden;
+  }
+  .avatar-big::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--lime);
+    border-radius: 50%;
+    border: 3px solid var(--bg-card);
+  }
+  .name { text-align: center; font-size: 26px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+  .badges { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .badge {
+    background: var(--lime-bg);
+    color: var(--lime);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-premium {
+    background: rgba(245,158,11,0.15);
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: help;
+    position: relative;
+  }
+  .badge-premium .tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    width: 200px;
+    z-index: 10;
+  }
+  .badge-premium:hover .tooltip { visibility: visible; }
+
+  .rating-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .rating-row .stars { color: var(--amber); }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .stat { text-align: center; }
+  .stat-num { color: var(--white); font-weight: 700; font-size: 16px; }
+  .stat-label { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .info-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; color: var(--text); font-size: 14px; }
+  .info-icon { color: var(--lime); font-size: 16px; width: 20px; text-align: center; }
+
+  .pricing-block {
+    background: rgba(200,240,74,0.05);
+    border: 1px solid rgba(200,240,74,0.2);
+    padding: 14px;
+    border-radius: 12px;
+    margin: 16px 0;
+  }
+  .pricing-main { font-size: 22px; font-weight: 800; color: var(--white); }
+  .pricing-main span { color: var(--text-muted); font-size: 14px; font-weight: 400; }
+  .pricing-sub { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+
+  .availability-line {
+    background: rgba(16,185,129,0.08);
+    color: var(--green-trust);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--lime);
+    color: var(--bg);
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-light);
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+
+  .trust-card {
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .trust-card .icon { color: var(--green-trust); font-size: 16px; margin-top: 1px; }
+
+  /* RIGHT CONTENT */
+  .content { display: flex; flex-direction: column; gap: 24px; }
+  .section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+  }
+  .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .icon { color: var(--lime); }
+  .section-link { color: var(--lime); font-size: 12px; cursor: pointer; }
+
+  /* MIXES SECTION */
+  .mix-list { display: flex; flex-direction: column; gap: 12px; }
+  .mix-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .mix-cover {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--lime-bg), #1a3a4a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lime);
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .mix-info { flex: 1; min-width: 0; }
+  .mix-title { color: var(--white); font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .mix-meta { color: var(--text-muted); font-size: 12px; }
+  .mix-wave {
+    height: 32px;
+    background: linear-gradient(90deg,
+      rgba(200,240,74,0.4) 0%, rgba(200,240,74,0.4) 30%,
+      rgba(200,240,74,0.15) 30%, rgba(200,240,74,0.15) 100%);
+    border-radius: 4px;
+    margin-top: 8px;
+    position: relative;
+  }
+  .mix-play {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--lime);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* VIDEO SECTION */
+  .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .video-item {
+    background: var(--bg);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+  }
+  .video-thumb {
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #2a1a3e, #1a2a3e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 40px;
+    opacity: 0.7;
+    position: relative;
+  }
+  .video-thumb::after {
+    content: '▶';
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lime);
+    font-size: 22px;
+  }
+  .video-label { padding: 12px 16px; color: var(--text); font-size: 13px; }
+
+  /* BIO */
+  .bio-text { color: var(--text); font-size: 14px; line-height: 1.7; }
+  .bio-text p + p { margin-top: 10px; }
+
+  /* TAGS */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    background: var(--lime-bg);
+    color: var(--lime);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag-mood {
+    background: rgba(236,72,153,0.1);
+    color: var(--pink);
+  }
+  .tag-event {
+    background: rgba(245,158,11,0.1);
+    color: var(--amber);
+  }
+
+  /* PACKS */
+  .pack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .pack-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .pack-card.featured { border-color: var(--lime); position: relative; }
+  .pack-card.featured::before {
+    content: 'POPULAR';
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: var(--lime);
+    color: var(--bg);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .pack-name { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .pack-price { font-size: 22px; color: var(--lime); font-weight: 800; margin-bottom: 8px; }
+  .pack-price span { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+  .pack-includes { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+  .pack-includes li { list-style: none; padding-left: 16px; position: relative; }
+  .pack-includes li::before { content: '✓'; position: absolute; left: 0; color: var(--lime); }
+
+  /* GALLERY */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .gallery-item {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #2a1a3e, #1a3a4a);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 24px;
+  }
+  .gallery-item:nth-child(odd) {
+    background: linear-gradient(135deg, #3a1a2e, #1a2a3a);
+  }
+  .gallery-item:nth-child(3n) {
+    background: linear-gradient(135deg, #1a3a2e, #3a1a4a);
+  }
+
+  /* EQUIPMENT */
+  .equip-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .equip-col h4 { font-size: 13px; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .equip-col h4.no { color: var(--red); }
+  .equip-col h4.yes { color: var(--green-trust); }
+  .equip-col ul { list-style: none; }
+  .equip-col li { font-size: 13px; color: var(--text-muted); padding: 4px 0 4px 18px; position: relative; }
+  .equip-col.yes li::before { content: '✓'; position: absolute; left: 0; color: var(--green-trust); }
+  .equip-col.no li::before { content: '✕'; position: absolute; left: 0; color: var(--red); }
+
+  /* COVERAGE & LANGUAGES */
+  .info-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .info-pair .label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .info-pair .value { color: var(--text); font-size: 14px; }
+
+  /* REVIEWS */
+  .review-summary {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+  .review-big { text-align: center; }
+  .review-num { font-size: 56px; font-weight: 800; color: var(--white); line-height: 1; }
+  .review-stars { color: var(--amber); font-size: 18px; margin: 6px 0; }
+  .review-count { color: var(--text-muted); font-size: 12px; }
+  .review-breakdown { display: flex; flex-direction: column; gap: 8px; }
+  .review-bar { display: grid; grid-template-columns: 140px 1fr 32px; gap: 12px; align-items: center; font-size: 12px; }
+  .review-bar .label { color: var(--text-muted); }
+  .review-bar .bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .review-bar .bar-fill { height: 100%; background: var(--lime); }
+  .review-bar .num { color: var(--text); text-align: right; font-weight: 600; }
+
+  .review-list { display: flex; flex-direction: column; gap: 16px; }
+  .review-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .review-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .reviewer { display: flex; align-items: center; gap: 10px; }
+  .reviewer-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--lime-bg); color: var(--lime); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .reviewer-name { color: var(--white); font-weight: 600; font-size: 13px; }
+  .reviewer-meta { color: var(--text-muted); font-size: 11px; }
+  .verified { color: var(--green-trust); font-size: 11px; display: flex; align-items: center; gap: 4px; }
+  .review-text { color: var(--text); font-size: 13px; line-height: 1.6; }
+  .review-rating { color: var(--amber); font-size: 13px; margin-top: 4px; }
+
+  /* CALENDAR */
+  .calendar {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .cal-month { color: var(--white); font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day-head { text-align: center; color: var(--text-dim); font-size: 10px; padding: 4px; font-weight: 600; }
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .cal-day.available { background: rgba(16,185,129,0.15); color: var(--green-trust); cursor: pointer; }
+  .cal-day.busy { background: rgba(239,68,68,0.1); color: var(--red); text-decoration: line-through; }
+  .cal-day.empty { color: var(--text-dim); }
+  .cal-legend { display: flex; gap: 16px; margin-top: 12px; font-size: 11px; color: var(--text-muted); }
+  .cal-legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 4px; }
+
+  /* FAQ */
+  .faq-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .faq-q { color: var(--white); font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .faq-a { color: var(--text-muted); font-size: 12px; line-height: 1.6; margin-top: 8px; }
+
+  /* HOW IT WORKS */
+  .how-card {
+    background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02));
+    border: 1px solid var(--green-trust);
+  }
+  .how-steps { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .how-step { display: flex; gap: 14px; align-items: flex-start; }
+  .how-num {
+    width: 28px; height: 28px;
+    background: var(--green-trust);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .how-text { color: var(--text); font-size: 13px; line-height: 1.5; }
+  .how-text strong { color: var(--white); }
+
+  /* SOCIAL */
+  .social-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .social-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-size: 12px;
+  }
+  .social-item .stats { color: var(--text-muted); font-size: 11px; }
+  .social-note { color: var(--text-dim); font-size: 11px; margin-top: 12px; font-style: italic; }
+
+  /* SECTION DESCRIPTION (annotations for developer) */
+  .dev-note {
+    background: rgba(255,200,120,0.06);
+    border-left: 3px solid var(--amber);
+    padding: 8px 12px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--amber);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="legend">
+  <h4>Leyenda de prioridad</h4>
+  <div class="item"><span class="dot dot-red"></span> <span style="color:#ff8888">Bloqueante MVP</span></div>
+  <div class="item"><span class="dot dot-yellow"></span> <span style="color:#ffc878">Importante pre-launch</span></div>
+  <div class="item"><span class="dot dot-green"></span> <span style="color:#78ffc8">Iteración 2</span></div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-dim);">Las notas naranjas son comentarios para el dev. No van en producción.</div>
+</div>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="logo">PULSAR <span>by ShowRoots</span></div>
+  <div class="nav-links">
+    <span class="nav-link">🔍 Talentos</span>
+    <span class="nav-link">🏠 Venues</span>
+    <span class="nav-link">🔔</span>
+    <span class="nav-account"><span class="avatar">R</span> Rubén</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-img-placeholder"></div>
+  <div class="hero-actions">
+    <span class="badge-secure">🛡️ Pago protegido por Pulsar</span>
+    <span class="btn-share">↗ Compartir</span>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="card">
+      <div class="avatar-big">🎧</div>
+      <div class="name">Rubs DJ</div>
+      <div class="badges">
+        <span class="badge">DJ</span>
+        <span class="badge badge-premium">
+          ★ Premium
+          <span class="tooltip">Talento verificado · Min. 20 eventos completados · Top performer</span>
+        </span>
+      </div>
+      <div class="rating-row">
+        <span class="stars">★★★★★</span>
+        <span><strong style="color:var(--white)">4.9</strong> (24 reseñas)</span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat"><div class="stat-num">47</div><div class="stat-label">Eventos</div></div>
+        <div class="stat"><div class="stat-num">6h</div><div class="stat-label">Responde en</div></div>
+        <div class="stat"><div class="stat-num">2026</div><div class="stat-label">Miembro desde</div></div>
+      </div>
+
+      <div class="info-row">
+        <span class="info-icon">📍</span>
+        <span>Ciudad de Panamá</span>
+      </div>
+      <div class="info-row">
+        <span class="info-icon">🌐</span>
+        <span>Español, Inglés</span>
+      </div>
+
+      <div class="pricing-block">
+        <div class="pricing-main">$400<span> desde / 4hrs</span></div>
+        <div class="pricing-sub">$100/hr adicional · Add-ons cotizan aparte</div>
+      </div>
+
+      <div class="availability-line">
+        ⚡ Disponible: 15, 22, 29 may
+      </div>
+
+      <button class="btn-primary">📅 Reservar Ahora</button>
+      <button class="btn-secondary">💬 Enviar consulta</button>
+
+      <div class="trust-card">
+        <span class="icon">🛡️</span>
+        <span>Tu pago queda en custodia hasta 24h después del evento. Si no se presenta, reembolso 100%.</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <main class="content">
+
+    <!-- 1. MIXES / AUDIO -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🎵</span>
+          Escucha mis sets
+          <span class="priority-tag must">MVP</span>
+        </div>
+        <span class="section-link">Ver todos →</span>
+      </div>
+      <div class="mix-list">
+        <div class="mix-item">
+          <div class="mix-cover">🎵</div>
+          <div class="mix-info">
+            <div class="mix-title">Wedding Mix · Beach Vibes 2025</div>
+            <div class="mix-meta">62 min · Latin · House · Comercial</div>
+            <div class="mix-wave"></div>
+          </div>
+          <div class="mix-play">▶</div>
+        </div>
+        <div class="mix-item">
+          <div class="mix-cover">🎛</div>
+          <div class="mix-info">
+            <div class="mix-title">Corporate Cocktail Set</div>
+            <div class="mix-meta">48 min · Deep House · Lounge</div>
+            <div class="mix-wave"></div>
+          </div>
+          <div class="mix-play">▶</div>
+        </div>
+        <div class="mix-item">
+          <div class="mix-cover">⚡</div>
+          <div class="mix-info">
+            <div class="mix-title">Peak Time · Club Residency</div>
+            <div class="mix-meta">75 min · Tech House · Techno</div>
+            <div class="mix-wave"></div>
+          </div>
+          <div class="mix-play">▶</div>
+        </div>
+      </div>
+      <div class="dev-note">→ Embed SoundCloud / Spotify / Mixcloud via iframe. Mínimo 2 mixes para perfil público. Player sticky abajo cuando scrollea.</div>
+    </div>
+
+    <!-- 2. VIDEO -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🎬</span>
+          Video en vivo
+          <span class="priority-tag high">Pre-launch</span>
+        </div>
+      </div>
+      <div class="video-grid">
+        <div class="video-item">
+          <div class="video-thumb">🎉</div>
+          <div class="video-label">Boda · Casco Antiguo · 2025</div>
+        </div>
+        <div class="video-item">
+          <div class="video-thumb">🪩</div>
+          <div class="video-label">Corporativo · Banistmo · 2025</div>
+        </div>
+      </div>
+      <div class="dev-note">→ Embed YouTube/Vimeo. Clips de 15-60s. Lo más vendedor: el público bailando, no solo el DJ.</div>
+    </div>
+
+    <!-- 3. BIO -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">👤</span>
+          Sobre mí
+          <span class="priority-tag must">MVP</span>
+        </div>
+      </div>
+      <div class="bio-text">
+        <p>DJ con 8 años de experiencia en Panamá, especializado en bodas, eventos corporativos y residencias premium. He tocado en Casco Antiguo, Costa del Este y los principales hoteles de Ciudad de Panamá.</p>
+        <p>Mi enfoque: leer el ambiente y construir un viaje musical, no imponer un setlist fijo. Trabajo bilingüe (ES/EN) y me adapto a clientela internacional.</p>
+      </div>
+      <div class="dev-note">→ En el dashboard del DJ, mostrar template con prompts: "Años de experiencia, especialidad, venues, idiomas, filosofía". Ayuda a evitar bios vacías.</div>
+    </div>
+
+    <!-- 4. GENEROS Y MOOD -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🎶</span>
+          Géneros & estilo
+          <span class="priority-tag must">MVP</span>
+        </div>
+      </div>
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:10px; letter-spacing:1px;">GÉNEROS</div>
+      <div class="tag-row" style="margin-bottom:16px;">
+        <span class="tag">Electrónica</span>
+        <span class="tag">House</span>
+        <span class="tag">Deep House</span>
+        <span class="tag">Latin</span>
+        <span class="tag">Funk</span>
+        <span class="tag">Lounge</span>
+      </div>
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:10px; letter-spacing:1px;">VIBE / MOOD</div>
+      <div class="tag-row">
+        <span class="tag tag-mood">Boda elegante</span>
+        <span class="tag tag-mood">After party</span>
+        <span class="tag tag-mood">Cocktail formal</span>
+        <span class="tag tag-mood">Cumpleaños hype</span>
+      </div>
+    </div>
+
+    <!-- 5. TIPOS DE EVENTOS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">📅</span>
+          Tipos de eventos
+          <span class="priority-tag high">Pre-launch</span>
+        </div>
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-event">💍 Bodas</span>
+        <span class="tag tag-event">🏢 Corporativo</span>
+        <span class="tag tag-event">🎂 Cumpleaños</span>
+        <span class="tag tag-event">🍸 Cocktail / Brunch</span>
+        <span class="tag tag-event">🪩 Club / Residencia</span>
+        <span class="tag tag-event">🚀 Lanzamiento de producto</span>
+      </div>
+    </div>
+
+    <!-- 6. PACKS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">📦</span>
+          Paquetes
+          <span class="priority-tag high">Pre-launch</span>
+        </div>
+        <span class="section-link">Personalizar →</span>
+      </div>
+      <div class="pack-grid">
+        <div class="pack-card">
+          <div class="pack-name">Pack Boda Esencial</div>
+          <div class="pack-price">$600 <span>· 4 hrs</span></div>
+          <ul class="pack-includes">
+            <li>DJ + sonido básico</li>
+            <li>Micrófono incluido</li>
+            <li>Setlist preparado</li>
+          </ul>
+        </div>
+        <div class="pack-card featured">
+          <div class="pack-name">Pack Corporativo</div>
+          <div class="pack-price">$550 <span>· 3 hrs</span></div>
+          <ul class="pack-includes">
+            <li>DJ + sonido pro</li>
+            <li>2 micrófonos inalámbricos</li>
+            <li>MC bilingüe</li>
+          </ul>
+        </div>
+        <div class="pack-card">
+          <div class="pack-name">Pack Cumpleaños</div>
+          <div class="pack-price">$700 <span>· 5 hrs</span></div>
+          <ul class="pack-includes">
+            <li>DJ + sonido + luces básicas</li>
+            <li>Setlist colaborativo</li>
+            <li>Cabina con branding</li>
+          </ul>
+        </div>
+        <div class="pack-card">
+          <div class="pack-name">Pack Custom</div>
+          <div class="pack-price">Cotizar</div>
+          <ul class="pack-includes">
+            <li>Cualquier tipo de evento</li>
+            <li>Duración a medida</li>
+            <li>Producción según necesidades</li>
+          </ul>
+        </div>
+      </div>
+      <div class="dev-note">→ Los packs reducen la fricción del "cotizar". El cliente compra un pack y solo paga add-ons opcionales.</div>
+    </div>
+
+    <!-- 7. GALERIA -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">📸</span>
+          Galería
+          <span class="priority-tag high">Pre-launch</span>
+        </div>
+        <span class="section-link">Ver todas (24) →</span>
+      </div>
+      <div class="gallery">
+        <div class="gallery-item">🎉</div>
+        <div class="gallery-item">🎛</div>
+        <div class="gallery-item">💍</div>
+        <div class="gallery-item">🪩</div>
+        <div class="gallery-item">🎂</div>
+        <div class="gallery-item">🍸</div>
+        <div class="gallery-item">🏢</div>
+        <div class="gallery-item">🎤</div>
+      </div>
+      <div class="dev-note">→ Founding DJs reciben sesión de fotos pro gratis. Para Standard, mínimo 3 fotos para publicar perfil.</div>
+    </div>
+
+    <!-- 8. EQUIPAMIENTO -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🎛</span>
+          Equipamiento
+          <span class="priority-tag high">Pre-launch</span>
+        </div>
+      </div>
+      <div class="equip-list">
+        <div class="equip-col yes">
+          <h4 class="yes">✓ Yo traigo</h4>
+          <ul>
+            <li>2x CDJ-3000</li>
+            <li>Mixer DJM-A9</li>
+            <li>Auriculares + cabling</li>
+            <li>Laptop con Rekordbox / Serato</li>
+            <li>Monitor para cabina</li>
+          </ul>
+        </div>
+        <div class="equip-col no">
+          <h4 class="no">✕ No incluido</h4>
+          <ul>
+            <li>Sonido para más de 80 personas</li>
+            <li>Luces / iluminación</li>
+            <li>Pantallas / visuales</li>
+            <li>DJ booth con branding</li>
+          </ul>
+        </div>
+      </div>
+      <div class="dev-note">→ El "no traigo" es CLAVE: evita el problema clásico "yo asumí que traía el sonido" → cancelación.</div>
+    </div>
+
+    <!-- 9. COBERTURA + IDIOMAS -->
+    <div class="section">
+      <div class="info-pair">
+        <div>
+          <div class="label">📍 Cobertura</div>
+          <div class="value">Ciudad de Panamá, Costa del Este, Casco Antiguo, Coronado. <br><span style="color:var(--text-muted); font-size:12px;">Fuera del área: +$50 traslado</span></div>
+        </div>
+        <div>
+          <div class="label">🌐 Idiomas en MC</div>
+          <div class="value">Español, Inglés</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. RESEÑAS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">⭐</span>
+          Reseñas
+          <span class="priority-tag must">MVP</span>
+        </div>
+        <span class="section-link">Filtrar ↓</span>
+      </div>
+      <div class="review-summary">
+        <div class="review-big">
+          <div class="review-num">4.9</div>
+          <div class="review-stars">★★★★★</div>
+          <div class="review-count">24 reseñas</div>
+        </div>
+        <div class="review-breakdown">
+          <div class="review-bar"><span class="label">Puntualidad</span><span class="bar"><span class="bar-fill" style="width:100%"></span></span><span class="num">5.0</span></div>
+          <div class="review-bar"><span class="label">Selección musical</span><span class="bar"><span class="bar-fill" style="width:98%"></span></span><span class="num">4.9</span></div>
+          <div class="review-bar"><span class="label">Lectura del público</span><span class="bar"><span class="bar-fill" style="width:94%"></span></span><span class="num">4.7</span></div>
+          <div class="review-bar"><span class="label">Técnica</span><span class="bar"><span class="bar-fill" style="width:96%"></span></span><span class="num">4.8</span></div>
+          <div class="review-bar"><span class="label">Comunicación</span><span class="bar"><span class="bar-fill" style="width:100%"></span></span><span class="num">5.0</span></div>
+        </div>
+      </div>
+
+      <div class="review-list">
+        <div class="review-item">
+          <div class="review-head">
+            <div class="reviewer">
+              <div class="reviewer-avatar">M</div>
+              <div>
+                <div class="reviewer-name">María G.</div>
+                <div class="reviewer-meta">Boda · 350 invitados · Abril 2026</div>
+              </div>
+            </div>
+            <div class="verified">✓ Verificada</div>
+          </div>
+          <div class="review-rating">★★★★★</div>
+          <div class="review-text">"Rubs leyó el ambiente perfecto. Empezó con cocktail jazz y terminó con la fiesta hasta las 4am. Mis invitados internacionales lo amaron. Volvería a contratarlo sin dudar."</div>
+        </div>
+        <div class="review-item">
+          <div class="review-head">
+            <div class="reviewer">
+              <div class="reviewer-avatar">J</div>
+              <div>
+                <div class="reviewer-name">Javier R.</div>
+                <div class="reviewer-meta">Corporativo · 150 personas · Marzo 2026</div>
+              </div>
+            </div>
+            <div class="verified">✓ Verificada</div>
+          </div>
+          <div class="review-rating">★★★★★</div>
+          <div class="review-text">"Profesional de principio a fin. Llegó 2 horas antes para setup, manejó el MC bilingüe sin problema. La gerencia quedó impresionada."</div>
+        </div>
+      </div>
+      <div class="dev-note">→ Estado vacío: si hay 0 reseñas, mostrar "🌟 Sé el primero en reseñar a Rubs DJ" con CTA. NO mostrar "Sin reseñas aún" pelado.</div>
+    </div>
+
+    <!-- 11. DISPONIBILIDAD -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">📅</span>
+          Disponibilidad
+          <span class="priority-tag high">Pre-launch</span>
+        </div>
+      </div>
+      <div class="calendar">
+        <div class="cal-head">
+          <span>‹</span>
+          <span class="cal-month">Mayo 2026</span>
+          <span>›</span>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-day-head">D</div><div class="cal-day-head">L</div><div class="cal-day-head">M</div><div class="cal-day-head">M</div><div class="cal-day-head">J</div><div class="cal-day-head">V</div><div class="cal-day-head">S</div>
+          <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day busy">1</div><div class="cal-day busy">2</div>
+          <div class="cal-day available">3</div><div class="cal-day available">4</div><div class="cal-day available">5</div><div class="cal-day available">6</div><div class="cal-day available">7</div><div class="cal-day busy">8</div><div class="cal-day busy">9</div>
+          <div class="cal-day available">10</div><div class="cal-day available">11</div><div class="cal-day available">12</div><div class="cal-day busy">13</div><div class="cal-day busy">14</div><div class="cal-day available">15</div><div class="cal-day available">16</div>
+          <div class="cal-day available">17</div><div class="cal-day available">18</div><div class="cal-day available">19</div><div class="cal-day available">20</div><div class="cal-day available">21</div><div class="cal-day available">22</div><div class="cal-day busy">23</div>
+          <div class="cal-day available">24</div><div class="cal-day available">25</div><div class="cal-day available">26</div><div class="cal-day available">27</div><div class="cal-day available">28</div><div class="cal-day available">29</div><div class="cal-day available">30</div>
+          <div class="cal-day available">31</div>
+        </div>
+        <div class="cal-legend">
+          <span><span class="cal-legend-dot" style="background:rgba(16,185,129,0.4);"></span>Disponible</span>
+          <span><span class="cal-legend-dot" style="background:rgba(239,68,68,0.3);"></span>Ocupado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. FAQ DEL DJ -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">❓</span>
+          Preguntas frecuentes
+          <span class="priority-tag nice">Iter 2</span>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Puedo enviarte mi lista de canciones? <span>↓</span></div>
+        <div class="faq-a">Sí, totalmente. Trabajo con un brief musical 15 días antes del evento. Tomamos tu lista como guía pero la integro al flujo del evento.</div>
+      </div>
+      <div class="faq-item"><div class="faq-q">¿Tomas requests del público en el evento? <span>↓</span></div></div>
+      <div class="faq-item"><div class="faq-q">¿Cuánto tiempo necesitas de setup? <span>↓</span></div></div>
+      <div class="faq-item"><div class="faq-q">¿Puedes hacer MC en inglés? <span>↓</span></div></div>
+    </div>
+
+    <!-- 13. COMO FUNCIONA -->
+    <div class="section how-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon" style="color:var(--green-trust);">🛡️</span>
+          Cómo funciona contratar a Rubs DJ
+          <span class="priority-tag must">MVP</span>
+        </div>
+      </div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <div class="how-text">Envías la solicitud con los detalles de tu evento. <strong>Gratis, sin compromiso.</strong></div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <div class="how-text">Rubs revisa y te envía una <strong>propuesta personalizada en 48hrs.</strong></div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <div class="how-text">Pagas a <strong>Pulsar</strong> (no a Rubs directamente). Tu dinero queda en custodia.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <div class="how-text">Día del evento: Rubs toca. <strong>Si no se presenta, te reembolsamos 100%.</strong></div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">5</div>
+          <div class="how-text">24h después del evento, Rubs recibe su pago y te invita a dejar una reseña.</div>
+        </div>
+      </div>
+      <div class="dev-note">→ Este bloque es el más importante del perfil para anti-fraude y para vender el modelo escrow. Debe verse en cada perfil de talento.</div>
+    </div>
+
+    <!-- 14. REDES SOCIALES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🌐</span>
+          Redes
+          <span class="priority-tag nice">Iter 2</span>
+        </div>
+      </div>
+      <div class="social-row">
+        <div class="social-item">
+          📷 Instagram <span class="stats">· 12.4k seguidores</span>
+        </div>
+        <div class="social-item">
+          🎵 TikTok <span class="stats">· 5.2k</span>
+        </div>
+        <div class="social-item">
+          🎚 SoundCloud <span class="stats">· 3.8k</span>
+        </div>
+      </div>
+      <div class="social-note">Para coordinar tu evento, usa el botón "Reservar Ahora". Nunca contactes al talento por fuera de Pulsar antes de confirmar tu reserva.</div>
+      <div class="dev-note">→ Mostrar stats pero NO link directo a la cuenta. O abrir modal con advertencia anti-desintermediación.</div>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

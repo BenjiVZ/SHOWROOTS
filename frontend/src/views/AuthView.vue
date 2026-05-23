@@ -147,6 +147,22 @@
                   Ingresando...
                 </span>
               </button>
+
+              <!-- Google Divider -->
+              <div class="social-divider">
+                <span>o continúa con</span>
+              </div>
+
+              <!-- Google Button -->
+              <button type="button" class="btn-google" :disabled="loading" @click="handleGoogleLogin">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Google
+              </button>
             </form>
 
             <!-- REGISTER FORM -->
@@ -247,6 +263,40 @@
                       <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     </button>
                   </div>
+
+                  <!-- Password Requirements Checklist -->
+                  <div v-if="regForm.password.length > 0" class="pw-checklist">
+                    <div class="pw-rule" :class="{ met: pwRules.minLength }">
+                      <div class="pw-check-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>Mínimo 8 caracteres</span>
+                    </div>
+                    <div class="pw-rule" :class="{ met: pwRules.hasUpper }">
+                      <div class="pw-check-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>Una letra mayúscula (A-Z)</span>
+                    </div>
+                    <div class="pw-rule" :class="{ met: pwRules.hasLower }">
+                      <div class="pw-check-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>Una letra minúscula (a-z)</span>
+                    </div>
+                    <div class="pw-rule" :class="{ met: pwRules.hasNumber }">
+                      <div class="pw-check-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>Un número (0-9)</span>
+                    </div>
+                    <div class="pw-rule" :class="{ met: pwRules.hasSpecial }">
+                      <div class="pw-check-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <span>Un carácter especial (!@#$%...)</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Row 4: Confirmar Contraseña -->
@@ -264,6 +314,15 @@
                     />
                     <label for="reg-pass-confirm" class="input-label-float">Confirmar Contraseña</label>
                   </div>
+
+                  <!-- Password Match Indicator -->
+                  <div v-if="regForm.password_confirm.length > 0" class="pw-match-indicator" :class="{ match: passwordsMatch, nomatch: !passwordsMatch }">
+                    <div class="pw-check-icon">
+                      <svg v-if="passwordsMatch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </div>
+                    <span>{{ passwordsMatch ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden' }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -275,7 +334,13 @@
                 </div>
               </transition>
 
-              <button type="submit" class="btn-submit btn-register" :disabled="loading">
+              <transition name="fade-slide">
+                <div v-if="googlePrefilled" class="success-toast">
+                  ✅ Datos de Google cargados. Elige tu rol y crea una contraseña.
+                </div>
+              </transition>
+
+              <button type="submit" class="btn-submit btn-register" :disabled="loading || !allPwRulesMet || regForm.password !== regForm.password_confirm">
                 <span v-if="!loading">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                   Crear Cuenta
@@ -284,6 +349,22 @@
                   <svg class="spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
                   Registrando...
                 </span>
+              </button>
+
+              <!-- Google Divider -->
+              <div class="social-divider">
+                <span>o continúa con</span>
+              </div>
+
+              <!-- Google Button -->
+              <button type="button" class="btn-google" :disabled="loading" @click="handleGoogleLogin">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Google
               </button>
             </form>
           </transition>
@@ -294,9 +375,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -306,6 +388,21 @@ const isRegister = ref(route.name === 'register')
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
+const googlePrefilled = ref(false)
+
+// Password validation rules
+const pwRules = computed(() => {
+  const pw = regForm.value.password
+  return {
+    minLength: pw.length >= 8,
+    hasUpper: /[A-Z]/.test(pw),
+    hasLower: /[a-z]/.test(pw),
+    hasNumber: /[0-9]/.test(pw),
+    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw),
+  }
+})
+const allPwRulesMet = computed(() => Object.values(pwRules.value).every(Boolean))
+const passwordsMatch = computed(() => regForm.value.password.length > 0 && regForm.value.password === regForm.value.password_confirm)
 
 // Login form
 const loginForm = ref({ username: '', password: '' })
@@ -336,8 +433,8 @@ const roles = [
   },
   {
     value: 'partner',
-    label: 'Partner',
-    desc: 'Soy venue',
+    label: 'Aliado',
+    desc: 'Soy Aliado',
     icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
   }
 ]
@@ -374,17 +471,95 @@ async function handleLogin() {
   }
 }
 
+function validateRegister() {
+  const f = regForm.value
+  if (!f.role) return 'Elige tu tipo de cuenta: Cliente, Talento o Aliado.'
+  if (!f.first_name?.trim()) return 'Falta tu nombre.'
+  if (!f.last_name?.trim()) return 'Falta tu apellido.'
+  if (!f.username?.trim()) return 'Falta tu nombre de usuario.'
+  if (f.username.trim().length < 3) return 'El usuario debe tener al menos 3 caracteres.'
+  if (!f.email?.trim()) return 'Falta tu correo electrónico.'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return 'El correo electrónico no es válido.'
+  if (!f.password) return 'Falta la contraseña.'
+  if (f.password.length < 6) return 'La contraseña debe tener al menos 6 caracteres.'
+  return null
+}
+
 async function handleRegister() {
+  // Validación frontend con mensajes claros antes de tocar el backend
+  const validationError = validateRegister()
+  if (validationError) {
+    error.value = validationError
+    setTimeout(() => { if (error.value === validationError) error.value = '' }, 5000)
+    return
+  }
+
   loading.value = true
   error.value = ''
   try {
     await auth.register(regForm.value)
     const role = regForm.value.role
-    const dest = role === 'talent' ? '/talent-dashboard' : role === 'partner' ? '/partner' : '/dashboard'
+    const dest = role === 'talent' ? '/talent-onboarding' : role === 'partner' ? '/partner' : '/dashboard'
     router.push(dest)
   } catch (err) {
     const data = err.response?.data
     error.value = typeof data === 'object' ? Object.values(data).flat().join(' ') : 'Error al registrar.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── Google Sign-In ──
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+function handleGoogleLogin() {
+  if (!window.google?.accounts) {
+    error.value = 'Google Sign-In no está disponible. Recarga la página.'
+    return
+  }
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: onGoogleCredential,
+  })
+  window.google.accounts.id.prompt()
+}
+
+async function onGoogleCredential(response) {
+  loading.value = true
+  error.value = ''
+  try {
+    if (isRegister.value) {
+      // REGISTER MODE: Just pre-fill the form with Google data, don't create account
+      const payload = JSON.parse(atob(response.credential.split('.')[1]))
+      regForm.value.first_name = payload.given_name || ''
+      regForm.value.last_name = payload.family_name || ''
+      regForm.value.email = payload.email || ''
+      // Suggest username from email
+      if (!regForm.value.username) {
+        regForm.value.username = payload.email?.split('@')[0] || ''
+      }
+      googlePrefilled.value = true
+    } else {
+      // LOGIN MODE: Authenticate directly via backend
+      const { data } = await api.post('/auth/google/', {
+        credential: response.credential,
+      })
+      // Store auth
+      auth.user = data.user
+      auth.accessToken = data.tokens.access
+      localStorage.setItem('user', JSON.stringify(data.user))
+      localStorage.setItem('access_token', data.tokens.access)
+      localStorage.setItem('refresh_token', data.tokens.refresh)
+
+      // Redirect based on role
+      const dest = data.user.role === 'admin' ? '/admin'
+        : data.user.role === 'partner' ? '/partner'
+        : data.user.role === 'talent' ? '/talent-dashboard'
+        : '/dashboard'
+      router.push(dest)
+    }
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Error al iniciar con Google.'
   } finally {
     loading.value = false
   }
@@ -876,6 +1051,110 @@ async function handleRegister() {
 }
 
 /* ========================
+   PASSWORD CHECKLIST
+   ======================== */
+.pw-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.pw-rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.pw-rule span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  transition: color 0.3s ease;
+}
+
+.pw-rule.met span {
+  color: #34a853;
+}
+
+.pw-check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-border);
+  flex-shrink: 0;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pw-check-icon svg {
+  width: 11px;
+  height: 11px;
+  stroke: transparent;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pw-rule.met .pw-check-icon {
+  background: #34a853;
+  transform: scale(1.15);
+}
+
+.pw-rule.met .pw-check-icon svg {
+  stroke: #fff;
+  stroke-dashoffset: 0;
+}
+
+/* Password Match Indicator */
+.pw-match-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  transition: all 0.3s ease;
+}
+
+.pw-match-indicator span {
+  font-size: 0.78rem;
+  transition: color 0.3s ease;
+}
+
+.pw-match-indicator.match span {
+  color: #34a853;
+}
+
+.pw-match-indicator.nomatch span {
+  color: var(--color-error, #ef4444);
+}
+
+.pw-match-indicator.match .pw-check-icon {
+  background: #34a853;
+  transform: scale(1.15);
+}
+
+.pw-match-indicator.match .pw-check-icon svg {
+  stroke: #fff;
+  stroke-dashoffset: 0;
+}
+
+.pw-match-indicator.nomatch .pw-check-icon {
+  background: var(--color-error, #ef4444);
+  transform: scale(1.15);
+}
+
+.pw-match-indicator.nomatch .pw-check-icon svg {
+  stroke: #fff;
+  stroke-dashoffset: 0;
+}
+
+/* ========================
    ERROR TOAST
    ======================== */
 .error-toast {
@@ -888,6 +1167,19 @@ async function handleRegister() {
   border-radius: var(--radius-md);
   color: var(--color-error);
   font-size: var(--font-size-sm);
+}
+
+.success-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(52, 168, 83, 0.1);
+  border: 1px solid rgba(52, 168, 83, 0.4);
+  border-radius: var(--radius-md);
+  color: #34a853;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
 /* ========================
@@ -1064,6 +1356,63 @@ async function handleRegister() {
 
 [data-theme="light"] .bg-orb {
   opacity: 0.6;
+}
+
+/* ========================
+   GOOGLE BUTTON + DIVIDER
+   ======================== */
+.social-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+.social-divider::before,
+.social-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+.social-divider span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  background: #fff;
+  color: #3c4043;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1.5px solid #dadce0;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.btn-google:hover {
+  background: #f7f8f8;
+  border-color: #c6c6c6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.btn-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme="light"] .btn-google {
+  border-color: rgba(0,0,0,0.15);
+}
+[data-theme="light"] .btn-google:hover {
+  background: #f1f3f4;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 </style>

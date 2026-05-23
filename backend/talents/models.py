@@ -28,7 +28,15 @@ class TalentProfile(models.Model):
 
     TALENT_LEVEL_CHOICES = [
         ('standard', 'Standard'),
+        ('pro', 'Pro'),
         ('premium', 'Premium'),
+    ]
+
+    EXPERIENCE_LEVEL_CHOICES = [
+        ('beginner', 'Principiante'),
+        ('semi_professional', 'Semiprofesional'),
+        ('professional', 'Profesional'),
+        ('expert', 'Experto'),
     ]
 
     user = models.OneToOneField(
@@ -69,8 +77,47 @@ class TalentProfile(models.Model):
         help_text='Admin debe aprobar antes de que sea visible'
     )
     is_available = models.BooleanField(default=True)
+    experience_level = models.CharField(
+        max_length=20, choices=EXPERIENCE_LEVEL_CHOICES,
+        default='beginner', help_text='Nivel de experiencia del talento'
+    )
+    coverage_radius_km = models.PositiveIntegerField(
+        default=50, help_text='Radio de cobertura en km desde su ubicación'
+    )
+    onboarding_completed = models.BooleanField(
+        default=False, help_text='Si el talento completó el wizard de onboarding'
+    )
+    mood_tags = models.JSONField(
+        default=list, blank=True,
+        help_text='Lista de moods/vibes (ej: ["Boda elegante", "After party", "Cocktail formal"])'
+    )
+    event_types = models.JSONField(
+        default=list, blank=True,
+        help_text='Tipos de eventos que cubre (slugs: wedding, corporate, birthday, cocktail, club, launch)'
+    )
+    languages = models.JSONField(
+        default=list, blank=True,
+        help_text='Idiomas en los que puede hacer MC (ej: ["Español", "Inglés"])'
+    )
+    equipment_brings = models.JSONField(
+        default=list, blank=True,
+        help_text='Equipamiento que el talento trae (ej: ["2x CDJ-3000", "Mixer DJM-A9", "Auriculares"])'
+    )
+    equipment_not_included = models.JSONField(
+        default=list, blank=True,
+        help_text='Equipamiento NO incluido (ej: ["Sonido +80 personas", "Luces", "Pantallas"])'
+    )
+    service_zones = models.JSONField(
+        default=list, blank=True,
+        help_text='Zonas/barrios específicos de cobertura (ej: ["Casco Antiguo", "Costa del Este", "Coronado"])'
+    )
+    travel_fee_extra = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True,
+        help_text='Cargo adicional por traslado fuera del área de cobertura'
+    )
     website = models.URLField(blank=True)
     instagram = models.CharField(max_length=100, blank=True)
+    tiktok = models.CharField(max_length=100, blank=True)
     soundcloud = models.URLField(blank=True)
     mixcloud = models.URLField(blank=True)
     spotify = models.URLField(blank=True)
@@ -180,3 +227,60 @@ class Availability(models.Model):
 
     def __str__(self):
         return f"{self.talent.stage_name} - {self.date} ({self.get_status_display()})"
+
+
+class Pack(models.Model):
+    """Paquete de servicio pre-armado del talento (ej: Pack Boda $600 / 4h)."""
+
+    talent = models.ForeignKey(
+        TalentProfile,
+        on_delete=models.CASCADE,
+        related_name='packs'
+    )
+    name = models.CharField(max_length=120)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price_label = models.CharField(
+        max_length=40, blank=True,
+        help_text='Texto alternativo cuando no hay precio fijo (ej: "Cotizar")'
+    )
+    duration_hours = models.DecimalField(
+        max_digits=4, decimal_places=1, null=True, blank=True,
+        help_text='Duración en horas (ej: 4.0)'
+    )
+    currency = models.CharField(max_length=3, default='USD')
+    included_items = models.JSONField(
+        default=list, blank=True,
+        help_text='Items incluidos (ej: ["DJ + sonido básico", "Micrófono", "Setlist"])'
+    )
+    is_featured = models.BooleanField(default=False, help_text='Marcar como "POPULAR" en el perfil')
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'talent_packs'
+        ordering = ['order', 'price']
+
+    def __str__(self):
+        return f"{self.talent.stage_name} · {self.name}"
+
+
+class TalentFAQ(models.Model):
+    """Preguntas frecuentes personalizadas del talento."""
+
+    talent = models.ForeignKey(
+        TalentProfile,
+        on_delete=models.CASCADE,
+        related_name='faqs'
+    )
+    question = models.CharField(max_length=255)
+    answer = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'talent_faqs'
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.talent.stage_name} · {self.question[:50]}"

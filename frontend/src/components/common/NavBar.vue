@@ -3,7 +3,6 @@
     <div class="container navbar-inner">
       <router-link to="/" class="logo" aria-label="Pulsar Home">
         <span class="logo-text">PULSAR</span>
-        <span class="logo-sub">by ShowRoots</span>
       </router-link>
 
       <div class="nav-links" :class="{ open: menuOpen }">
@@ -11,26 +10,15 @@
           <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           Talentos
         </router-link>
-        <router-link to="/venues" @click="menuOpen = false">
+        <!-- Venues — oculto temporalmente, funcionalidad pendiente -->
+        <router-link v-if="false" to="/venues" @click="menuOpen = false">
           <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Venues
         </router-link>
 
         <template v-if="auth.isLoggedIn">
-          <router-link v-if="auth.user?.role === 'admin'" to="/admin" @click="menuOpen = false">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Admin
-          </router-link>
-          <router-link v-else-if="auth.user?.role === 'partner'" to="/partner" @click="menuOpen = false">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            Partner
-          </router-link>
-          <router-link v-else :to="auth.user?.role === 'talent' ? '/talent-dashboard' : '/dashboard'" @click="menuOpen = false">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Dashboard
-          </router-link>
           <NotificationDropdown />
-          <div class="user-menu-wrap">
+          <div class="user-menu-wrap" ref="userMenuRef">
             <div class="user-pill" @click="showUserMenu = !showUserMenu">
               <span class="user-initial">{{ auth.user?.first_name?.[0] || auth.user?.username?.[0] || '?' }}</span>
               <span class="user-name-nav">{{ auth.user?.first_name || auth.user?.username }}</span>
@@ -40,9 +28,13 @@
                 <strong>{{ auth.user?.first_name }} {{ auth.user?.last_name }}</strong>
                 <span class="dropdown-role">{{ auth.roleLabel }}</span>
               </div>
-              <router-link to="/dashboard" class="dropdown-item" @click="showUserMenu = false">
+              <router-link :to="dashboardRoute" class="dropdown-item" @click="showUserMenu = false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Mi Dashboard
+              </router-link>
+              <router-link to="/account" class="dropdown-item" @click="showUserMenu = false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Mi Perfil
               </router-link>
               <button class="dropdown-item" @click="handleLogout">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -93,11 +85,32 @@ const isScrolled = ref(false)
 const menuOpen = ref(false)
 // unreadCount moved to NotificationDropdown component
 const showUserMenu = ref(false)
+const userMenuRef = ref(null)
+
+function onDocumentClick(e) {
+  if (!showUserMenu.value) return
+  if (userMenuRef.value && !userMenuRef.value.contains(e.target)) {
+    showUserMenu.value = false
+  }
+}
+
+function onDocumentKey(e) {
+  if (e.key === 'Escape' && showUserMenu.value) showUserMenu.value = false
+}
 
 // Force dark navbar on talent profile page when global theme is light
 // Only while transparent (not scrolled) — once scrolled, revert to light
 const forceDarkNav = computed(() => {
   return route.name === 'talent-profile' && !themeStore.isDark() && !isScrolled.value
+})
+
+// Ruta del dashboard según el rol
+const dashboardRoute = computed(() => {
+  const role = auth.user?.role
+  if (role === 'admin') return '/admin'
+  if (role === 'partner') return '/partner'
+  if (role === 'talent') return '/talent-dashboard'
+  return '/dashboard'
 })
 
 // Lock body scroll when mobile menu is open
@@ -120,10 +133,14 @@ function handleLogout() {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+  document.addEventListener('mousedown', onDocumentClick)
+  document.addEventListener('keydown', onDocumentKey)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  document.removeEventListener('mousedown', onDocumentClick)
+  document.removeEventListener('keydown', onDocumentKey)
   document.body.style.overflow = ''
 })
 </script>

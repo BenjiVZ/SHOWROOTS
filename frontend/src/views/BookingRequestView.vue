@@ -37,17 +37,15 @@
 
                 <div class="form-group">
                   <label class="form-label">Tipo de Evento</label>
-                  <select v-model="form.event_type" class="form-input" required>
-                    <option value="">Seleccionar...</option>
-                    <option value="wedding">Boda</option>
-                    <option value="corporate">Evento Corporativo</option>
-                    <option value="birthday">Cumpleaños</option>
-                    <option value="rooftop">Rooftop</option>
-                    <option value="restaurant">Restaurante / Bar</option>
-                    <option value="private">Evento Privado</option>
-                    <option value="festival">Festival</option>
-                    <option value="other">Otro</option>
-                  </select>
+                  <div class="event-tiles">
+                    <button v-for="t in eventTypeTiles" :key="t.value" type="button"
+                      class="event-tile"
+                      :class="{ selected: form.event_type === t.value }"
+                      @click="form.event_type = t.value">
+                      <span class="event-tile-icon" v-html="t.icon"></span>
+                      <span class="event-tile-label">{{ t.label }}</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -142,7 +140,12 @@
                 <div class="form-group">
                   <label class="form-label">Descripción del Evento</label>
                   <textarea v-model="form.description" class="form-input form-textarea" rows="4"
+                    :class="{ 'form-input-warn': descViolations.length }"
                     placeholder="Describe qué tipo de ambiente buscas, requerimientos especiales, etc."></textarea>
+                  <p v-if="descViolationMsg" class="anti-disinter-warn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ descViolationMsg }}
+                  </p>
                 </div>
 
                 <div class="form-group">
@@ -442,18 +445,39 @@
         </div>
       </div>
 
-      <!-- Success Modal -->
+      <!-- Success / Confirmation Modal -->
       <div v-if="showSuccess" class="modal-overlay" @click.self="goToDashboard">
-        <div class="modal-card glass animate-fade-in-up">
+        <div class="modal-card success-card glass animate-fade-in-up">
           <div class="success-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <h2>¡Solicitud Enviada!</h2>
-          <p>Tu solicitud ha sido enviada a <strong>{{ talent?.stage_name }}</strong>. Te notificaremos cuando responda.</p>
-          <p class="expire-note">⏰ El talento tiene 48 horas para responder</p>
+          <p class="success-sub">Tu solicitud llegó a <strong>{{ talent?.stage_name }}</strong>. Te notificaremos cuando responda.</p>
+
+          <div v-if="createdBooking?.booking_code" class="booking-code-block">
+            <span class="code-label">Código de tu reserva</span>
+            <code class="booking-code">{{ createdBooking.booking_code }}</code>
+          </div>
+
+          <div class="next-steps-list">
+            <h4>¿Qué pasa ahora?</h4>
+            <div v-for="(step, i) in nextStepsTimeline" :key="i" class="next-step-item">
+              <div class="next-num">{{ i + 1 }}</div>
+              <div class="next-text">
+                <strong>{{ step.title }}</strong>
+                <span>{{ step.desc }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="trust-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Pago protegido por Pulsar · Reembolso 100% si el talento no se presenta
+          </div>
+
           <div class="modal-actions">
-            <button @click="goToDashboard" class="btn btn-primary">Ir a Mis Reservas</button>
-            <router-link to="/search" class="btn btn-ghost">Seguir Explorando</router-link>
+            <button @click="goToDashboard" class="btn btn-primary">Ver mis reservas</button>
+            <router-link to="/search" class="btn btn-ghost">Seguir explorando</router-link>
           </div>
         </div>
       </div>
@@ -462,10 +486,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import { scan as antiScan, violationsMessage } from '@/utils/antiDisinter'
 
 const route = useRoute()
 const router = useRouter()
@@ -476,6 +501,7 @@ const talent = ref(null)
 const error = ref('')
 const submitting = ref(false)
 const showSuccess = ref(false)
+const createdBooking = ref(null)
 const currentStep = ref(0)
 const selectedDuration = ref(3)
 
@@ -662,6 +688,10 @@ onMounted(async () => {
 })
 
 async function handleSubmit() {
+  if (descViolations.value.length) {
+    error.value = descViolationMsg.value
+    return
+  }
   if (!auth.isLoggedIn) {
     // Persist form data so it survives the login redirect
     sessionStorage.setItem('booking_draft', JSON.stringify({
@@ -715,7 +745,8 @@ async function handleSubmit() {
       payload.client_final_email = form.value.client_final_email
       payload.client_final_phone = form.value.client_final_phone
     }
-    await api.post('/bookings/create/', payload)
+    const { data } = await api.post('/bookings/create/', payload)
+    createdBooking.value = data
     showSuccess.value = true
   } catch (e) {
     const data = e.response?.data
@@ -729,6 +760,40 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+const eventTypeTiles = [
+  // Boda — anillos
+  { value: 'wedding', label: 'Boda', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="15" r="5"/><circle cx="16" cy="15" r="5"/><path d="M7 9l2-5h6l2 5"/></svg>' },
+  // Corporativo — edificio
+  { value: 'corporate', label: 'Corporativo', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="13" y1="7" x2="13" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="13" y1="11" x2="13" y2="11.01"/><line x1="9" y1="15" x2="9" y2="15.01"/><line x1="13" y1="15" x2="13" y2="15.01"/></svg>' },
+  // Cumpleaños — torta con velita
+  { value: 'birthday', label: 'Cumpleaños', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8"/><path d="M4 16s1.5-2 4-2 3.5 2 4 2 1.5-2 4-2 4 2 4 2"/><line x1="2" y1="21" x2="22" y2="21"/><line x1="12" y1="4" x2="12" y2="11"/><path d="M10.5 4.5C10.5 3 12 2 12 2s1.5 1 1.5 2.5a1.5 1.5 0 01-3 0z"/></svg>' },
+  // Privado — copas brindando
+  { value: 'private', label: 'Privado', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 11v11"/><path d="M19 3l-7 8-7-8"/><path d="M5 3h14"/></svg>' },
+  // Festival — carpa
+  { value: 'festival', label: 'Festival', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M12 3L4 20"/><path d="M12 3l8 17"/><path d="M12 3v17"/><path d="M9 20l3-6 3 6"/></svg>' },
+  // Rooftop — skyline nocturno
+  { value: 'rooftop', label: 'Rooftop', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V11l4-2v12"/><path d="M7 21V7l5-2v16"/><path d="M12 21V9l5 2v10"/><path d="M17 21v-8l4 2v6"/><circle cx="18" cy="5" r="1"/></svg>' },
+  // Restaurante — copa de cóctel
+  { value: 'restaurant', label: 'Restaurante', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14l-7 9z"/><path d="M12 12v9"/><path d="M8 21h8"/><circle cx="16" cy="6" r="0.8" fill="currentColor"/></svg>' },
+  // Otro — chispa / sparkles
+  { value: 'other', label: 'Otro', icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/><path d="M5 14l.6 1.4L7 16l-1.4.6L5 18l-.6-1.4L3 16l1.4-.6z"/></svg>' },
+]
+
+const nextStepsTimeline = [
+  { title: 'Pago confirmado', desc: 'Cuando el talento acepte, recibirás el link para pagar a Pulsar (no al talento).' },
+  { title: 'El talento revisa', desc: 'Tiene hasta 48 horas para enviarte una propuesta personalizada.' },
+  { title: 'Coordinación previa', desc: 'Chat in-app para confirmar setlist, setup y detalles del evento.' },
+  { title: 'Día del evento', desc: 'El talento se presenta. Si no llega, te reembolsamos 100%.' },
+  { title: 'Liberación del pago', desc: '24h después del evento, se libera el pago al talento y dejas tu reseña.' },
+]
+
+// Anti-desintermediación en descripción
+const descViolations = ref([])
+watch(() => form.value.description, (val) => {
+  descViolations.value = antiScan(val || '')
+})
+const descViolationMsg = computed(() => violationsMessage(descViolations.value))
 
 function goToDashboard() {
   router.push(auth.user?.role === 'partner' ? '/partner' : '/dashboard')
@@ -1081,6 +1146,149 @@ select.form-input { cursor: pointer; }
 .modal-card p { color: var(--color-text-secondary); margin-bottom: var(--space-4); }
 .expire-note { font-size: var(--font-size-sm); color: var(--color-primary); font-weight: 600; margin-bottom: var(--space-6); }
 .modal-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Success card (confirmación con booking_code + timeline) */
+.success-card {
+  max-width: 520px;
+  padding: var(--space-8) var(--space-6);
+  text-align: left;
+}
+.success-card .success-icon { display: flex; justify-content: center; }
+.success-card h2 { text-align: center; }
+.success-sub { text-align: center; }
+.booking-code-block {
+  text-align: center;
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: var(--space-4) 0 var(--space-6);
+}
+.code-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+.booking-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 1px;
+}
+.next-steps-list { margin-bottom: var(--space-5); }
+.next-steps-list h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+  color: var(--color-text-primary);
+}
+.next-step-item {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+.next-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(193,216,47,0.15);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+.next-text strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+}
+.next-text span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+.trust-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: var(--space-5);
+}
+
+/* Anti-desintermediación warning */
+.anti-disinter-warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: rgba(232, 93, 74, 0.08);
+  border: 1px solid rgba(232, 93, 74, 0.3);
+  border-radius: 8px;
+  color: #E85D4A;
+  font-size: 0.78rem;
+}
+.form-input-warn { border-color: #E85D4A !important; }
+
+/* Event type tiles (Pantalla 1 del mockup) */
+.event-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-2);
+}
+.event-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-4) var(--space-2);
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--color-text-secondary);
+}
+.event-tile:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-2px);
+}
+.event-tile.selected {
+  border-color: var(--color-primary);
+  background: rgba(193,216,47,0.06);
+  color: var(--color-primary);
+}
+.event-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+.event-tile:hover .event-tile-icon { color: var(--color-text-primary); }
+.event-tile.selected .event-tile-icon { color: var(--color-primary); }
+.event-tile-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
 
 /* ── Partner Section ── */
 .partner-section {

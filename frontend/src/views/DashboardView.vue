@@ -38,33 +38,42 @@
         <div v-if="!notifications.length" class="notif-empty">Sin notificaciones</div>
       </div>
 
-      <!-- Quick Stats -->
+      <!-- Quick Stats — KPIs del cliente -->
       <div class="stats-grid animate-fade-in-up" style="animation-delay:0.1s">
         <div class="stat-card glass">
           <div class="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
           <div>
-            <span class="stat-value">{{ bookings.length }}</span>
-            <span class="stat-label">Total Reservas</span>
+            <span class="stat-value">{{ upcomingCount }}</span>
+            <span class="stat-label">Próximos eventos</span>
           </div>
         </div>
         <div class="stat-card glass">
-          <div class="stat-icon stat-icon-warning">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
-            <span class="stat-value">{{ pendingCount }}</span>
-            <span class="stat-label">Pendientes</span>
+            <span class="stat-value">${{ inEscrowTotal.toFixed(2) }}</span>
+            <span class="stat-label">En custodia</span>
           </div>
         </div>
         <div class="stat-card glass">
           <div class="stat-icon stat-icon-success">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <div>
-            <span class="stat-value">{{ confirmedCount }}</span>
-            <span class="stat-label">Confirmadas</span>
+            <span class="stat-value">{{ completedCount }}</span>
+            <span class="stat-label">Eventos completados</span>
+          </div>
+        </div>
+        <div v-if="!auth.isTalent && creditBalance > 0" class="stat-card glass stat-credit">
+          <div class="stat-icon" style="background:rgba(193,216,47,0.12);color:var(--color-primary);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <span class="stat-value">${{ Number(creditBalance).toFixed(0) }}</span>
+            <span class="stat-label">Crédito Pulsar</span>
           </div>
         </div>
         <div v-if="auth.isTalent || auth.isPartner" class="stat-card glass">
@@ -75,6 +84,29 @@
             <span class="stat-value">${{ totalEarnings }}</span>
             <span class="stat-label">Ingresos</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Próximos eventos con countdown (hero cards) -->
+      <div v-if="upcomingWithCountdown.length" class="upcoming-section animate-fade-in-up" style="animation-delay:0.12s">
+        <h3 class="upcoming-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Próximos eventos
+        </h3>
+        <div class="upcoming-grid">
+          <router-link v-for="b in upcomingWithCountdown" :key="b.id" :to="`/dashboard/bookings/${b.id}`" class="upcoming-card">
+            <div class="uc-countdown">
+              <div class="uc-cd-unit"><strong>{{ b.cd.days }}</strong><span>días</span></div>
+              <div class="uc-cd-unit"><strong>{{ b.cd.hours }}</strong><span>hrs</span></div>
+              <div class="uc-cd-unit"><strong>{{ b.cd.minutes }}</strong><span>min</span></div>
+            </div>
+            <div class="uc-info">
+              <strong>{{ auth.isTalent ? b.client_name : b.talent_name }}</strong>
+              <p>{{ b.event_type_display || b.event_type }} · {{ formatDate(b.event_date) }}</p>
+              <span v-if="b.event_city" class="uc-location">📍 {{ b.event_city }}</span>
+            </div>
+            <span class="uc-escrow">🛡 ${{ Number(b.amount_paid || 0).toFixed(2) }} en custodia</span>
+          </router-link>
         </div>
       </div>
 
@@ -168,6 +200,47 @@ const totalEarnings = computed(() => {
     .toFixed(2)
 })
 
+// KPIs nuevos para el cliente
+const now = new Date()
+const upcomingCount = computed(() =>
+  bookings.value.filter(b => b.status === 'confirmada' && new Date(b.event_date) >= now).length
+)
+
+// Cards con countdown — hasta 3 próximos confirmados
+const nowMs = ref(Date.now())
+setInterval(() => { nowMs.value = Date.now() }, 30000)
+
+const upcomingWithCountdown = computed(() => {
+  return bookings.value
+    .filter(b => b.status === 'confirmada' && b.event_date && b.event_time_start)
+    .map(b => {
+      const target = new Date(`${b.event_date}T${b.event_time_start}`).getTime()
+      const diff = target - nowMs.value
+      if (diff <= 0) return null
+      return {
+        ...b,
+        cd: {
+          days: Math.floor(diff / 86400000),
+          hours: Math.floor((diff % 86400000) / 3600000),
+          minutes: Math.floor((diff % 3600000) / 60000),
+        }
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+    .slice(0, 3)
+})
+const completedCount = computed(() =>
+  bookings.value.filter(b => b.status === 'completada').length
+)
+const inEscrowTotal = computed(() => {
+  // Bookings con pago hecho pero evento aún no completado
+  return bookings.value
+    .filter(b => b.status === 'confirmada')
+    .reduce((sum, b) => sum + parseFloat(b.amount_paid || 0), 0)
+})
+const creditBalance = ref(0)
+
 const tabs = computed(() => [
   { value: 'all', label: 'Todas', count: bookings.value.length },
   { value: 'active', label: 'Activas', count: bookings.value.filter(b => !['completada', 'cancelada', 'rechazada'].includes(b.status)).length },
@@ -235,6 +308,13 @@ onMounted(async () => {
     notifications.value = (results[1].data.results || results[1].data).slice(0, 10)
     unreadCount.value = results[2].data.unread_count
     if (auth.isTalent && results[3]) talentProfile.value = results[3].data
+    // Fetch credit balance (solo si no es talento)
+    if (!auth.isTalent) {
+      try {
+        const { data } = await api.get('/credits/')
+        creditBalance.value = parseFloat(data.balance || 0)
+      } catch { /* silent */ }
+    }
   } catch (e) {
     console.error(e)
   } finally {
@@ -392,6 +472,86 @@ onMounted(async () => {
 
 /* Bookings */
 .bookings-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Upcoming with countdown */
+.upcoming-section { margin-bottom: var(--space-6); }
+.upcoming-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+.upcoming-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+.upcoming-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, rgba(193,216,47,0.06), rgba(16,185,129,0.02));
+  border: 1px solid rgba(193,216,47,0.25);
+  border-radius: var(--radius-xl);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-fast);
+}
+.upcoming-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+.uc-countdown {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  justify-content: space-around;
+}
+.uc-cd-unit { text-align: center; }
+.uc-cd-unit strong {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  line-height: 1;
+}
+.uc-cd-unit span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.uc-info strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.uc-info p {
+  margin: 0 0 4px;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+.uc-location { font-size: 0.78rem; color: var(--color-text-muted); }
+.uc-escrow {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(16,185,129,0.1);
+  color: #10b981;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
 .booking-item {
   display: flex;
   justify-content: space-between;

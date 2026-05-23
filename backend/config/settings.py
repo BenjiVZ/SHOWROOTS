@@ -11,7 +11,14 @@ SECRET_KEY = 'django-insecure-webdj-dev-key-change-in-production-2024'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'backend.aplicacionesdamasco.com', 'frontend.aplicacionesdamasco.com', 'localhost']
+# Google OAuth — loaded from backend/.env
+import os
+from pathlib import Path as _Path
+from dotenv import load_dotenv
+load_dotenv(_Path(__file__).resolve().parent.parent / '.env')
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+
+ALLOWED_HOSTS = ['*', 'backend.aplicacionesdamasco.com', 'frontend.aplicacionesdamasco.com', '3000.masterslogic.com', '3001.masterslogic.com', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [
@@ -92,7 +99,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -112,6 +119,15 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 12,
+    # Rate limiting — protección básica antes de Stripe
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',
+        'user': '600/minute',
+    },
 }
 
 # JWT Settings
@@ -129,10 +145,19 @@ CORS_ALLOWED_ORIGINS = [
     'http://frontend.aplicacionesdamasco.com',
     'https://backend.aplicacionesdamasco.com',
     'http://backend.aplicacionesdamasco.com',
+    'https://3000.masterslogic.com',
+    'https://3001.masterslogic.com',
     'http://localhost:3000',
     'http://localhost:3001',
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://frontend.aplicacionesdamasco.com',
+    'https://backend.aplicacionesdamasco.com',
+    'https://3000.masterslogic.com',
+    'https://3001.masterslogic.com',
+]
 
 # ── Email Configuration ──
 # Dev: prints to console | Prod: real SMTP

@@ -13,7 +13,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => user.value?.role === 'admin')
 
   const roleLabel = computed(() => {
-    const map = { talent: 'Talento', client: 'Cliente', partner: 'Partner', admin: 'Admin' }
+    const map = { talent: 'Talento', client: 'Cliente', partner: 'Aliado', admin: 'Admin' }
     return map[user.value?.role] || ''
   })
 

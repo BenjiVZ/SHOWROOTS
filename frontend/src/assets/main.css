@@ -44,6 +44,10 @@
   --color-border-hover: rgba(193, 216, 47, 0.4);
   --color-border-focus: rgba(193, 216, 47, 0.6);
 
+  /* ---- Acentos ---- */
+  --color-primary-ultra-light: rgba(193, 216, 47, 0.12);
+  --color-accent-light: rgba(193, 216, 47, 0.08);
+
   /* ---- Estado ---- */
   --color-success: #C1D82F;
   --color-success-light: rgba(193, 216, 47, 0.15);
@@ -166,6 +170,10 @@
   --color-border: rgba(0, 0, 0, 0.12);
   --color-border-hover: rgba(107, 138, 15, 0.4);
   --color-border-focus: rgba(107, 138, 15, 0.6);
+
+  /* ---- Acentos ---- */
+  --color-primary-ultra-light: rgba(107, 138, 15, 0.08);
+  --color-accent-light: rgba(107, 138, 15, 0.05);
 
   /* ---- Estado ---- */
   --color-success: #4A7A08;

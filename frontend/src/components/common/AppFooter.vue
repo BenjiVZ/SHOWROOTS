@@ -4,7 +4,6 @@
       <div class="footer-brand">
         <div class="footer-logo">
           <span class="footer-logo-text">PULSAR</span>
-          <span class="footer-logo-sub">by ShowRoots</span>
         </div>
         <p class="footer-desc">La plataforma que conecta talentos musicales con clientes que buscan la mejor experiencia para sus eventos.</p>
       </div>
@@ -12,7 +11,8 @@
         <div class="footer-col">
           <h4>Explora</h4>
           <router-link to="/search">Buscar Talentos</router-link>
-          <router-link to="/venues">Venues</router-link>
+          <!-- Venues — oculto temporalmente -->
+          <router-link v-if="false" to="/venues">Venues</router-link>
           <router-link to="/search?talent_type=dj">DJs</router-link>
           <router-link to="/search?talent_type=band">Bandas</router-link>
         </div>
@@ -26,7 +26,7 @@
     </div>
     <div class="footer-bottom">
       <div class="container footer-bottom-inner">
-        <p>&copy; {{ new Date().getFullYear() }} Pulsar by ShowRoots — Todos los derechos reservados.</p>
+        <p>&copy; {{ new Date().getFullYear() }} Pulsar — Todos los derechos reservados.</p>
       </div>
     </div>
   </footer>

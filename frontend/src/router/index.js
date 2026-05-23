@@ -49,9 +49,21 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/dashboard/bookings/:id/pay',
+    name: 'booking-pay',
+    component: () => import('@/views/PaymentView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/partner',
     name: 'partner-dashboard',
     component: () => import('@/views/PartnerDashboardView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/talent-onboarding',
+    name: 'talent-onboarding',
+    component: () => import('@/views/TalentOnboardingView.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -65,6 +77,22 @@ const routes = [
     name: 'admin-dashboard',
     component: () => import('@/views/AdminDashboardView.vue'),
     meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: '/account',
+    name: 'account',
+    component: () => import('@/views/AccountView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/tiers',
+    name: 'tiers',
+    component: () => import('@/views/TiersView.vue'),
+  },
+  {
+    path: '/como-funciona',
+    name: 'how-it-works',
+    component: () => import('@/views/HowItWorksView.vue'),
   },
   {
     path: '/forgot-password',

@@ -7,14 +7,25 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user profile data."""
 
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
             'role', 'avatar', 'phone', 'city', 'country', 'bio',
+            'discovery_source',
             'is_verified', 'is_active', 'date_joined', 'created_at'
         ]
         read_only_fields = ['id', 'is_verified', 'is_active', 'date_joined', 'created_at']
+
+    def get_avatar(self, obj):
+        if not obj.avatar:
+            return None
+        try:
+            return obj.avatar.url
+        except Exception:
+            return None
 
 
 class RegisterSerializer(serializers.ModelSerializer):

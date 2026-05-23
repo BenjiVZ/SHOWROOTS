@@ -2,11 +2,12 @@ from rest_framework import generics, permissions, status, parsers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Genre, TalentProfile, TalentMedia, TalentExperience, Availability
+from .models import Genre, TalentProfile, TalentMedia, TalentExperience, Availability, Pack, TalentFAQ
 from .serializers import (
     GenreSerializer, TalentListSerializer, TalentDetailSerializer,
     TalentCreateSerializer, TalentMediaSerializer, TalentExperienceSerializer,
     AvailabilitySerializer, AvailabilityCreateSerializer,
+    PackSerializer, TalentFAQSerializer,
 )
 from .filters import TalentFilter
 
@@ -43,9 +44,23 @@ class TalentDetailView(generics.RetrieveAPIView):
 
 
 class TalentCreateView(generics.CreateAPIView):
-    """Create a talent profile for the authenticated user."""
+    """Create a talent profile for the authenticated user.
+
+    Si ya existe un perfil, hace upsert (actualiza el existente) en lugar de fallar.
+    Esto evita 500 errors si el DJ reintenta el wizard de onboarding.
+    """
     serializer_class = TalentCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        existing = TalentProfile.objects.filter(user=request.user).first()
+        if existing:
+            # Upsert: actualizar el perfil existente con los datos del wizard
+            serializer = self.get_serializer(existing, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return super().create(request, *args, **kwargs)
 
 
 class TalentUpdateView(generics.RetrieveUpdateAPIView):
@@ -59,9 +74,13 @@ class TalentUpdateView(generics.RetrieveUpdateAPIView):
         return TalentDetailSerializer
 
     def get_object(self):
-        return TalentProfile.objects.select_related('user').prefetch_related(
-            'genres', 'media', 'experiences', 'availability'
-        ).get(user=self.request.user)
+        try:
+            return TalentProfile.objects.select_related('user').prefetch_related(
+                'genres', 'media', 'experiences', 'availability'
+            ).get(user=self.request.user)
+        except TalentProfile.DoesNotExist:
+            from rest_framework.exceptions import NotFound
+            raise NotFound('No tienes perfil de talento. Crea uno primero.')
 
 
 class CoverPhotoUploadView(APIView):
@@ -93,7 +112,7 @@ class CoverPhotoUploadView(APIView):
 
         return Response({
             'message': 'Foto de portada actualizada.',
-            'cover_photo': request.build_absolute_uri(talent.cover_photo.url)
+            'cover_photo': talent.cover_photo.url,
         })
 
 
@@ -106,12 +125,27 @@ class TalentMediaListCreateView(generics.ListCreateAPIView):
         return TalentMedia.objects.filter(talent_id=self.kwargs['talent_id'])
 
     def perform_create(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
+        from .tier_limits import can_add
         talent = TalentProfile.objects.get(id=self.kwargs['talent_id'])
+        if talent.user != self.request.user:
+            raise PermissionDenied('Solo el dueño puede subir media.')
+        # Map media_type to kind
+        media_type = serializer.validated_data.get('media_type')
+        kind_map = {'photo': 'photo', 'audio': 'mix', 'video': 'video'}
+        kind = kind_map.get(media_type)
+        if kind:
+            allowed, limit, current = can_add(talent, kind)
+            if not allowed:
+                raise PermissionDenied(
+                    f'Tu Plan {talent.get_talent_level_display()} permite máximo {limit} {kind}s. '
+                    f'Haz upgrade de Plan para subir más.'
+                )
         serializer.save(talent=talent)
 
 
-class TalentMediaDeleteView(generics.DestroyAPIView):
-    """Delete a media item."""
+class TalentMediaDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update (title/order/is_cover), or delete a media item owned by the requesting user."""
     serializer_class = TalentMediaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -210,3 +244,121 @@ class StatsView(APIView):
             'total_genres': Genre.objects.count(),
             'premium_talents': TalentProfile.objects.filter(talent_level='premium', is_approved=True).count(),
         })
+
+
+class TalentInquiryView(APIView):
+    """Cliente envía una consulta rápida al talento sin crear booking aún."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, talent_id):
+        try:
+            talent = TalentProfile.objects.get(id=talent_id)
+        except TalentProfile.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+
+        message = (request.data.get('message') or '').strip()
+        if len(message) < 10:
+            return Response({'error': 'Mensaje debe tener al menos 10 caracteres.'}, status=400)
+
+        # Anti-disinter scan
+        from bookings.anti_disinter import sanitize
+        clean, findings = sanitize(message)
+        if findings:
+            return Response({
+                'error': 'Tu mensaje contiene patrones de contacto directo. Toda comunicación queda dentro de Pulsar.',
+                'categories': list({cat for cat, _ in findings}),
+            }, status=400)
+
+        # Crear notificación al talento
+        from bookings.models import Notification
+        Notification.objects.create(
+            user=talent.user,
+            notification_type='new_message',
+            title=f'Nueva consulta de {request.user.get_full_name() or request.user.email}',
+            message=clean[:500],
+            link=f'/talent-dashboard'
+        )
+        return Response({'success': True, 'message': 'Consulta enviada. El talento responderá pronto.'})
+
+
+class MyTierLimitsView(APIView):
+    """Devuelve los límites del tier del talento autenticado + lo que ya consumió."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .tier_limits import get_limits, can_add
+        if not hasattr(request.user, 'talent_profile'):
+            return Response({'error': 'No tienes perfil de talento'}, status=404)
+        talent = request.user.talent_profile
+        limits = get_limits(talent.talent_level)
+        usage = {}
+        for kind in ['photo', 'mix', 'video', 'pack', 'faq']:
+            allowed, limit, current = can_add(talent, kind)
+            usage[kind] = {'limit': limit, 'current': current, 'can_add': allowed}
+        return Response({
+            'tier': talent.talent_level,
+            'limits': limits,
+            'usage': usage,
+        })
+
+
+# ── Packs ─────────────────────────────────────────────────────────
+class PackListCreateView(generics.ListCreateAPIView):
+    """List packs of a talent (public read) or create one (owner)."""
+    serializer_class = PackSerializer
+
+    def get_queryset(self):
+        return Pack.objects.filter(talent_id=self.kwargs['talent_id'])
+
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
+        from .tier_limits import can_add
+        talent = TalentProfile.objects.get(id=self.kwargs['talent_id'])
+        if talent.user != self.request.user:
+            raise PermissionDenied('Solo el dueño puede crear paquetes.')
+        allowed, limit, current = can_add(talent, 'pack')
+        if not allowed:
+            raise PermissionDenied(
+                f'Tu Plan {talent.get_talent_level_display()} permite máximo {limit} paquete(s).'
+            )
+        serializer.save(talent=talent)
+
+
+class PackDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a pack (owner only for write)."""
+    serializer_class = PackSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Pack.objects.filter(talent__user=self.request.user)
+
+
+# ── FAQs ─────────────────────────────────────────────────────────
+class FAQListCreateView(generics.ListCreateAPIView):
+    """List FAQs of a talent (public read) or create one (owner)."""
+    serializer_class = TalentFAQSerializer
+
+    def get_queryset(self):
+        return TalentFAQ.objects.filter(talent_id=self.kwargs['talent_id'])
+
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
+        from .tier_limits import can_add
+        talent = TalentProfile.objects.get(id=self.kwargs['talent_id'])
+        if talent.user != self.request.user:
+            raise PermissionDenied('Solo el dueño puede crear FAQs.')
+        allowed, limit, current = can_add(talent, 'faq')
+        if not allowed:
+            raise PermissionDenied(
+                f'Tu Plan {talent.get_talent_level_display()} permite máximo {limit} FAQ(s).'
+            )
+        serializer.save(talent=talent)
+
+
+class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete an FAQ (owner only for write)."""
+    serializer_class = TalentFAQSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return TalentFAQ.objects.filter(talent__user=self.request.user)

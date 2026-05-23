@@ -11,8 +11,8 @@
             </svg>
           </div>
           <div>
-            <h1>Partner Dashboard</h1>
-            <p class="subtitle">Gestion de reservas y comisiones</p>
+            <h1>Dashboard de Aliado</h1>
+            <p class="subtitle">Gestión de reservas y comisiones</p>
           </div>
         </div>
         <router-link to="/search" class="btn btn-cta">

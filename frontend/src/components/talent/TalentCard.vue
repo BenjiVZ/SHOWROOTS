@@ -1,13 +1,23 @@
 <template>
-  <router-link :to="`/talent/${talent.id}`" class="talent-card card" :aria-label="`Ver perfil de ${talent.stage_name}`">
+  <router-link :to="`/talent/${talent.id}`" class="talent-card card" :class="`tier-${talent.talent_level || 'standard'}`" :aria-label="`Ver perfil de ${talent.stage_name}`">
     <div class="card-image">
-      <img :src="talent.cover_photo || placeholderImg" :alt="talent.stage_name" loading="lazy" />
+      <img :src="talent.cover_photo || talent.avatar || placeholderImg" :alt="talent.stage_name" loading="lazy" />
       <div class="card-overlay">
         <span class="talent-type badge" :class="typeClass">{{ typeLabel }}</span>
-        <span v-if="talent.is_featured" class="featured-badge">
+        <span v-if="talent.talent_level === 'premium'" class="tier-card-badge tier-card-premium">
+          ★★ Premium
+        </span>
+        <span v-else-if="talent.talent_level === 'pro'" class="tier-card-badge tier-card-pro">
+          ★ Pro
+        </span>
+        <span v-if="talent.is_featured && talent.talent_level !== 'premium'" class="featured-badge">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           Destacado
         </span>
+      </div>
+      <div v-if="talent.talent_level === 'premium'" class="tier-curated-ribbon">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        CURADO POR PULSAR
       </div>
     </div>
     <div class="card-body">
@@ -71,6 +81,55 @@ const typeClass = computed(() => {
   display: block;
   text-decoration: none;
   color: inherit;
+  position: relative;
+}
+
+/* Tier visual differentiation en search cards */
+.talent-card.tier-pro {
+  border: 1px solid rgba(193, 216, 47, 0.35);
+}
+.talent-card.tier-premium {
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.15), 0 12px 30px rgba(245, 158, 11, 0.12);
+}
+.tier-card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.tier-card-pro {
+  background: rgba(193, 216, 47, 0.15);
+  color: #C1D82F;
+  border: 1px solid rgba(193, 216, 47, 0.4);
+}
+.tier-card-premium {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+}
+.tier-curated-ribbon {
+  position: absolute;
+  bottom: var(--space-3);
+  left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #f59e0b;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .card-image {

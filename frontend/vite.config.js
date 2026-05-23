@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     port: 3001,
     host: '0.0.0.0',
-    allowedHosts: ['frontend.aplicacionesdamasco.com'],
+    allowedHosts: ['frontend.aplicacionesdamasco.com', '3001.masterslogic.com'],
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

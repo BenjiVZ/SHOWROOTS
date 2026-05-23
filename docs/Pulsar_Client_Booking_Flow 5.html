@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pulsar · Flujo de Booking del Cliente</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #000000;
+    --bg-soft: #0a0a0a;
+    --bg-card: #141414;
+    --bg-card-2: #1a1a1a;
+    --border: #222;
+    --border-light: #2a2a2a;
+    --lime: #c8f04a;
+    --lime-soft: rgba(200,240,74,0.1);
+    --lime-bg: #1a2010;
+    --cyan: #22d3ee;
+    --gold: #f59e0b;
+    --pink: #ec4899;
+    --orange: #fb923c;
+    --red: #ef4444;
+    --green: #10b981;
+    --green-soft: rgba(16,185,129,0.08);
+    --violet: #a78bfa;
+    --white: #ffffff;
+    --text: #e5e5e5;
+    --text-muted: #888;
+    --text-dim: #555;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header.master {
+    text-align: center;
+    padding: 48px 32px 32px;
+    background: linear-gradient(180deg, #14141a 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  header.master h1 { font-size: 36px; color: var(--white); font-weight: 800; margin-bottom: 8px; }
+  header.master h1 .lime { color: var(--lime); }
+  header.master p { color: var(--text-muted); font-size: 14px; max-width: 720px; margin: 0 auto 24px; }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+  .toc a {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .toc a:hover { border-color: var(--lime); color: var(--lime); }
+
+  .layout { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 48px 0 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    background: var(--lime);
+    color: var(--bg);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-info h2 { color: var(--white); font-size: 22px; font-weight: 700; }
+  .section-info p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+  /* COMPONENTS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+  }
+  .btn {
+    background: var(--lime);
+    color: var(--bg);
+    border: none;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn.outline { background: transparent; border: 1px solid var(--border-light); color: var(--text); }
+
+  /* STEPS BAR (booking flow indicator) */
+  .bf-steps {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    justify-content: center;
+  }
+  .bf-step { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; }
+  .bf-step .circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .bf-step.done .circle { background: var(--green); color: var(--bg); border-color: var(--green); }
+  .bf-step.done { color: var(--green); }
+  .bf-step.active .circle { background: var(--lime); color: var(--bg); border-color: var(--lime); }
+  .bf-step.active { color: var(--lime); font-weight: 600; }
+  .bf-line { width: 32px; height: 2px; background: var(--border-light); }
+  .bf-line.done { background: var(--green); }
+
+  .bf-title { color: var(--white); font-size: 28px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+  .bf-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; text-align: center; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .form-input, .form-select {
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--lime); outline: none; }
+
+  /* EVENT TYPE GRID */
+  .event-types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .event-type-tile {
+    background: var(--bg-soft);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 12px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .event-type-tile.selected { border-color: var(--lime); background: rgba(200,240,74,0.04); }
+  .event-type-tile .icon { font-size: 28px; margin-bottom: 6px; }
+  .event-type-tile .name { color: var(--white); font-size: 13px; font-weight: 600; }
+
+  /* SIDEBAR ORDER SUMMARY */
+  .booking-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+  }
+  .order-summary {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+  }
+  .os-head { color: var(--white); font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .os-talent {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .os-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--lime); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: linear-gradient(135deg, #2a1a3e, #1a2a3e); color: var(--lime); }
+  .os-talent-name { color: var(--white); font-weight: 600; font-size: 13px; }
+  .os-talent-meta { color: var(--text-muted); font-size: 11px; }
+  .os-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; color: var(--text); border-bottom: 1px dashed var(--border); }
+  .os-line .label { color: var(--text-muted); }
+  .os-line .value { color: var(--white); font-weight: 600; }
+  .os-total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .os-total .label { color: var(--text); font-size: 14px; }
+  .os-total .value { color: var(--lime); font-weight: 800; font-size: 26px; }
+  .os-trust {
+    margin-top: 14px;
+    background: var(--green-soft);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .os-trust .icon { color: var(--green); }
+
+  /* PAYMENT SCREEN — THE KEY SCREEN */
+  .payment-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02));
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .payment-hero .icon { font-size: 40px; color: var(--green); margin-bottom: 8px; }
+  .payment-hero h3 { color: var(--white); font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .payment-hero p { color: var(--text-muted); font-size: 13px; max-width: 480px; margin: 0 auto; }
+
+  .escrow-timeline {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+  }
+  .escrow-step {
+    text-align: center;
+    position: relative;
+  }
+  .escrow-step::after {
+    content: '→';
+    position: absolute;
+    right: -22px;
+    top: 24px;
+    color: var(--text-dim);
+    font-size: 20px;
+  }
+  .escrow-step:last-child::after { display: none; }
+  .escrow-step .num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--lime);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    margin: 0 auto 12px;
+  }
+  .escrow-step.escrow .num { background: var(--gold); }
+  .escrow-step.complete .num { background: var(--green); }
+  .escrow-step h4 { color: var(--white); font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .escrow-step p { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+  .price-breakdown {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .pb-head { color: var(--white); font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .pb-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+  .pb-line:last-child { border-bottom: none; }
+  .pb-line .left { color: var(--text); }
+  .pb-line .left small { display: block; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+  .pb-line .right { color: var(--white); font-weight: 600; }
+  .pb-discount { color: var(--green); }
+  .pb-total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    background: var(--bg-soft);
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 12px;
+    border: 1px solid var(--lime);
+  }
+  .pb-total .left { color: var(--text); font-size: 15px; font-weight: 600; }
+  .pb-total .right { color: var(--lime); font-weight: 800; font-size: 28px; }
+
+  /* PAYMENT METHOD */
+  .pay-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .pay-method {
+    background: var(--bg-soft);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .pay-method.selected { border-color: var(--lime); background: rgba(200,240,74,0.04); }
+  .pay-method .icon { font-size: 24px; margin-bottom: 6px; }
+  .pay-method .name { color: var(--white); font-size: 12px; font-weight: 600; }
+  .pay-method .meta { color: var(--text-muted); font-size: 10px; }
+
+  .card-form {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .legal-fineprint {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .legal-fineprint strong { color: var(--text); }
+
+  /* CONFIRMATION SCREEN */
+  .confirmation-hero {
+    text-align: center;
+    padding: 60px 32px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(200,240,74,0.05));
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .conf-icon {
+    width: 88px;
+    height: 88px;
+    background: var(--green);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin: 0 auto 20px;
+    box-shadow: 0 0 40px rgba(16,185,129,0.4);
+  }
+  .conf-title { color: var(--white); font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+  .conf-subtitle { color: var(--text); font-size: 16px; margin-bottom: 8px; }
+  .conf-code {
+    display: inline-block;
+    background: rgba(0,0,0,0.4);
+    border: 1px dashed var(--border-light);
+    color: var(--lime);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  /* TIMELINE NEXT STEPS */
+  .next-steps {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .next-steps h3 { color: var(--white); font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .timeline-step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .timeline-step:last-child { border-bottom: none; }
+  .ts-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .ts-icon.active { background: var(--lime); color: var(--bg); border-color: var(--lime); }
+  .timeline-step.done .ts-icon { background: var(--green); color: var(--bg); }
+  .ts-content h4 { color: var(--white); font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .ts-content p { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+  .ts-time { color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+
+  /* CLIENT DASHBOARD */
+  .client-nav {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px 12px 0 0;
+  }
+  .cn-logo { color: var(--white); font-weight: 900; letter-spacing: 1px; }
+  .cn-links { display: flex; gap: 16px; }
+  .cn-link { color: var(--text-muted); font-size: 13px; padding: 6px 14px; cursor: pointer; }
+  .cn-link.active { background: var(--lime); color: var(--bg); border-radius: 999px; font-weight: 600; }
+
+  .client-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+  .client-kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .client-kpi .label { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .client-kpi .value { color: var(--white); font-size: 28px; font-weight: 700; margin-top: 6px; }
+  .client-kpi .meta { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+
+  .booking-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .booking-card.upcoming { border-color: var(--lime); }
+  .bc-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .bc-event { display: flex; align-items: center; gap: 12px; }
+  .bc-event-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(245,158,11,0.15);
+    color: var(--gold);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .bc-event-name { color: var(--white); font-weight: 700; font-size: 16px; }
+  .bc-event-meta { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+  .bc-status {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .bc-status.upcoming { background: rgba(200,240,74,0.15); color: var(--lime); }
+  .bc-status.in-progress { background: rgba(34,211,238,0.15); color: var(--cyan); }
+  .bc-status.completed { background: rgba(16,185,129,0.15); color: var(--green); }
+  .bc-status.pending { background: rgba(245,158,11,0.15); color: var(--gold); }
+
+  .bc-talent-row {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .bc-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .bc-detail .label { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .bc-detail .value { color: var(--text); font-size: 13px; margin-top: 2px; }
+  .bc-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  /* BOOKING DETAIL with countdown */
+  .countdown-banner {
+    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(200,240,74,0.05));
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .cb-label { color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+  .cb-time { color: var(--white); font-size: 36px; font-weight: 800; margin: 8px 0; }
+  .cb-detail { color: var(--text); font-size: 14px; }
+
+  /* CHAT */
+  .chat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .chat-head { color: var(--white); font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .chat-warning {
+    background: rgba(245,158,11,0.05);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+  .chat-msgs { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 16px; height: 280px; overflow-y: auto; margin-bottom: 12px; }
+  .chat-msg { display: flex; gap: 10px; margin-bottom: 14px; }
+  .chat-msg.me { flex-direction: row-reverse; }
+  .chat-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .chat-avatar.dj { background: var(--lime); color: var(--bg); }
+  .chat-avatar.me { background: var(--cyan); color: var(--bg); }
+  .chat-bubble {
+    background: var(--bg-card-2);
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    color: var(--text);
+    max-width: 70%;
+  }
+  .chat-msg.me .chat-bubble { background: rgba(34,211,238,0.1); color: var(--text); }
+  .chat-time { color: var(--text-dim); font-size: 10px; margin-top: 4px; }
+  .chat-input { display: flex; gap: 8px; }
+  .chat-input input {
+    flex: 1;
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .chat-input button { background: var(--lime); color: var(--bg); border: none; padding: 0 20px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+
+  /* REVIEW SCREEN */
+  .review-screen {
+    text-align: center;
+    padding: 40px 32px;
+  }
+  .review-screen h2 { color: var(--white); font-size: 24px; margin-bottom: 8px; }
+  .review-screen p { color: var(--text-muted); margin-bottom: 24px; }
+  .review-talent {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+  }
+  .review-talent .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--lime); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .stars-input {
+    display: flex; justify-content: center; gap: 8px; margin: 16px 0;
+  }
+  .star {
+    font-size: 36px; color: var(--text-dim); cursor: pointer;
+  }
+  .star.on { color: var(--gold); }
+
+  .review-dimensions {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .dim-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .dim-row:last-child { border-bottom: none; }
+  .dim-label { color: var(--text); font-size: 13px; }
+  .dim-stars { display: flex; gap: 4px; }
+  .dim-stars .star { font-size: 18px; }
+
+  .review-textarea {
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 14px;
+    color: var(--text);
+    width: 100%;
+    min-height: 100px;
+    font-size: 13px;
+    resize: vertical;
+  }
+
+  /* DEV NOTE */
+  .dev-note {
+    background: rgba(255,200,120,0.06);
+    border-left: 3px solid var(--orange);
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: var(--orange);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+  }
+  .dev-note strong { color: var(--orange); }
+
+  /* RECEIPT VIEW */
+  .receipt-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* FAQ INLINE */
+  .faq-inline {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 8px;
+  }
+  .faq-inline summary {
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .faq-inline summary::-webkit-details-marker { color: var(--lime); }
+  .faq-inline p { color: var(--text-muted); font-size: 12px; line-height: 1.6; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header class="master">
+  <h1>Flujo de Booking del <span class="lime">Cliente</span></h1>
+  <p>De búsqueda a evento ejecutado. 7 pantallas que cubren el journey completo, con el escrow como elemento central de confianza.</p>
+  <div class="toc">
+    <a href="#s1">1. Detalles del evento</a>
+    <a href="#s2">2. Confirmar talento</a>
+    <a href="#s3">3. Pago con Escrow</a>
+    <a href="#s4">4. Confirmación</a>
+    <a href="#s5">5. Mis reservas</a>
+    <a href="#s6">6. Booking activo</a>
+    <a href="#s7">7. Reseña post-evento</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- =================== SECTION 1: PASO 1 - DETALLES DEL EVENTO =================== -->
+  <div id="s1" class="section-divider">
+    <div class="section-num">1</div>
+    <div class="section-info">
+      <h2>Paso 1 · Detalles del evento</h2>
+      <p>Después de hacer click en "Reservar Ahora" desde el perfil del DJ. Multi-step form con summary lateral que se va construyendo.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="bf-steps">
+      <div class="bf-step active"><span class="circle">1</span> Evento</div>
+      <div class="bf-line"></div>
+      <div class="bf-step"><span class="circle">2</span> Servicio</div>
+      <div class="bf-line"></div>
+      <div class="bf-step"><span class="circle">3</span> Producción</div>
+      <div class="bf-line"></div>
+      <div class="bf-step"><span class="circle">4</span> Pago</div>
+    </div>
+
+    <div class="booking-layout">
+
+      <!-- LEFT: Form -->
+      <div>
+        <div class="bf-title" style="text-align:left;">Contanos sobre tu evento</div>
+        <div class="bf-subtitle" style="text-align:left;">Esto le ayuda a Rubs DJ a preparar su set y darte una cotización precisa.</div>
+
+        <div class="form-row">
+          <label>Tipo de evento</label>
+          <div class="event-types">
+            <div class="event-type-tile selected">
+              <div class="icon">💍</div>
+              <div class="name">Boda</div>
+            </div>
+            <div class="event-type-tile">
+              <div class="icon">🏢</div>
+              <div class="name">Corporativo</div>
+            </div>
+            <div class="event-type-tile">
+              <div class="icon">🎂</div>
+              <div class="name">Cumpleaños</div>
+            </div>
+            <div class="event-type-tile">
+              <div class="icon">🍸</div>
+              <div class="name">Cocktail</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Nombre del evento (opcional)</label>
+          <input type="text" class="form-input" placeholder="Ej: Boda María y Javier">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Fecha</label>
+            <input type="date" class="form-input" value="2026-05-22">
+          </div>
+          <div class="form-row">
+            <label>Duración</label>
+            <select class="form-select">
+              <option>3 horas</option>
+              <option>4 horas</option>
+              <option selected>5 horas</option>
+              <option>6 horas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Hora de inicio</label>
+            <input type="time" class="form-input" value="18:00">
+          </div>
+          <div class="form-row">
+            <label>Cantidad de invitados aprox.</label>
+            <input type="number" class="form-input" value="350">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Ciudad</label>
+            <select class="form-select">
+              <option selected>Ciudad de Panamá</option>
+              <option>Costa del Este</option>
+              <option>Boquete</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Tipo de espacio</label>
+            <select class="form-select">
+              <option selected>Interior · Salón de eventos</option>
+              <option>Exterior · Jardín</option>
+              <option>Mixto</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Dirección o nombre del venue</label>
+          <input type="text" class="form-input" value="Casco Antiguo · Hotel La Compañía">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:24px;">
+          <button class="btn">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Order summary -->
+      <div class="order-summary">
+        <div class="os-head">📋 Tu reserva</div>
+        <div class="os-talent">
+          <div class="os-avatar">🎧</div>
+          <div>
+            <div class="os-talent-name">Rubs DJ ✓</div>
+            <div class="os-talent-meta">★ 4.8 · DJ Pro</div>
+          </div>
+        </div>
+        <div class="os-line"><span class="label">Tipo de evento</span><span class="value">Boda</span></div>
+        <div class="os-line"><span class="label">Fecha</span><span class="value">22 may 2026</span></div>
+        <div class="os-line"><span class="label">Duración</span><span class="value">5 horas</span></div>
+        <div class="os-line"><span class="label">Tarifa DJ</span><span class="value">$700</span></div>
+        <div class="os-total">
+          <span class="label">Subtotal</span>
+          <span class="value">$700</span>
+        </div>
+        <div class="os-trust">
+          <span class="icon">🛡️</span>
+          <span><strong style="color:var(--white);">Tu reserva está protegida.</strong> No se cobra nada todavía. Solo enviás solicitud.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 2: PASO 2 - CONFIRMAR TALENTO + MENSAJE =================== -->
+  <div id="s2" class="section-divider">
+    <div class="section-num">2</div>
+    <div class="section-info">
+      <h2>Paso 2 · Confirmar talento + mensaje</h2>
+      <p>El cliente revisa al DJ que está contratando, género musical deseado y manda un mensaje. Anti-desintermediación activa.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="bf-steps">
+      <div class="bf-step done"><span class="circle">✓</span> Evento</div>
+      <div class="bf-line done"></div>
+      <div class="bf-step active"><span class="circle">2</span> Servicio</div>
+      <div class="bf-line"></div>
+      <div class="bf-step"><span class="circle">3</span> Producción</div>
+      <div class="bf-line"></div>
+      <div class="bf-step"><span class="circle">4</span> Pago</div>
+    </div>
+
+    <div class="booking-layout">
+      <div>
+        <div class="bf-title" style="text-align:left;">Confirmá tu talento</div>
+        <div class="bf-subtitle" style="text-align:left;">Rubs DJ va a recibir tu solicitud y responder en menos de 48hs.</div>
+
+        <!-- TALENT CARD -->
+        <div style="background:var(--bg-soft); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:20px; display:flex; gap:16px; align-items:center;">
+          <div class="os-avatar" style="width:72px; height:72px; font-size:28px;">🎧</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:18px; font-weight:700;">Rubs DJ</div>
+            <div style="color:var(--text-muted); font-size:12px;">★ 4.8 (24 reseñas) · 47 eventos · Responde en 6h</div>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <span style="background:var(--lime-bg); color:var(--lime); padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600;">DJ Pro</span>
+              <span style="background:rgba(34,211,238,0.1); color:var(--cyan); padding:3px 8px; border-radius:6px; font-size:11px;">ES / EN</span>
+              <span style="background:rgba(236,72,153,0.1); color:var(--pink); padding:3px 8px; border-radius:6px; font-size:11px;">Bodas especialista</span>
+            </div>
+          </div>
+          <button class="btn outline" style="font-size:11px;">Ver perfil completo</button>
+        </div>
+
+        <div class="form-row">
+          <label>Géneros musicales que querés</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <span style="background:var(--lime); color:var(--bg); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Latin ×</span>
+            <span style="background:var(--lime); color:var(--bg); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">House ×</span>
+            <span style="background:var(--lime); color:var(--bg); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Lounge ×</span>
+            <span style="background:var(--bg-soft); border:1px dashed var(--border-light); color:var(--text-muted); padding:6px 12px; border-radius:999px; font-size:12px;">+ Agregar otro</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Descripción del evento</label>
+          <textarea class="review-textarea" placeholder="Contale al DJ qué tipo de ambiente buscás, qué espera la pareja, si hay momentos especiales...">Boda en Casco Antiguo. Empezamos con cocktail jazz/lounge, después transición a Latin y house para fiesta. Tenemos invitados internacionales (necesitamos algo de inglés en el MC). Música preferida: Romantica para entrada de novios, luego Latin clásico y reguetón.</textarea>
+        </div>
+
+        <div class="form-row">
+          <label>Mensaje al talento (opcional)</label>
+          <textarea class="review-textarea" placeholder="¿Algo más que quieras comunicar?">Hola Rubs, vimos tu mix de boda y nos encantó. ¿Disponible para esta fecha?</textarea>
+        </div>
+
+        <div class="dev-note">
+          <strong>Nota dev (anti-desintermediación):</strong> En estos textareas, escanear automáticamente por patrones de contacto: números de teléfono (regex), emails, @username de Instagram, palabras como "WhatsApp", "llamame", "mándame". Si detecta, mostrar warning: "Para tu seguridad, no compartas datos de contacto antes de confirmar el booking. Pulsar te protege con escrow." y bloquear el envío hasta corregir.
+        </div>
+
+        <div class="form-row">
+          <label>Presupuesto estimado total (opcional)</label>
+          <input type="number" class="form-input" placeholder="$1,500" value="1800">
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:24px;">
+          <button class="btn outline">← Anterior</button>
+          <button class="btn">Continuar a producción →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary -->
+      <div class="order-summary">
+        <div class="os-head">📋 Tu reserva</div>
+        <div class="os-talent">
+          <div class="os-avatar">🎧</div>
+          <div>
+            <div class="os-talent-name">Rubs DJ ✓</div>
+            <div class="os-talent-meta">★ 4.8 · DJ Pro</div>
+          </div>
+        </div>
+        <div class="os-line"><span class="label">Boda</span><span class="value">22 may · 5h</span></div>
+        <div class="os-line"><span class="label">Casco Antiguo</span><span class="value">350 invitados</span></div>
+        <div class="os-line"><span class="label">Géneros</span><span class="value">3 seleccionados</span></div>
+        <div class="os-line"><span class="label">Tarifa DJ</span><span class="value">$700</span></div>
+        <div class="os-total">
+          <span class="label">Subtotal</span>
+          <span class="value">$700</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 3: PASO 4 - PAGO CON ESCROW (THE KEY SCREEN) =================== -->
+  <div id="s3" class="section-divider">
+    <div class="section-num">3</div>
+    <div class="section-info">
+      <h2>Paso 4 · Pago con Escrow 🛡️</h2>
+      <p>La pantalla más importante del flujo. Aquí el cliente decide si confía o se va. El escrow debe ser visible, claro y reassuring.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="bf-steps">
+      <div class="bf-step done"><span class="circle">✓</span> Evento</div>
+      <div class="bf-line done"></div>
+      <div class="bf-step done"><span class="circle">✓</span> Servicio</div>
+      <div class="bf-line done"></div>
+      <div class="bf-step done"><span class="circle">✓</span> Producción</div>
+      <div class="bf-line done"></div>
+      <div class="bf-step active"><span class="circle">4</span> Pago</div>
+    </div>
+
+    <!-- HERO: Escrow explainer -->
+    <div class="payment-hero">
+      <div class="icon">🛡️</div>
+      <h3>Tu pago está protegido por Pulsar</h3>
+      <p>Tu dinero NO va directo al talento. Queda en custodia segura hasta 24h después de tu evento. Si algo falla, te devolvemos el 100%.</p>
+    </div>
+
+    <!-- ESCROW TIMELINE: Where does the money go? -->
+    <div class="escrow-timeline">
+      <div class="escrow-step">
+        <div class="num">1</div>
+        <h4>Hoy</h4>
+        <p><strong style="color:var(--white);">Pagás a Pulsar</strong><br>Tu tarjeta es cargada. El dinero queda en custodia, NO va al talento.</p>
+      </div>
+      <div class="escrow-step escrow">
+        <div class="num">🛡️</div>
+        <h4>En custodia</h4>
+        <p><strong style="color:var(--gold);">$1,220 protegidos</strong><br>Pulsar guarda el dinero hasta el día del evento. El talento ve que ya pagaste, pero no recibe nada todavía.</p>
+      </div>
+      <div class="escrow-step complete">
+        <div class="num">✓</div>
+        <h4>24h post-evento</h4>
+        <p><strong style="color:var(--green);">Liberación del pago</strong><br>Pulsar libera el dinero al talento. Si no se presentó o algo falló, te devolvemos el 100%.</p>
+      </div>
+    </div>
+
+    <div class="receipt-grid">
+
+      <!-- LEFT: Payment methods -->
+      <div>
+        <div class="bf-title" style="text-align:left; font-size:20px;">Método de pago</div>
+
+        <div class="pay-methods">
+          <div class="pay-method selected">
+            <div class="icon">💳</div>
+            <div class="name">Tarjeta</div>
+            <div class="meta">Visa / Master</div>
+          </div>
+          <div class="pay-method">
+            <div class="icon">🏦</div>
+            <div class="name">ACH</div>
+            <div class="meta">Transferencia</div>
+          </div>
+          <div class="pay-method">
+            <div class="icon">📱</div>
+            <div class="name">Yappy</div>
+            <div class="meta">Pago móvil</div>
+          </div>
+        </div>
+
+        <div class="card-form">
+          <div class="form-row">
+            <label>Número de tarjeta</label>
+            <input type="text" class="form-input" value="•••• •••• •••• 4242">
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label>Vence</label>
+              <input type="text" class="form-input" value="12/27">
+            </div>
+            <div class="form-row">
+              <label>CVV</label>
+              <input type="text" class="form-input" value="•••">
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Nombre en la tarjeta</label>
+            <input type="text" class="form-input" value="MARIA GONZALEZ">
+          </div>
+        </div>
+
+        <div class="legal-fineprint">
+          <strong>Antes de confirmar:</strong>
+          <ul style="margin-top:8px; padding-left:18px; line-height:1.8;">
+            <li>Tu tarjeta se carga AHORA. El dinero queda en custodia hasta el evento.</li>
+            <li>Si cancelás con más de 14 días de anticipación: reembolso 100%.</li>
+            <li>Si cancelás entre 7-14 días: reembolso 50%.</li>
+            <li>Si cancelás con menos de 7 días: no hay reembolso (excepto fuerza mayor).</li>
+            <li>Si el talento no se presenta: reembolso 100% + crédito de $100 en Pulsar.</li>
+          </ul>
+        </div>
+
+        <details class="faq-inline">
+          <summary>¿Qué pasa si quiero modificar la fecha?</summary>
+          <p>Podés solicitar cambio de fecha hasta 14 días antes. El talento debe aceptar. Si no acepta o no tiene disponibilidad, podés cancelar con reembolso 100%.</p>
+        </details>
+        <details class="faq-inline">
+          <summary>¿Cuándo se libera el pago al talento?</summary>
+          <p>24 horas después de que termine tu evento. Esto le da tiempo a Pulsar para validar que todo salió bien y te permite reportar cualquier problema antes de la liberación.</p>
+        </details>
+      </div>
+
+      <!-- RIGHT: Price breakdown + total -->
+      <div>
+        <div class="price-breakdown">
+          <div class="pb-head">Desglose del pago</div>
+
+          <div class="pb-line">
+            <div class="left">
+              Rubs DJ · Performance
+              <small>5 hrs · 22 may 2026</small>
+            </div>
+            <div class="right">$700.00</div>
+          </div>
+
+          <div class="pb-line">
+            <div class="left">
+              Pack Sonido Pro
+              <small>Sonido del Pacífico · técnico incluido</small>
+            </div>
+            <div class="right">$520.00</div>
+          </div>
+
+          <div class="pb-line">
+            <div class="left">
+              Subtotal
+            </div>
+            <div class="right">$1,220.00</div>
+          </div>
+
+          <div class="pb-line">
+            <div class="left">
+              Tarifa de servicio Pulsar
+              <small>Procesamiento + escrow + soporte</small>
+            </div>
+            <div class="right">$36.60</div>
+          </div>
+
+          <div class="pb-line">
+            <div class="left">
+              Impuestos (ITBMS 7%)
+            </div>
+            <div class="right">$87.92</div>
+          </div>
+
+          <div class="pb-total">
+            <span class="left">TOTAL HOY</span>
+            <span class="right">$1,344.52</span>
+          </div>
+        </div>
+
+        <button class="btn" style="width:100%; padding:16px; justify-content:center; font-size:15px; margin-top:16px;">
+          🛡️ Pagar $1,344.52 con Pulsar
+        </button>
+
+        <div class="os-trust" style="margin-top:14px;">
+          <span class="icon">🔒</span>
+          <span>Pago procesado por Stripe. Cumple PCI-DSS Level 1. Tu tarjeta nunca toca servidores de Pulsar.</span>
+        </div>
+
+        <div style="text-align:center; margin-top:16px; color:var(--text-dim); font-size:11px;">
+          Al confirmar aceptás los <a style="color:var(--cyan);">Términos y Condiciones</a> y la <a style="color:var(--cyan);">Política de Reembolso</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dev-note">
+      <strong>Nota dev — Esta pantalla es el corazón del trust de Pulsar:</strong> El bloque del "Escrow Timeline" (los 3 pasos: Hoy → En custodia → Post-evento) debe ser visualmente impactante. No es un detalle — es el sales pitch del platform. Considerar animación sutil de "$" moviéndose entre las cajas para reforzar el mensaje.
+    </div>
+  </div>
+
+  <!-- =================== SECTION 4: CONFIRMACIÓN =================== -->
+  <div id="s4" class="section-divider">
+    <div class="section-num">4</div>
+    <div class="section-info">
+      <h2>Pantalla de confirmación</h2>
+      <p>Inmediatamente después del pago. Cierra el loop con confianza y muestra qué pasa a continuación.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="confirmation-hero">
+      <div class="conf-icon">✓</div>
+      <div class="conf-title">¡Reserva enviada!</div>
+      <div class="conf-subtitle">Pagaste <strong style="color:var(--white);">$1,344.52</strong> y tu dinero está protegido en custodia.</div>
+      <div class="conf-code">Booking #PUL-2026-05-A8F3</div>
+      <div style="margin-top:20px; color:var(--text-muted); font-size:13px;">
+        Te mandamos copia a <strong style="color:var(--white);">maria.gonzalez@gmail.com</strong>
+      </div>
+    </div>
+
+    <div class="next-steps">
+      <h3>Qué pasa ahora</h3>
+
+      <div class="timeline-step done">
+        <div class="ts-icon">✓</div>
+        <div class="ts-content">
+          <h4>Pago confirmado</h4>
+          <p>Tu dinero está en custodia de Pulsar. El talento puede ver que pagaste pero no recibe nada hasta el evento.</p>
+          <div class="ts-time">Hace 2 segundos</div>
+        </div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="ts-icon active">📨</div>
+        <div class="ts-content">
+          <h4>Rubs DJ recibe tu solicitud</h4>
+          <p>Va a revisar los detalles y confirmar disponibilidad. Te avisamos en cuanto responda (en general, &lt;6 hrs).</p>
+          <div class="ts-time">En curso · Te llega notificación</div>
+        </div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="ts-icon">💬</div>
+        <div class="ts-content">
+          <h4>Coordinación previa</h4>
+          <p>Una vez que el talento confirma, abrimos un chat privado entre ustedes en la plataforma. Coordinás detalles musicales, setup y logística.</p>
+          <div class="ts-time">Próximas 48 hrs</div>
+        </div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="ts-icon">🎉</div>
+        <div class="ts-content">
+          <h4>Día del evento — 22 mayo 2026</h4>
+          <p>Rubs llega al venue 2 hrs antes para setup. Sonido del Pacífico llega 3 hrs antes para montar el pack.</p>
+          <div class="ts-time">Faltan 24 días</div>
+        </div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="ts-icon">💰</div>
+        <div class="ts-content">
+          <h4>24 hrs post-evento</h4>
+          <p>Pulsar libera el pago al talento. Te invitamos a dejar una reseña. Si algo falló, podés reportarlo antes y retenemos el pago.</p>
+          <div class="ts-time">23 mayo 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button class="btn outline">📅 Ver mis reservas</button>
+      <button class="btn">💬 Ir al chat con Rubs</button>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 5: CLIENT DASHBOARD =================== -->
+  <div id="s5" class="section-divider">
+    <div class="section-num">5</div>
+    <div class="section-info">
+      <h2>Dashboard del cliente · Mis reservas</h2>
+      <p>El cliente vuelve a Pulsar y ve sus bookings activos, pasados y borradores. Centro de control de sus eventos.</p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="client-nav">
+      <div class="cn-logo">PULSAR</div>
+      <div class="cn-links">
+        <span class="cn-link">🔍 Talentos</span>
+        <span class="cn-link">🏠 Venues</span>
+        <span class="cn-link active">📋 Mis Reservas</span>
+      </div>
+      <div style="color:var(--text); font-size:13px;">👤 María G.</div>
+    </div>
+
+    <div style="padding:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div>
+          <div style="color:var(--white); font-size:28px; font-weight:700;">Mis <span style="color:var(--lime);">Reservas</span></div>
+          <div style="color:var(--text-muted); font-size:13px;">Eventos contratados, pasados y borradores</div>
+        </div>
+        <button class="btn">+ Nueva reserva</button>
+      </div>
+
+      <div class="client-kpis">
+        <div class="client-kpi">
+          <div class="label">Próximos eventos</div>
+          <div class="value">1</div>
+          <div class="meta">En 24 días · Boda</div>
+        </div>
+        <div class="client-kpi">
+          <div class="label">En custodia (escrow)</div>
+          <div class="value">$1,344.52</div>
+          <div class="meta">🛡️ Protegido por Pulsar</div>
+        </div>
+        <div class="client-kpi">
+          <div class="label">Eventos completados</div>
+          <div class="value">2</div>
+          <div class="meta">★ 5.0 promedio</div>
+        </div>
+      </div>
+
+      <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin: 24px 0 12px;">Próximos</div>
+
+      <!-- UPCOMING BOOKING -->
+      <div class="booking-card upcoming">
+        <div class="bc-head">
+          <div class="bc-event">
+            <div class="bc-event-icon">💍</div>
+            <div>
+              <div class="bc-event-name">Boda · Casco Antiguo</div>
+              <div class="bc-event-meta">Sábado 22 mayo 2026 · 18:00-23:00</div>
+            </div>
+          </div>
+          <span class="bc-status upcoming">⏰ EN 24 DÍAS</span>
+        </div>
+
+        <div class="bc-talent-row">
+          <div class="os-avatar">🎧</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-weight:600; font-size:13px;">Rubs DJ ✓ · Confirmó tu reserva</div>
+            <div style="color:var(--text-muted); font-size:11px;">★ 4.8 · DJ Pro · 47 eventos completados</div>
+          </div>
+          <span style="background:rgba(16,185,129,0.15); color:var(--green); padding:4px 10px; border-radius:6px; font-size:11px;">✓ Confirmado</span>
+        </div>
+
+        <div class="bc-detail-grid">
+          <div class="bc-detail"><div class="label">Invitados</div><div class="value">350 pers</div></div>
+          <div class="bc-detail"><div class="label">Producción</div><div class="value">Pack Sonido Pro</div></div>
+          <div class="bc-detail"><div class="label">Pagado</div><div class="value" style="color:var(--green);">$1,344.52</div></div>
+          <div class="bc-detail"><div class="label">Mensajes</div><div class="value">3 nuevos</div></div>
+        </div>
+
+        <div class="bc-actions">
+          <button class="btn outline" style="font-size:12px; padding:8px 14px;">💬 Chat con DJ</button>
+          <button class="btn outline" style="font-size:12px; padding:8px 14px;">📄 Ver detalles</button>
+          <button class="btn outline" style="font-size:12px; padding:8px 14px;">⚙️ Modificar</button>
+          <button style="margin-left:auto; background:transparent; border:1px solid rgba(239,68,68,0.3); color:var(--red); padding:8px 14px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+
+      <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin: 24px 0 12px;">Pendientes de respuesta</div>
+
+      <!-- PENDING BOOKING -->
+      <div class="booking-card">
+        <div class="bc-head">
+          <div class="bc-event">
+            <div class="bc-event-icon" style="background:rgba(245,158,11,0.15); color:var(--gold);">🏢</div>
+            <div>
+              <div class="bc-event-name">Cumpleaños · Costa del Este</div>
+              <div class="bc-event-meta">Sábado 14 junio 2026 · 21:00-02:00</div>
+            </div>
+          </div>
+          <span class="bc-status pending">⏳ ESPERANDO RESPUESTA</span>
+        </div>
+
+        <div class="bc-talent-row">
+          <div class="os-avatar" style="border-color:var(--gold);">🎧</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-weight:600; font-size:13px;">DJ Voltex · Revisando tu solicitud</div>
+            <div style="color:var(--text-muted); font-size:11px;">★ 4.8 · DJ Premium · Responde en 3h</div>
+          </div>
+          <span style="background:rgba(245,158,11,0.15); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px;">Sin pagar todavía</span>
+        </div>
+
+        <div style="background:rgba(245,158,11,0.05); border-left:3px solid var(--gold); border-radius:0 8px 8px 0; padding:10px 14px; margin-top:8px; font-size:12px; color:var(--gold);">
+          ℹ️ Cuando el talento confirme y mande cotización, te llega notificación para revisar y pagar.
+        </div>
+      </div>
+
+      <div style="color:var(--text-muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin: 24px 0 12px;">Pasados</div>
+
+      <!-- COMPLETED BOOKING -->
+      <div class="booking-card" style="opacity:0.7;">
+        <div class="bc-head">
+          <div class="bc-event">
+            <div class="bc-event-icon" style="background:rgba(16,185,129,0.15); color:var(--green);">🎂</div>
+            <div>
+              <div class="bc-event-name">Cumpleaños 30 · Cinta Costera</div>
+              <div class="bc-event-meta">Sábado 14 marzo 2026 · Completado</div>
+            </div>
+          </div>
+          <span class="bc-status completed">✓ COMPLETADO</span>
+        </div>
+        <div class="bc-talent-row">
+          <div class="os-avatar">🎧</div>
+          <div style="flex:1;">
+            <div style="color:var(--white); font-size:13px;">DJ Cosmos · Reseña enviada (★ 5.0)</div>
+            <div style="color:var(--text-muted); font-size:11px;">$650 · Pago liberado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 6: BOOKING ACTIVO + CHAT =================== -->
+  <div id="s6" class="section-divider">
+    <div class="section-num">6</div>
+    <div class="section-info">
+      <h2>Vista de booking activo · countdown + chat</h2>
+      <p>Cuando el cliente entra a un booking confirmado. Countdown del evento, chat con el talento (escudo anti-desintermediación) y resumen del evento.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- Countdown -->
+    <div class="countdown-banner">
+      <div class="cb-label">⏰ Tu evento empieza en</div>
+      <div class="cb-time">24 días · 6 horas · 18 min</div>
+      <div class="cb-detail">Sábado 22 mayo 2026 · 18:00 · Casco Antiguo</div>
+    </div>
+
+    <div class="receipt-grid">
+
+      <!-- LEFT: Chat -->
+      <div class="chat-card">
+        <div class="chat-head">💬 Chat con Rubs DJ</div>
+
+        <div class="chat-warning">
+          ⚠️ Para tu seguridad, todas las coordinaciones deben quedar en este chat. No compartas datos de contacto fuera de Pulsar — perderás la protección del escrow.
+        </div>
+
+        <div class="chat-msgs">
+          <div class="chat-msg">
+            <div class="chat-avatar dj">R</div>
+            <div>
+              <div class="chat-bubble">¡Hola María! Confirmado para tu boda. Excelente elección de venue, ya he tocado en La Compañía 4 veces este año.</div>
+              <div class="chat-time">Hace 2 hrs · 14:23</div>
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-avatar dj">R</div>
+            <div>
+              <div class="chat-bubble">Te paso unos sets de referencia para que me digas qué tan cerca está de lo que buscás 🎧</div>
+              <div class="chat-time">Hace 2 hrs · 14:23</div>
+            </div>
+          </div>
+          <div class="chat-msg me">
+            <div class="chat-avatar me">M</div>
+            <div>
+              <div class="chat-bubble" style="text-align:right;">¡Hola Rubs! Perfecto. ¿Podés mandarme el playlist sugerido para entrada de novios?</div>
+              <div class="chat-time" style="text-align:right;">Hace 1 hr · 15:42</div>
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-avatar dj">R</div>
+            <div>
+              <div class="chat-bubble">Claro. Suelo manejar 4 opciones según el ambiente. Te las mando esta noche. Una pregunta: ¿el sonido del Pack Pro que pediste es para todo el evento o solo la fiesta? Si es solo fiesta puedo ahorrarte algo.</div>
+              <div class="chat-time">Hace 30 min · 16:11</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input">
+          <input type="text" placeholder="Escribí tu mensaje...">
+          <button>Enviar</button>
+        </div>
+
+        <div class="dev-note">
+          <strong>Nota dev (anti-desintermediación):</strong> Filtrar en tiempo real cualquier patrón de teléfono, email o @username. Si detecta, reemplazar por *** y mostrar warning. Implementar tracking de "intent to leave platform" — si la frecuencia de intentos sube, escalar a admin.
+        </div>
+      </div>
+
+      <!-- RIGHT: Booking summary -->
+      <div>
+        <div class="card" style="padding:18px;">
+          <div style="color:var(--white); font-size:15px; font-weight:700; margin-bottom:12px;">📋 Resumen</div>
+          <div class="bc-talent-row" style="background:var(--bg-soft); margin-bottom:14px;">
+            <div class="os-avatar">🎧</div>
+            <div>
+              <div style="color:var(--white); font-weight:600; font-size:13px;">Rubs DJ</div>
+              <div style="color:var(--text-muted); font-size:11px;">$700</div>
+            </div>
+          </div>
+          <div class="bc-talent-row" style="background:var(--bg-soft);">
+            <div style="width:44px; height:44px; border-radius:50%; background:rgba(245,158,11,0.15); color:var(--gold); display:flex; align-items:center; justify-content:center; font-size:18px;">🔊</div>
+            <div>
+              <div style="color:var(--white); font-weight:600; font-size:13px;">Pack Sonido Pro</div>
+              <div style="color:var(--text-muted); font-size:11px;">Sonido del Pacífico · $520</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+            <div class="os-line"><span class="label">Fecha</span><span class="value">22 may 2026</span></div>
+            <div class="os-line"><span class="label">Hora</span><span class="value">18:00 - 23:00</span></div>
+            <div class="os-line"><span class="label">Venue</span><span class="value">La Compañía</span></div>
+            <div class="os-line"><span class="label">Invitados</span><span class="value">350 pers</span></div>
+            <div class="os-line"><span class="label">Géneros</span><span class="value">Latin, House, Lounge</span></div>
+            <div class="os-line"><span class="label">Pagado</span><span class="value" style="color:var(--green);">$1,344.52 ✓</span></div>
+            <div class="os-line"><span class="label">Estado escrow</span><span class="value" style="color:var(--gold);">🛡️ En custodia</span></div>
+          </div>
+
+          <button class="btn outline" style="width:100%; margin-top:14px; justify-content:center;">📄 Descargar contrato</button>
+          <button class="btn outline" style="width:100%; margin-top:8px; justify-content:center;">⚙️ Modificar reserva</button>
+        </div>
+
+        <div style="background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.25); border-radius:12px; padding:14px; margin-top:14px;">
+          <div style="color:var(--red); font-size:12px; font-weight:600; margin-bottom:6px;">⚠️ ¿Necesitás cancelar?</div>
+          <div style="color:var(--text-muted); font-size:11px; line-height:1.5;">Cancelando hoy recibís <strong style="color:var(--green);">reembolso 100%</strong> (hasta 14 días antes del evento). Después del 8 mayo, reembolso 50%.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 7: REVIEW POST-EVENTO =================== -->
+  <div id="s7" class="section-divider">
+    <div class="section-num">7</div>
+    <div class="section-info">
+      <h2>Reseña post-evento</h2>
+      <p>24h después del evento, el cliente recibe email/push invitándolo a reseñar. Su reseña dispara la liberación del escrow al talento.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="review-screen">
+      <h2>¿Cómo estuvo Rubs DJ en tu boda?</h2>
+      <p>Tu reseña ayuda a otros clientes y al talento. Va a publicarse en el perfil de Rubs.</p>
+
+      <div class="review-talent">
+        <div class="avatar">🎧</div>
+        <div style="text-align:left;">
+          <div style="color:var(--white); font-weight:700;">Rubs DJ</div>
+          <div style="color:var(--text-muted); font-size:12px;">Boda · 22 mayo 2026 · 350 invitados</div>
+        </div>
+      </div>
+
+      <div style="color:var(--text); font-size:14px; margin-bottom:8px;">Rating general</div>
+      <div class="stars-input">
+        <span class="star on">★</span>
+        <span class="star on">★</span>
+        <span class="star on">★</span>
+        <span class="star on">★</span>
+        <span class="star on">★</span>
+      </div>
+      <div style="color:var(--green); font-size:13px; margin-bottom:24px;">Excelente</div>
+
+      <div class="review-dimensions">
+        <div class="dim-row">
+          <div class="dim-label">Puntualidad</div>
+          <div class="dim-stars">
+            <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+          </div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Selección musical</div>
+          <div class="dim-stars">
+            <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+          </div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Lectura del público</div>
+          <div class="dim-stars">
+            <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star">★</span>
+          </div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Técnica</div>
+          <div class="dim-stars">
+            <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+          </div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Comunicación pre-evento</div>
+          <div class="dim-stars">
+            <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:left;">
+        <label style="display:block; color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Tu comentario (mín 30 caracteres)</label>
+        <textarea class="review-textarea" style="min-height:140px;">Rubs leyó el ambiente perfecto. Empezó con cocktail jazz, luego transición a Latin y terminó con la fiesta hasta las 4am. Mis invitados internacionales lo amaron. El MC bilingüe fue clave. Volvería a contratarlo sin dudar.</textarea>
+      </div>
+
+      <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.25); border-radius:12px; padding:14px; margin-top:14px; text-align:left;">
+        <div style="color:var(--green); font-size:13px; font-weight:600;">🛡️ Al enviar tu reseña:</div>
+        <div style="color:var(--text-muted); font-size:12px; margin-top:4px;">
+          • Pulsar libera el pago a Rubs DJ ($630 después de comisión)<br>
+          • Pulsar libera el pago a Sonido del Pacífico ($416 después de comisión)<br>
+          • Tu reseña se publica en el perfil de Rubs<br>
+          • Recibís $50 de crédito Pulsar para tu próxima reserva 🎁
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+        <button class="btn outline">Saltar por ahora</button>
+        <button class="btn">⭐ Publicar reseña</button>
+      </div>
+
+      <div style="margin-top:24px; color:var(--text-dim); font-size:11px;">
+        ¿Algo salió mal? <a style="color:var(--red);">Reportar problema</a> antes de publicar reseña. Pulsar revisa y puede retener el pago al talento.
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== FOOTER ================== -->
+  <div style="background:var(--bg-card); border:1px dashed var(--border-light); border-radius:16px; padding:24px; margin:40px 0 20px; color:var(--text-muted); font-size:13px;">
+    <h3 style="color:var(--white); margin-bottom:12px;">📋 Resumen del flujo</h3>
+    <p style="margin-bottom:10px;">7 pantallas que cubren el journey completo del cliente, desde "solicito" hasta "reseñé":</p>
+    <ol style="padding-left:20px; line-height:1.8;">
+      <li><strong style="color:var(--text);">Paso 1 — Detalles del evento</strong> — multi-step form con summary lateral en vivo</li>
+      <li><strong style="color:var(--text);">Paso 2 — Confirmar talento</strong> — mensaje al DJ con filtro anti-desintermediación</li>
+      <li><strong style="color:var(--text);">Paso 3 — Producción</strong> — ya cubierto en Pulsar_Partner_Module.html</li>
+      <li><strong style="color:var(--text);">Paso 4 — Pago con Escrow</strong> — la pantalla más importante. Timeline visual de los 3 momentos del dinero</li>
+      <li><strong style="color:var(--text);">Confirmación</strong> — cierra el loop, muestra qué pasa a continuación con timeline de 5 pasos</li>
+      <li><strong style="color:var(--text);">Dashboard "Mis Reservas"</strong> — vista del cliente con próximos, pendientes y completados</li>
+      <li><strong style="color:var(--text);">Booking activo</strong> — countdown + chat anti-fugas + resumen + cancelación visible</li>
+      <li><strong style="color:var(--text);">Reseña post-evento</strong> — dispara liberación del escrow + incentivo de $50 crédito</li>
+    </ol>
+    <p style="margin-top:16px;"><strong style="color:var(--gold);">El elemento de confianza recurrente — el escrow — aparece en:</strong></p>
+    <ul style="padding-left:20px; line-height:1.8; margin-top:6px;">
+      <li>Paso 1 (sidebar): "Tu reserva está protegida. No se cobra nada todavía"</li>
+      <li>Paso 4: Timeline visual de 3 pasos + breakdown con escrow explícito</li>
+      <li>Confirmación: "Tu dinero está en custodia"</li>
+      <li>Dashboard: KPI "$1,344.52 en custodia"</li>
+      <li>Booking activo: badge "🛡️ En custodia" en resumen</li>
+      <li>Reseña: "Al enviar, Pulsar libera el pago a Rubs"</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>
