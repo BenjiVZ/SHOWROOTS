@@ -664,6 +664,46 @@ function nextStep() {
 }
 function prevStep() { currentStep.value--; error.value = '' }
 
+// Helpers de draft persistence (sobreviven login/registro)
+const DRAFT_KEY = 'booking_draft'
+
+function snapshotDraft() {
+  return {
+    talentId: String(talentId),
+    form: form.value,
+    selectedServices: selectedServices.value,
+    serviceDetails: { ...serviceDetails },
+    selectedDuration: selectedDuration.value,
+    currentStep: currentStep.value,
+    savedAt: Date.now(),
+  }
+}
+
+function persistDraft() {
+  // No guardar si el usuario ya está logueado (el draft solo aplica al flujo "registrate para enviar").
+  if (auth.isLoggedIn) return
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshotDraft()))
+  } catch { /* quota / private mode — silent */ }
+}
+
+function restoreDraftIfMatches() {
+  const raw = sessionStorage.getItem(DRAFT_KEY)
+  if (!raw) return false
+  try {
+    const saved = JSON.parse(raw)
+    if (String(saved.talentId) !== String(talentId)) return false  // Draft de otro talento — ignorar
+    if (saved.form) Object.assign(form.value, saved.form)
+    if (Array.isArray(saved.selectedServices)) selectedServices.value = saved.selectedServices
+    if (saved.serviceDetails) Object.assign(serviceDetails, saved.serviceDetails)
+    if (saved.selectedDuration) selectedDuration.value = saved.selectedDuration
+    if (saved.currentStep != null) currentStep.value = saved.currentStep
+    return true
+  } catch {
+    return false
+  }
+}
+
 onMounted(async () => {
   try {
     const { data } = await api.get(`/talents/${talentId}/`)
@@ -672,18 +712,33 @@ onMounted(async () => {
     error.value = 'No se pudo cargar la información del talento.'
   }
 
-  // Restore saved draft after login redirect
-  const draft = sessionStorage.getItem('booking_draft')
-  if (draft) {
-    try {
-      const saved = JSON.parse(draft)
-      if (saved.form) Object.assign(form.value, saved.form)
-      if (saved.selectedServices) selectedServices.value = saved.selectedServices
-      if (saved.serviceDetails) Object.assign(serviceDetails, saved.serviceDetails)
-      if (saved.selectedDuration) selectedDuration.value = saved.selectedDuration
-      if (saved.currentStep != null) currentStep.value = saved.currentStep
-      sessionStorage.removeItem('booking_draft')
-    } catch { /* ignore parse errors */ }
+  // Restaurar borrador si pertenece a este talento
+  const restored = restoreDraftIfMatches()
+  if (restored && auth.isLoggedIn) {
+    // Si el usuario llegó ya logueado con un draft restaurado, ya no hace falta — lo limpiamos.
+    sessionStorage.removeItem(DRAFT_KEY)
+  }
+})
+
+// Auto-guardar borrador (con debounce) mientras el usuario edita y no está logueado.
+// Cubre el caso de navegar al navbar para registrarse sin haber hecho submit.
+let saveTimer = null
+function scheduleDraftSave() {
+  if (auth.isLoggedIn) return
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(persistDraft, 400)
+}
+watch(
+  () => [form.value, selectedServices.value, serviceDetails, selectedDuration.value, currentStep.value],
+  scheduleDraftSave,
+  { deep: true }
+)
+
+// Si el usuario se loguea durante esta sesión, limpiar el draft (ya no se necesita).
+watch(() => auth.isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    if (saveTimer) clearTimeout(saveTimer)
+    sessionStorage.removeItem(DRAFT_KEY)
   }
 })
 
@@ -693,14 +748,8 @@ async function handleSubmit() {
     return
   }
   if (!auth.isLoggedIn) {
-    // Persist form data so it survives the login redirect
-    sessionStorage.setItem('booking_draft', JSON.stringify({
-      form: form.value,
-      selectedServices: selectedServices.value,
-      serviceDetails,
-      selectedDuration: selectedDuration.value,
-      currentStep: currentStep.value,
-    }))
+    // Guardar borrador (talent_id incluido) y redirigir al login con redirect explícito
+    persistDraft()
     router.push({ name: 'login', query: { redirect: route.fullPath } })
     return
   }

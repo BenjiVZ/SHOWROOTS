@@ -9,6 +9,7 @@ urlpatterns = [
     path('me/', views.MeView.as_view(), name='me'),
     path('me/avatar/', views.AvatarUploadView.as_view(), name='avatar-upload'),
     path('me/delete/', views.DeleteAccountView.as_view(), name='delete-account'),
+    path('me/partner-role/', views.PartnerRoleToggleView.as_view(), name='partner-role-toggle'),
     path('google/', views.GoogleAuthView.as_view(), name='google-auth'),
     # Password reset
     path('password-reset/', views.PasswordResetRequestView.as_view(), name='password-reset'),

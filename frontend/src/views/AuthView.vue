@@ -13,7 +13,6 @@
         <div class="panel-content">
           <div class="panel-logo">
             <span class="panel-logo-text">PULSAR</span>
-            <span class="panel-logo-sub">by ShowRoots</span>
           </div>
 
           <div class="panel-text">
@@ -444,7 +443,11 @@ function switchMode(toRegister) {
   error.value = ''
   showPassword.value = false
   isRegister.value = toRegister
-  router.replace(toRegister ? '/register' : '/login')
+  // Preservar ?redirect=... al alternar login↔register
+  router.replace({
+    name: toRegister ? 'register' : 'login',
+    query: route.query.redirect ? { redirect: route.query.redirect } : {},
+  })
 }
 
 // Sync with route changes (back/forward nav)
@@ -498,8 +501,10 @@ async function handleRegister() {
   error.value = ''
   try {
     await auth.register(regForm.value)
+    // Si vino con redirect explícito (ej: desde una reserva), respetarlo por encima del default por rol.
     const role = regForm.value.role
-    const dest = role === 'talent' ? '/talent-onboarding' : role === 'partner' ? '/partner' : '/dashboard'
+    const fallback = role === 'talent' ? '/talent-onboarding' : role === 'partner' ? '/partner' : '/dashboard'
+    const dest = route.query.redirect || fallback
     router.push(dest)
   } catch (err) {
     const data = err.response?.data
@@ -551,11 +556,12 @@ async function onGoogleCredential(response) {
       localStorage.setItem('access_token', data.tokens.access)
       localStorage.setItem('refresh_token', data.tokens.refresh)
 
-      // Redirect based on role
-      const dest = data.user.role === 'admin' ? '/admin'
+      // Si llegó con ?redirect=... (ej: desde formulario de reserva), respetarlo
+      const fallback = data.user.role === 'admin' ? '/admin'
         : data.user.role === 'partner' ? '/partner'
         : data.user.role === 'talent' ? '/talent-dashboard'
         : '/dashboard'
+      const dest = route.query.redirect || fallback
       router.push(dest)
     }
   } catch (err) {

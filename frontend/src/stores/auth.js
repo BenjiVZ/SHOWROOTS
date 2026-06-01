@@ -11,6 +11,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isClient = computed(() => user.value?.role === 'client')
   const isPartner = computed(() => user.value?.role === 'partner')
   const isAdmin = computed(() => user.value?.role === 'admin')
+  // True si Partner es el rol primario O si el usuario lo activó como rol secundario
+  const hasPartnerRole = computed(() => user.value?.role === 'partner' || !!user.value?.is_partner_active)
 
   const roleLabel = computed(() => {
     const map = { talent: 'Talento', client: 'Cliente', partner: 'Aliado', admin: 'Admin' }
@@ -53,7 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user, accessToken, isLoggedIn,
-    isTalent, isClient, isPartner, isAdmin, roleLabel,
+    isTalent, isClient, isPartner, isAdmin, hasPartnerRole, roleLabel,
     login, register, fetchMe, logout
   }
 })

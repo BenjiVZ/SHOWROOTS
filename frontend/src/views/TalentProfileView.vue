@@ -227,6 +227,32 @@
           </div>
         </section>
 
+        <!-- Packs de Producción (Aliado verificado) -->
+        <section v-if="productionPacks.length" class="content-section">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+            Packs de Producción
+            <span class="prod-badge">Partner verificado</span>
+          </h2>
+          <p class="prod-sub">Estos packs los podés rentar incluso si no contratás a {{ talent.stage_name }} como DJ.</p>
+          <div class="prod-packs-grid">
+            <div v-for="p in productionPacks" :key="p.id" class="prod-pack-card">
+              <div class="prod-pack-thumb">
+                <img v-if="p.cover_image" :src="p.cover_image" :alt="p.name" />
+                <span v-else class="prod-pack-emoji">{{ prodCategoryIcon(p.category) }}</span>
+              </div>
+              <div class="prod-pack-body">
+                <div class="prod-pack-name">{{ p.name }}</div>
+                <div class="prod-pack-meta">{{ p.category_display }} · {{ p.event_size_display }}</div>
+                <div class="prod-pack-price">${{ Number(p.price).toFixed(0) }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="prod-cta">
+            <router-link to="/packs" class="section-link-action">Ver catálogo completo de packs →</router-link>
+          </div>
+        </section>
+
         <!-- Genres & Mood -->
         <section v-if="talent.genres?.length || moodTags.length" class="content-section">
           <h2>
@@ -938,6 +964,9 @@ const languagesList = computed(() => {
 
 // ── Packs ──
 const packs = computed(() => talent.value?.packs || [])
+const productionPacks = ref([])
+const PROD_CATEGORY_ICONS = { sound: '🔊', lights: '💡', screens: '📺', mics: '🎤', dj_booth: '🎚', fx: '🪩' }
+function prodCategoryIcon(c) { return PROD_CATEGORY_ICONS[c] || '📦' }
 
 // ── FAQ open state ──
 const faqOpen = ref({})
@@ -1303,6 +1332,16 @@ onMounted(async () => {
     reviews.value = reviewsRes.data.results || reviewsRes.data
   } catch (err) {
     console.error('Profile load error:', err)
+  }
+  // Fetch production packs si el DJ es también Partner verificado
+  try {
+    const userId = talent.value?.user?.id
+    if (userId) {
+      const { data } = await api.get(`/users/${userId}/production-packs/`)
+      productionPacks.value = Array.isArray(data) ? data : []
+    }
+  } catch {
+    productionPacks.value = []
   }
   // Setup scroll-driven frost fade
   scrollHandler = updateFrost
@@ -2822,4 +2861,46 @@ textarea.input-field {
   font-family: inherit !important;
   outline: none !important;
 }
+
+/* ── Production Packs (perfil dual-rol Fase 8) ── */
+.prod-badge {
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.prod-sub { color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: var(--space-3); }
+.prod-packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.prod-pack-card {
+  background: var(--color-bg-card);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+.prod-pack-card:hover { border-color: #f59e0b; transform: translateY(-2px); }
+.prod-pack-thumb {
+  aspect-ratio: 16/10;
+  background: linear-gradient(135deg, #3a2a1e, #1a1a3a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prod-pack-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.prod-pack-emoji { font-size: 2.4rem; opacity: 0.6; }
+.prod-pack-body { padding: var(--space-3); }
+.prod-pack-name { color: var(--color-text-primary); font-weight: 700; }
+.prod-pack-meta { color: var(--color-text-muted); font-size: 0.8rem; margin: 4px 0 8px; }
+.prod-pack-price { color: #f59e0b; font-weight: 800; font-size: 1.2rem; }
+.prod-cta { text-align: right; }
 </style>

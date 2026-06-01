@@ -61,6 +61,22 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/partner/onboarding',
+    name: 'partner-onboarding',
+    component: () => import('@/views/PartnerOnboardingView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/packs',
+    name: 'packs-catalog',
+    component: () => import('@/views/PacksCatalogView.vue'),
+  },
+  {
+    path: '/aliado/:userId',
+    name: 'aliado-profile',
+    component: () => import('@/views/AliadoProfileView.vue'),
+  },
+  {
     path: '/talent-onboarding',
     name: 'talent-onboarding',
     component: () => import('@/views/TalentOnboardingView.vue'),

@@ -86,6 +86,65 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+VALID_PARTNER_OFFERS = {'referral', 'packs', 'venue'}
+
+
+class PartnerRoleToggleView(APIView):
+    """
+    Activa o desactiva el rol Aliado para el usuario autenticado.
+
+    POST body:
+      { "active": true/false, "offers": ["referral", ...] }
+
+    Reglas:
+      - El rol primario sigue siendo `role` (cliente/talento/admin) — no se toca.
+      - Admin NO puede activarse como partner (separación de poderes).
+      - Si `active=false` se limpia partner_offers.
+      - Si `active=true` y offers vacío, se asume ['referral'] por defecto (v1).
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        if user.role == 'admin':
+            return Response(
+                {'detail': 'Los administradores no pueden activarse como Aliado.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        active = bool(request.data.get('active', False))
+        offers = request.data.get('offers')
+        if offers is None:
+            offers = ['referral'] if active else []
+
+        if not isinstance(offers, list):
+            return Response(
+                {'detail': '`offers` debe ser una lista.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invalid = [o for o in offers if o not in VALID_PARTNER_OFFERS]
+        if invalid:
+            return Response(
+                {'detail': f'Ofertas inválidas: {invalid}. Permitidas: {sorted(VALID_PARTNER_OFFERS)}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if active and not offers:
+            return Response(
+                {'detail': 'Activá al menos una sub-oferta del rol Aliado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.is_partner_active = active
+        user.partner_offers = offers if active else []
+        user.save(update_fields=['is_partner_active', 'partner_offers', 'updated_at'])
+
+        return Response(UserSerializer(user).data)
+
+
 class PasswordResetRequestView(APIView):
     """Request a password reset. Sends email with reset link."""
     permission_classes = [permissions.AllowAny]

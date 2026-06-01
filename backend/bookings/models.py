@@ -153,6 +153,8 @@ class Booking(models.Model):
     class Meta:
         db_table = 'bookings'
         ordering = ['-created_at']
+        verbose_name = 'Reserva'
+        verbose_name_plural = 'Reservas'
 
     @property
     def is_expired(self):
@@ -179,9 +181,14 @@ class Booking(models.Model):
 
     @property
     def total_to_pay(self):
-        """Total que el cliente paga: precio + service fee + ITBMS."""
+        """Total que el cliente paga: DJ + packs + service fee + ITBMS."""
         base = self.quoted_price or self.precio_estimado or Decimal('0.00')
-        return (base + (self.service_fee or Decimal('0.00')) + (self.tax_amount or Decimal('0.00'))).quantize(Decimal('0.01'))
+        return (
+            base
+            + self.packs_subtotal
+            + (self.service_fee or Decimal('0.00'))
+            + (self.tax_amount or Decimal('0.00'))
+        ).quantize(Decimal('0.01'))
 
     def cancellation_refund(self, when=None):
         """
@@ -282,14 +289,22 @@ class Booking(models.Model):
         return self.quoted_price or self.precio_estimado or self.budget
 
     @property
+    def packs_subtotal(self):
+        """Suma de todos los production packs agregados al booking."""
+        total = Decimal('0.00')
+        for bp in self.production_packs.all():
+            total += (Decimal(str(bp.price_at_booking)) * bp.quantity)
+        return total.quantize(Decimal('0.01'))
+
+    @property
     def total_client_cost(self):
-        """Total that the client pays = event price + service fee."""
+        """Total que paga el cliente = DJ + packs + service fee."""
         price = self.final_price or Decimal('0.00')
-        return price + self.service_fee
+        return (price + self.packs_subtotal + (self.service_fee or Decimal('0.00'))).quantize(Decimal('0.01'))
 
     @property
     def remaining_balance(self):
-        """Amount still owed (includes service fee)."""
+        """Amount still owed (incluye packs + service fee)."""
         total = self.total_client_cost
         if total:
             return max(total - self.amount_paid, Decimal('0.00'))
@@ -359,17 +374,21 @@ class Payment(models.Model):
     class Meta:
         db_table = 'payments'
         ordering = ['-created_at']
+        verbose_name = 'Pago'
+        verbose_name_plural = 'Pagos'
 
     def __str__(self):
         return f"Payment ${self.amount} - Booking #{self.booking_id} ({self.get_payment_status_display()})"
 
     def calculate_commissions(self, platform_rate=None, partner_rate=None):
         """
-        Calculate commission breakdown using configurable rates from PlatformConfig.
-        Comisión por tier:
-          - Standard: 22% (entrada)
-          - Pro:      15% (después de 10+ eventos + rating ≥4.5)
-          - Premium:  12% (por invitación de Pulsar)
+        Calculate commission breakdown — separa la porción DJ y la porción Packs.
+        - DJ portion: rate por tier (Standard 22% / Pro 15% / Premium 12%)
+        - Packs portion: pack_commission_rate (default 20%)
+        - Partner referrer: 30% de la comisión total (sobre ambas porciones)
+
+        El monto del payment se atribuye proporcionalmente entre DJ y packs según
+        el peso de cada uno en el booking total.
         """
         from bookings.models import PlatformConfig
         config = PlatformConfig.get_config()
@@ -387,10 +406,28 @@ class Payment(models.Model):
         if partner_rate is None:
             partner_rate = config.partner_commission_rate
 
-        self.commission_showroots = (self.amount * platform_rate).quantize(Decimal('0.01'))
+        pack_rate = config.pack_commission_rate
+
+        # Split this payment proporcionalmente entre la base DJ y la base packs
+        dj_base = self.booking.final_price or Decimal('0.00')
+        packs_base = self.booking.packs_subtotal
+        total_base = dj_base + packs_base
+
+        if total_base > 0:
+            dj_share = (Decimal(str(self.amount)) * dj_base / total_base).quantize(Decimal('0.01'))
+            pack_share = (Decimal(str(self.amount)) - dj_share).quantize(Decimal('0.01'))
+        else:
+            dj_share = Decimal(str(self.amount))
+            pack_share = Decimal('0.00')
+
+        commission_dj = (dj_share * platform_rate).quantize(Decimal('0.01'))
+        commission_packs = (pack_share * pack_rate).quantize(Decimal('0.01'))
+
+        self.commission_showroots = commission_dj + commission_packs
         if self.booking.partner:
             self.commission_partner = (self.commission_showroots * partner_rate).quantize(Decimal('0.01'))
             self.commission_showroots -= self.commission_partner
+        # `talent_payout` aquí representa "lo que va al proveedor" — DJ + Aliados de Packs comparten esto
         self.talent_payout = self.amount - self.commission_showroots - self.commission_partner
 
     def save(self, *args, **kwargs):
@@ -442,6 +479,8 @@ class Message(models.Model):
     class Meta:
         db_table = 'messages'
         ordering = ['created_at']
+        verbose_name = 'Mensaje'
+        verbose_name_plural = 'Mensajes'
 
     def save(self, *args, **kwargs):
         # Run anti-disintermediation scanner on the content
@@ -493,6 +532,8 @@ class Notification(models.Model):
     class Meta:
         db_table = 'notifications'
         ordering = ['-created_at']
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
 
     def __str__(self):
         return f"{self.title} → {self.user}"
@@ -552,6 +593,8 @@ class Review(models.Model):
     class Meta:
         db_table = 'reviews'
         ordering = ['-created_at']
+        verbose_name = 'Reseña'
+        verbose_name_plural = 'Reseñas'
 
     def __str__(self):
         return f"Review {self.rating}★ - {self.client} → {self.talent}"
@@ -605,6 +648,10 @@ class PlatformConfig(models.Model):
     partner_commission_rate = models.DecimalField(
         max_digits=5, decimal_places=4, default=Decimal('0.3000'),
         help_text='Comisión del partner sobre la comisión de la plataforma (ej: 0.30 = 30%)'
+    )
+    pack_commission_rate = models.DecimalField(
+        max_digits=5, decimal_places=4, default=Decimal('0.2000'),
+        help_text='Comisión Pulsar sobre packs de producción (ej: 0.20 = 20%)'
     )
 
     # ── Auto-promoción Standard → Pro ──
@@ -726,6 +773,8 @@ class ClientCredit(models.Model):
     class Meta:
         db_table = 'client_credits'
         ordering = ['-created_at']
+        verbose_name = 'Crédito de cliente'
+        verbose_name_plural = 'Créditos de cliente'
 
     def __str__(self):
         return f"${self.amount} · {self.client} · {self.get_reason_display()}"
@@ -766,6 +815,8 @@ class PremiumInvitation(models.Model):
     class Meta:
         db_table = 'premium_invitations'
         ordering = ['-sent_at']
+        verbose_name = 'Invitación a Premium'
+        verbose_name_plural = 'Invitaciones a Premium'
 
     def __str__(self):
         return f"{self.talent.stage_name} · {self.get_status_display()}"
@@ -841,6 +892,8 @@ class Dispute(models.Model):
     class Meta:
         db_table = 'disputes'
         ordering = ['-created_at']
+        verbose_name = 'Disputa'
+        verbose_name_plural = 'Disputas'
 
     def __str__(self):
         return f"Disputa booking #{self.booking_id} · {self.get_status_display()}"
@@ -877,6 +930,270 @@ class AuditLog(models.Model):
     class Meta:
         db_table = 'audit_logs'
         ordering = ['-created_at']
+        verbose_name = 'Registro de auditoría'
+        verbose_name_plural = 'Registros de auditoría'
 
     def __str__(self):
         return f"{self.actor} · {self.get_action_display()} · {self.created_at:%Y-%m-%d %H:%M}"
+
+
+# ── Partner de Producción (renta de equipo) ──
+
+class PartnerProductionProfile(models.Model):
+    """
+    Perfil de producción de un Aliado: categorías de equipo, cobertura, verificación.
+    Necesario antes de publicar packs (sección 2 del mockup).
+    """
+
+    CATEGORY_CHOICES = [
+        ('sound', 'Sonido'),
+        ('lights', 'Iluminación'),
+        ('screens', 'Pantallas'),
+        ('mics', 'Microfonía'),
+        ('dj_booth', 'DJ Booth'),
+        ('fx', 'FX / Especiales'),
+    ]
+
+    STATUS_CHOICES = [
+        ('draft', 'Borrador'),
+        ('pending', 'Pendiente de verificación'),
+        ('verified', 'Verificado'),
+        ('rejected', 'Rechazado'),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='production_profile'
+    )
+    categories = models.JSONField(
+        default=list, blank=True,
+        help_text='Lista de categorías ofrecidas (slugs). Ej: ["sound", "lights", "mics"]'
+    )
+    main_city = models.CharField(max_length=100, blank=True)
+    coverage_radius_km = models.PositiveIntegerField(
+        default=50, help_text='Radio de cobertura en km'
+    )
+    travel_fee_extra = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True,
+        help_text='Cargo extra fuera del radio de cobertura'
+    )
+    max_simultaneous_events = models.PositiveIntegerField(
+        default=1, help_text='Máximo de eventos simultáneos (por noche)'
+    )
+    notes = models.TextField(blank=True, help_text='Notas adicionales del partner')
+
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='draft')
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='production_profiles_verified'
+    )
+    rejection_reason = models.TextField(blank=True)
+    onboarding_step = models.PositiveSmallIntegerField(
+        default=1, help_text='Paso actual del wizard (1-4). 4 = completado y enviado a verificación.'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'partner_production_profiles'
+        ordering = ['-created_at']
+        verbose_name = 'Perfil de producción (Aliado)'
+        verbose_name_plural = 'Perfiles de producción (Aliados)'
+
+    def __str__(self):
+        return f"{self.user.username} · Production · {self.get_status_display()}"
+
+    @property
+    def photo_count(self):
+        return self.photos.count()
+
+    def submit_for_verification(self):
+        """Marca el perfil como pendiente de verificación humana."""
+        from django.utils import timezone as _tz
+        self.status = 'pending'
+        self.submitted_at = _tz.now()
+        self.onboarding_step = 4
+        self.save(update_fields=['status', 'submitted_at', 'onboarding_step', 'updated_at'])
+
+
+class PartnerProductionPhoto(models.Model):
+    """Foto de equipo del Partner. Mínimo 4 para verificación."""
+
+    profile = models.ForeignKey(
+        PartnerProductionProfile,
+        on_delete=models.CASCADE,
+        related_name='photos'
+    )
+    file = models.ImageField(upload_to='partner/equipment/')
+    caption = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'partner_production_photos'
+        ordering = ['order', 'uploaded_at']
+        verbose_name = 'Foto de equipo (Aliado)'
+        verbose_name_plural = 'Fotos de equipo (Aliados)'
+
+    def __str__(self):
+        return f"Photo #{self.id} · {self.profile.user.username}"
+
+
+class ProductionPack(models.Model):
+    """
+    Pack de producción que un Partner publica. El cliente lo agrega al booking.
+    Ej: "Pack Sonido Pro · 80-300 personas · $500".
+    """
+
+    EVENT_SIZE_CHOICES = [
+        ('small',  'Pequeño (<80)'),
+        ('medium', 'Mediano (80-300)'),
+        ('large',  'Grande (300+)'),
+    ]
+
+    STATUS_CHOICES = [
+        ('draft',     'Borrador'),
+        ('published', 'Publicado'),
+        ('paused',    'Pausado'),
+    ]
+
+    partner = models.ForeignKey(
+        PartnerProductionProfile,
+        on_delete=models.CASCADE,
+        related_name='packs'
+    )
+    name = models.CharField(max_length=150)
+    category = models.CharField(
+        max_length=20,
+        choices=PartnerProductionProfile.CATEGORY_CHOICES,
+        help_text='Categoría de equipo: sound, lights, screens, mics, dj_booth, fx'
+    )
+    short_description = models.CharField(max_length=200, blank=True)
+    event_size = models.CharField(
+        max_length=10, choices=EVENT_SIZE_CHOICES, default='medium'
+    )
+    equipment_items = models.JSONField(
+        default=list, blank=True,
+        help_text='Items incluidos. Ej: ["2x QSC KW153", "Mixer Pioneer DJM-A9", ...]'
+    )
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    includes_technician = models.BooleanField(default=True)
+    includes_setup = models.BooleanField(default=True)
+    setup_hours_before = models.PositiveSmallIntegerField(default=2)
+    available_days = models.JSONField(
+        default=list, blank=True,
+        help_text='Días disponibles. Ej: ["mon","tue","wed","thu","fri","sat"]'
+    )
+    cover_image = models.ImageField(upload_to='partner/packs/', blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    rentals_count = models.PositiveIntegerField(default=0)
+    rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'production_packs'
+        ordering = ['-rentals_count', '-created_at']
+        verbose_name = 'Pack de producción'
+        verbose_name_plural = 'Packs de producción'
+
+    def __str__(self):
+        return f"{self.name} · ${self.price} · {self.partner.user.username}"
+
+    @property
+    def is_visible_publicly(self):
+        """Solo publicado y el partner verificado puede aparecer en el catálogo."""
+        return self.status == 'published' and self.partner.status == 'verified'
+
+
+class BookingPack(models.Model):
+    """
+    Pack agregado a un booking. Snapshot del precio al momento del agregado
+    (el precio del pack puede cambiar después y no debe afectar bookings históricos).
+    """
+
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='production_packs'
+    )
+    pack = models.ForeignKey(
+        ProductionPack,
+        on_delete=models.PROTECT,
+        related_name='booking_uses'
+    )
+    price_at_booking = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'booking_packs'
+        ordering = ['created_at']
+        unique_together = ['booking', 'pack']
+        verbose_name = 'Pack en reserva'
+        verbose_name_plural = 'Packs en reservas'
+
+    def __str__(self):
+        return f"Booking #{self.booking_id} · {self.pack.name} (${self.price_at_booking})"
+
+    @property
+    def line_total(self):
+        from decimal import Decimal
+        return (Decimal(str(self.price_at_booking)) * self.quantity).quantize(Decimal('0.01'))
+
+
+class PackBundle(models.Model):
+    """
+    Combo de varios ProductionPacks con descuento. Ej: "Sonido Pro + Luces Show -15%".
+    El cliente lo agrega como una unidad y se le aplican todos los packs.
+    """
+
+    partner = models.ForeignKey(
+        PartnerProductionProfile,
+        on_delete=models.CASCADE,
+        related_name='bundles'
+    )
+    name = models.CharField(max_length=150)
+    description = models.CharField(max_length=300, blank=True)
+    packs = models.ManyToManyField(ProductionPack, related_name='bundles')
+    discount_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('10.00'),
+        help_text='Descuento sobre la suma de precios individuales (ej: 15.00 = 15%)'
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=[('draft', 'Borrador'), ('published', 'Publicado'), ('paused', 'Pausado')],
+        default='draft',
+    )
+    rentals_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'pack_bundles'
+        ordering = ['-rentals_count', '-created_at']
+        verbose_name = 'Combo de packs'
+        verbose_name_plural = 'Combos de packs'
+
+    def __str__(self):
+        return f"Bundle: {self.name} ({self.discount_percentage}% off)"
+
+    @property
+    def base_price(self):
+        """Suma de precios individuales de los packs (antes de descuento)."""
+        total = Decimal('0.00')
+        for p in self.packs.all():
+            total += Decimal(str(p.price))
+        return total.quantize(Decimal('0.01'))
+
+    @property
+    def discounted_price(self):
+        """Precio final con descuento aplicado."""
+        return (self.base_price * (Decimal('100') - self.discount_percentage) / Decimal('100')).quantize(Decimal('0.01'))

@@ -10,6 +10,10 @@
           <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           Talentos
         </router-link>
+        <router-link to="/packs" @click="menuOpen = false">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+          Packs
+        </router-link>
         <!-- Venues — oculto temporalmente, funcionalidad pendiente -->
         <router-link v-if="false" to="/venues" @click="menuOpen = false">
           <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -32,6 +36,10 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Mi Dashboard
               </router-link>
+              <router-link v-if="auth.hasPartnerRole && auth.user?.role !== 'partner'" to="/partner" class="dropdown-item" @click="showUserMenu = false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                Panel de Aliado
+              </router-link>
               <router-link to="/account" class="dropdown-item" @click="showUserMenu = false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Mi Perfil
@@ -44,8 +52,8 @@
           </div>
         </template>
         <template v-else>
-          <router-link to="/login" class="btn btn-ghost btn-sm" @click="menuOpen = false">Iniciar Sesión</router-link>
-          <router-link to="/register" class="btn btn-cta btn-sm" @click="menuOpen = false">
+          <router-link :to="authRoute('login')" class="btn btn-ghost btn-sm" @click="menuOpen = false">Iniciar Sesión</router-link>
+          <router-link :to="authRoute('register')" class="btn btn-cta btn-sm" @click="menuOpen = false">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             Registrarse
           </router-link>
@@ -112,6 +120,17 @@ const dashboardRoute = computed(() => {
   if (role === 'talent') return '/talent-dashboard'
   return '/dashboard'
 })
+
+// Construye ruta /login o /register pasando el path actual como `redirect`,
+// excepto si ya estamos en una pantalla de auth (evita /login?redirect=/login).
+function authRoute(name) {
+  const onAuthPage = route.name === 'login' || route.name === 'register'
+  const fp = route.fullPath
+  if (onAuthPage || !fp || fp === '/' ) {
+    return { name }
+  }
+  return { name, query: { redirect: fp } }
+}
 
 // Lock body scroll when mobile menu is open
 watch(menuOpen, (open) => {

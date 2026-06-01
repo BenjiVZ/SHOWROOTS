@@ -1,5 +1,5 @@
 """
-Pulsar by ShowRoots — Background Task Scheduler.
+Pulsar — Background Task Scheduler.
 
 Runs periodic tasks using APScheduler (Windows-compatible, no Redis needed).
 

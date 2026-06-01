@@ -29,4 +29,8 @@ urlpatterns = [
 
     # Inquiry (consulta rápida)
     path('talents/<int:talent_id>/inquire/', views.TalentInquiryView.as_view(), name='talent-inquire'),
+
+    # Recommended partners (Fase 10)
+    path('talents/me/recommended-partners/', views.MyRecommendedPartnersView.as_view(), name='my-recommended-partners'),
+    path('partner/production/verified/', views.VerifiedPartnersListView.as_view(), name='verified-partners-list'),
 ]

@@ -61,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 
 const props = defineProps({
   file: { type: [File, Blob], default: null },
@@ -81,7 +81,10 @@ const src = ref(null)
 const imgNaturalW = ref(0)
 const imgNaturalH = ref(0)
 const stageW = ref(400)
-const stageH = ref(400)
+const stageH = ref(400 / 1) // se recalcula al medir
+
+let resizeObserver = null
+let lastMeasuredW = 0
 
 const zoom = ref(1) // 1 = cover (mínimo), hasta 3
 const offsetX = ref(0)
@@ -107,25 +110,53 @@ watch(() => props.file, (file) => {
   zoom.value = 1
   offsetX.value = 0
   offsetY.value = 0
+  // Medir el stage cuando entra en DOM
+  nextTick(measureStage)
 }, { immediate: true })
+
+// Cuando se monta el stage, observar cambios de tamaño (rotación, resize del viewport, etc.)
+watch(stageEl, (el) => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+  if (el && window.ResizeObserver) {
+    resizeObserver = new ResizeObserver(measureStage)
+    resizeObserver.observe(el)
+    measureStage()
+  } else if (el) {
+    // Fallback sin ResizeObserver
+    measureStage()
+  }
+})
+
+function measureStage() {
+  if (!stageEl.value) return
+  const w = stageEl.value.clientWidth
+  if (!w || w === lastMeasuredW) return
+  lastMeasuredW = w
+  stageW.value = w
+  stageH.value = w / props.aspectRatio
+  // Re-centrar si ya hay imagen cargada
+  if (imgNaturalW.value && imgNaturalH.value) {
+    clampAndCenter()
+  }
+}
 
 onUnmounted(() => {
   if (src.value) URL.revokeObjectURL(src.value)
+  if (resizeObserver) resizeObserver.disconnect()
   window.removeEventListener('mousemove', onPointerMove)
   window.removeEventListener('mouseup', onPointerUp)
   window.removeEventListener('touchmove', onPointerMove)
   window.removeEventListener('touchend', onPointerUp)
 })
 
-// Stage dimensions según aspect ratio
-const stageStyle = computed(() => {
-  const baseWidth = 400
-  const w = baseWidth
-  const h = baseWidth / props.aspectRatio
-  stageW.value = w
-  stageH.value = h
-  return { width: `${w}px`, height: `${h}px` }
-})
+// Stage dimensions: ancho 100% del contenedor (capped), alto según aspect ratio.
+// JS sólo setea height — width lo controla CSS responsivo.
+const stageStyle = computed(() => ({
+  height: `${stageH.value}px`,
+}))
 
 // Escala mínima para cubrir el stage (cover)
 const minScale = computed(() => {
@@ -366,7 +397,8 @@ async function apply() {
   overflow: hidden;
   user-select: none;
   touch-action: none;
-  max-width: 100%;
+  width: 100%;
+  max-width: 420px;
 }
 
 .cropper-stage img {
@@ -458,6 +490,6 @@ async function apply() {
 .cropper-fade-enter-from, .cropper-fade-leave-to { opacity: 0; }
 
 @media (max-width: 520px) {
-  .cropper-stage { width: 100% !important; height: auto !important; aspect-ratio: v-bind('props.aspectRatio'); }
+  .cropper-modal { padding: var(--space-4); }
 }
 </style>

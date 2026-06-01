@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.LastSeenMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -160,20 +161,29 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # ── Email Configuration ──
-# Dev: prints to console | Prod: real SMTP
+# Auto-detección: si hay credenciales SMTP, usa SMTP real; si no, imprime en consola.
 import os
 
-EMAIL_BACKEND = os.environ.get(
-    'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend'  # Dev default
-)
-# Production SMTP settings (set via environment variables)
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Pulsar by ShowRoots <no-reply@showroots.com>')
+
+# Si el admin define un EMAIL_BACKEND explícito, respetarlo.
+# Si no, usar SMTP cuando hay credenciales (EMAIL_HOST_USER + EMAIL_HOST_PASSWORD),
+# o caer a consola en dev.
+if os.environ.get('EMAIL_BACKEND'):
+    EMAIL_BACKEND = os.environ['EMAIL_BACKEND']
+elif EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    f'Pulsar <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Pulsar <no-reply@showroots.com>'
+)
 
 # Frontend URL for building reset links in emails
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://frontend.aplicacionesdamasco.com')

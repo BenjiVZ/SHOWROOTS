@@ -1,9 +1,11 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, parsers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Booking, Payment, Message, Notification, Review, PlatformConfig
 from .models import PremiumInvitation, Dispute, AuditLog
+from .models import PartnerProductionProfile, PartnerProductionPhoto
+from .models import ProductionPack, BookingPack, PackBundle
 from .serializers import (
     BookingListSerializer, BookingDetailSerializer,
     BookingCreateSerializer, ReviewSerializer,
@@ -12,6 +14,9 @@ from .serializers import (
     NotificationSerializer, PartnerStatsSerializer,
     PlatformConfigSerializer, PremiumInvitationSerializer,
     FlaggedMessageSerializer,
+    PartnerProductionProfileSerializer, PartnerProductionPhotoSerializer,
+    ProductionPackSerializer, ProductionPackPublicSerializer, BookingPackSerializer,
+    PackBundleSerializer, PackBundlePublicSerializer,
 )
 from django.db.models import Sum, Q, Count
 from decimal import Decimal
@@ -35,11 +40,29 @@ class BookingListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'talent':
+        # Soporte multi-rol: ?as=talent|partner|client filtra explícitamente.
+        # Sin param, devolvemos todo lo que el user puede ver según sus roles activos.
+        view_as = self.request.query_params.get('as')
+
+        if view_as == 'talent':
             return Booking.objects.filter(talent__user=user)
-        elif user.role == 'partner':
+        if view_as == 'partner':
             return Booking.objects.filter(partner=user)
-        return Booking.objects.filter(client=user)
+        if view_as == 'client':
+            return Booking.objects.filter(client=user)
+
+        # Default: combinar según roles
+        from django.db.models import Q
+        q = Q()
+        if user.role == 'talent':
+            q |= Q(talent__user=user)
+        if user.role == 'partner' or getattr(user, 'is_partner_active', False):
+            q |= Q(partner=user)
+        if user.role == 'client':
+            q |= Q(client=user)
+        # Cliente siempre puede ver lo que reservó (incluso talentos como clientes)
+        q |= Q(client=user)
+        return Booking.objects.filter(q).distinct()
 
 
 class BookingCreateView(generics.CreateAPIView):
@@ -271,19 +294,27 @@ class MessageCreateView(generics.CreateAPIView):
             message=f'{msg.sender.get_full_name()} te envió un mensaje.',
             link=f'/dashboard/bookings/{booking.id}'
         )
-        # Email — throttle: sólo si el último mensaje previo del sender→recipient en este booking
-        # fue hace >15min, para no spammear durante chats activos.
+        # Email — sólo si el destinatario NO está conectado actualmente.
+        # Si su última actividad fue hace >30 min (o nunca), le mandamos el correo
+        # para avisarle que tiene un mensaje pendiente. Si está navegando ahora,
+        # asumimos que verá el mensaje en la UI y no lo spameamos.
         try:
             from django.utils import timezone as _tz
             from datetime import timedelta
-            threshold = _tz.now() - timedelta(minutes=15)
-            recent = Message.objects.filter(
+            ACTIVE_WINDOW = timedelta(minutes=30)
+            last_seen = recipient.last_seen_at
+            is_active_now = last_seen and (_tz.now() - last_seen) < ACTIVE_WINDOW
+
+            # Anti-spam adicional: si ya enviamos email en los últimos 30 min al mismo
+            # destinatario en este booking, no repetimos (evita 10 emails por chat rápido
+            # cuando el usuario está offline pero sus mensajes están llegando juntos).
+            recent_msg = Message.objects.filter(
                 booking=booking, sender=msg.sender,
-                created_at__gte=threshold
+                created_at__gte=_tz.now() - ACTIVE_WINDOW
             ).exclude(pk=msg.pk).exists()
-            if not recent:
+
+            if not is_active_now and not recent_msg:
                 from accounts.emails import send_new_message_email
-                # No filtres por flagged — si el msg fue sanitizado, mandamos el contenido limpio
                 send_new_message_email(recipient, msg.sender, booking, msg.content)
         except Exception:
             pass
@@ -882,7 +913,7 @@ class BookingContractView(APIView):
 </div>
 
 <div class="footer">
-  Generado por Pulsar by ShowRoots el {booking.updated_at:%Y-%m-%d %H:%M}. Documento de referencia, no constituye obligación legal directa.
+  Generado por Pulsar el {booking.updated_at:%Y-%m-%d %H:%M}. Documento de referencia, no constituye obligación legal directa.
 </div>
 </body></html>"""
 
@@ -929,9 +960,11 @@ class PartnerDashboardView(APIView):
 
     def get(self, request):
         user = request.user
-        if user.role != 'partner':
+        # Accept both primary role and secondary partner activation
+        is_partner = user.role == 'partner' or getattr(user, 'is_partner_active', False)
+        if not is_partner:
             return Response(
-                {'error': 'Solo los Partners pueden acceder a este dashboard.'},
+                {'error': 'Solo los Aliados pueden acceder a este dashboard.'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -990,3 +1023,776 @@ class PlatformConfigView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+# ── Partner Production Onboarding (Fase 4) ──
+
+MIN_PHOTOS_REQUIRED = 4
+
+
+def _ensure_partner_active(user):
+    """Returns (ok, error_response). El usuario debe tener el rol Aliado activo."""
+    is_partner = user.role == 'partner' or getattr(user, 'is_partner_active', False)
+    if not is_partner:
+        return False, Response(
+            {'detail': 'Activá primero tu rol Aliado en Mi Cuenta.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    return True, None
+
+
+class PartnerProductionProfileView(APIView):
+    """
+    GET  /api/partner/production/   → perfil del Partner autenticado (crea draft si no existe)
+    PATCH /api/partner/production/  → actualizar campos (durante el wizard)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        ok, err = _ensure_partner_active(request.user)
+        if not ok:
+            return err
+        profile, _ = PartnerProductionProfile.objects.get_or_create(user=request.user)
+        return Response(
+            PartnerProductionProfileSerializer(profile, context={'request': request}).data
+        )
+
+    def patch(self, request):
+        ok, err = _ensure_partner_active(request.user)
+        if not ok:
+            return err
+        profile, _ = PartnerProductionProfile.objects.get_or_create(user=request.user)
+        if profile.status == 'verified':
+            return Response(
+                {'detail': 'Tu perfil ya está verificado. No se puede editar desde el onboarding.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Allowed fields during wizard
+        allowed = [
+            'categories', 'main_city', 'coverage_radius_km',
+            'travel_fee_extra', 'max_simultaneous_events', 'notes',
+            'onboarding_step',
+        ]
+        data = {k: v for k, v in request.data.items() if k in allowed}
+        serializer = PartnerProductionProfileSerializer(
+            profile, data=data, partial=True, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class PartnerProductionSubmitView(APIView):
+    """POST /api/partner/production/submit/ → manda a verificación (status pending)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        ok, err = _ensure_partner_active(request.user)
+        if not ok:
+            return err
+        try:
+            profile = PartnerProductionProfile.objects.get(user=request.user)
+        except PartnerProductionProfile.DoesNotExist:
+            return Response(
+                {'detail': 'Aún no iniciaste el onboarding.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Validations
+        errors = []
+        if not profile.categories:
+            errors.append('Elegí al menos una categoría de equipo.')
+        if not profile.main_city:
+            errors.append('Falta tu ciudad principal.')
+        if profile.photo_count < MIN_PHOTOS_REQUIRED:
+            errors.append(f'Necesitás al menos {MIN_PHOTOS_REQUIRED} fotos del equipo (tenés {profile.photo_count}).')
+        if errors:
+            return Response({'detail': ' '.join(errors)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if profile.status in ('pending', 'verified'):
+            return Response(
+                {'detail': f'Tu perfil ya está en estado "{profile.get_status_display()}".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        profile.submit_for_verification()
+
+        # Auto-añadir 'packs' a partner_offers cuando se envía a verificación
+        user = request.user
+        if 'packs' not in (user.partner_offers or []):
+            user.partner_offers = (user.partner_offers or []) + ['packs']
+            user.save(update_fields=['partner_offers', 'updated_at'])
+
+        return Response(
+            PartnerProductionProfileSerializer(profile, context={'request': request}).data
+        )
+
+
+class PartnerProductionPhotosView(APIView):
+    """
+    POST   /api/partner/production/photos/  → subir foto (multipart)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+
+    def post(self, request):
+        ok, err = _ensure_partner_active(request.user)
+        if not ok:
+            return err
+        profile, _ = PartnerProductionProfile.objects.get_or_create(user=request.user)
+        if profile.status == 'verified':
+            return Response(
+                {'detail': 'Tu perfil ya está verificado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'detail': 'Falta el archivo.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        photo = PartnerProductionPhoto.objects.create(
+            profile=profile,
+            file=file,
+            caption=request.data.get('caption', ''),
+            order=profile.photos.count(),
+        )
+        return Response(
+            PartnerProductionPhotoSerializer(photo, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class PartnerProductionPhotoDeleteView(APIView):
+    """DELETE /api/partner/production/photos/<pk>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk):
+        try:
+            photo = PartnerProductionPhoto.objects.select_related('profile').get(
+                pk=pk, profile__user=request.user
+            )
+        except PartnerProductionPhoto.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if photo.profile.status == 'verified':
+            return Response(
+                {'detail': 'No podés borrar fotos de un perfil verificado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        photo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Admin: aprobación de Partners de producción ──
+
+class AdminPartnerProductionListView(APIView):
+    """GET /api/admin/partner-production/?status=pending → lista para revisión"""
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        # Por defecto excluir cuentas eliminadas; el admin puede pedirlas con ?include_deleted=1
+        qs = PartnerProductionProfile.objects.select_related('user').prefetch_related('photos')
+        if request.query_params.get('include_deleted') != '1':
+            qs = qs.filter(user__is_active=True)
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        data = PartnerProductionProfileSerializer(qs, many=True, context={'request': request}).data
+        # Add user info for admin
+        for item, prof in zip(data, qs):
+            item['user_info'] = {
+                'id': prof.user.id,
+                'username': prof.user.username,
+                'email': prof.user.email,
+                'full_name': prof.user.get_full_name(),
+            }
+        return Response(data)
+
+
+class AdminPartnerProductionActionView(APIView):
+    """POST /api/admin/partner-production/<pk>/action/  body: {action: 'approve'|'reject', reason?}"""
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk):
+        from django.utils import timezone as _tz
+        try:
+            profile = PartnerProductionProfile.objects.get(pk=pk)
+        except PartnerProductionProfile.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        action = request.data.get('action')
+        if action == 'approve':
+            profile.status = 'verified'
+            profile.verified_at = _tz.now()
+            profile.verified_by = request.user
+            profile.rejection_reason = ''
+            profile.save()
+            # Notificar
+            Notification.objects.create(
+                user=profile.user,
+                notification_type='system',
+                title='✅ Aliado de Producción verificado',
+                message='Tu perfil de producción fue aprobado. Ya podés publicar packs.',
+                link='/partner',
+            )
+        elif action == 'reject':
+            profile.status = 'rejected'
+            profile.rejection_reason = request.data.get('reason', '')
+            profile.save()
+            # Remover 'packs' de offers ya que no fue aprobado
+            user = profile.user
+            if 'packs' in (user.partner_offers or []):
+                user.partner_offers = [o for o in user.partner_offers if o != 'packs']
+                user.save(update_fields=['partner_offers', 'updated_at'])
+            Notification.objects.create(
+                user=profile.user,
+                notification_type='system',
+                title='Aliado de Producción rechazado',
+                message=f'Tu solicitud fue rechazada. Motivo: {profile.rejection_reason or "—"}',
+                link='/partner/onboarding',
+            )
+        else:
+            return Response(
+                {'detail': 'action debe ser "approve" o "reject".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        AuditLog.objects.create(
+            actor=request.user,
+            action='talent_approve' if action == 'approve' else 'talent_reject',
+            target_type='partner_production_profile',
+            target_id=profile.id,
+            details={'reason': profile.rejection_reason} if action == 'reject' else {},
+        )
+
+        return Response(
+            PartnerProductionProfileSerializer(profile, context={'request': request}).data
+        )
+
+
+# ── Production Packs CRUD (Fase 5) ──
+
+def _get_verified_partner_profile(user):
+    """Returns (profile, error_response). Solo verified puede manejar packs."""
+    try:
+        profile = PartnerProductionProfile.objects.get(user=user)
+    except PartnerProductionProfile.DoesNotExist:
+        return None, Response(
+            {'detail': 'Completá primero el onboarding de Aliado de Producción.'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    if profile.status != 'verified':
+        return None, Response(
+            {'detail': f'Tu perfil está en estado "{profile.get_status_display()}". Solo Aliados verificados pueden manejar packs.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    return profile, None
+
+
+class MyProductionPackListCreateView(APIView):
+    """GET/POST /api/partner/production/packs/"""
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+
+    def get(self, request):
+        ok, err = _ensure_partner_active(request.user)
+        if not ok:
+            return err
+        try:
+            profile = PartnerProductionProfile.objects.get(user=request.user)
+            packs = profile.packs.all()
+        except PartnerProductionProfile.DoesNotExist:
+            packs = ProductionPack.objects.none()
+        return Response(
+            ProductionPackSerializer(packs, many=True, context={'request': request}).data
+        )
+
+    def post(self, request):
+        profile, err = _get_verified_partner_profile(request.user)
+        if err:
+            return err
+        serializer = ProductionPackSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        if serializer.validated_data.get('category') not in (profile.categories or []):
+            return Response(
+                {'detail': 'La categoría del pack no está entre las que ofrecés. Editá tu perfil de producción primero.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save(partner=profile)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MyProductionPackDetailView(APIView):
+    """GET/PATCH/DELETE /api/partner/production/packs/<pk>/"""
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+
+    def get_object(self, request, pk):
+        try:
+            return ProductionPack.objects.get(pk=pk, partner__user=request.user)
+        except ProductionPack.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        pack = self.get_object(request, pk)
+        if not pack:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(ProductionPackSerializer(pack, context={'request': request}).data)
+
+    def patch(self, request, pk):
+        pack = self.get_object(request, pk)
+        if not pack:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = ProductionPackSerializer(
+            pack, data=request.data, partial=True, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        pack = self.get_object(request, pk)
+        if not pack:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if pack.booking_uses.exists():
+            pack.status = 'paused'
+            pack.save(update_fields=['status', 'updated_at'])
+            return Response(
+                {'detail': 'Tiene rentas asociadas — el pack quedó pausado en vez de borrado.'},
+                status=status.HTTP_200_OK,
+            )
+        pack.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Catálogo público de packs (Fase 6) ──
+
+class PublicProductionPackCatalogView(APIView):
+    """GET /api/production-packs/  con filtros category, event_size, max_price, vendor_type."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        qs = ProductionPack.objects.filter(
+            status='published',
+            partner__status='verified',
+            partner__user__is_active=True,  # excluir packs de aliados eliminados
+        ).select_related('partner__user')
+
+        category = request.query_params.get('category')
+        if category:
+            qs = qs.filter(category=category)
+
+        event_size = request.query_params.get('event_size')
+        if event_size:
+            qs = qs.filter(event_size=event_size)
+
+        max_price = request.query_params.get('max_price')
+        if max_price:
+            try:
+                qs = qs.filter(price__lte=Decimal(max_price))
+            except Exception:
+                pass
+
+        vendor_type = request.query_params.get('vendor_type')
+        if vendor_type == 'dj':
+            qs = qs.filter(partner__user__role='talent')
+
+        qs = qs.order_by('-rentals_count', '-rating_avg', '-created_at')
+
+        # Si se pasa ?for_talent_id=X, marcamos los packs recomendados y los ponemos arriba
+        for_talent_id = request.query_params.get('for_talent_id')
+        recommended_user_ids = set()
+        if for_talent_id:
+            try:
+                from talents.models import TalentProfile
+                tp = TalentProfile.objects.prefetch_related('recommended_partners').get(pk=for_talent_id)
+                recommended_user_ids = set(
+                    tp.recommended_partners.filter(is_active=True).values_list('id', flat=True)
+                )
+            except TalentProfile.DoesNotExist:
+                pass
+
+        data = ProductionPackPublicSerializer(qs, many=True, context={'request': request}).data
+        if recommended_user_ids:
+            for item in data:
+                item['is_recommended'] = item.get('vendor', {}).get('id') in recommended_user_ids
+            # Recomendados primero, manteniendo orden original dentro de cada grupo
+            data.sort(key=lambda x: 0 if x.get('is_recommended') else 1)
+        else:
+            for item in data:
+                item['is_recommended'] = False
+
+        return Response(data)
+
+
+class PublicProductionPackDetailView(APIView):
+    """GET /api/production-packs/<pk>/"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        try:
+            pack = ProductionPack.objects.select_related('partner__user').get(
+                pk=pk, status='published',
+                partner__status='verified',
+                partner__user__is_active=True,
+            )
+        except ProductionPack.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(ProductionPackPublicSerializer(pack, context={'request': request}).data)
+
+
+# ── Booking ↔ Packs integration (Fase 7) ──
+
+class BookingPacksView(APIView):
+    """GET / POST /api/bookings/<booking_id>/packs/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_booking(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(pk=booking_id)
+        except Booking.DoesNotExist:
+            return None
+        u = request.user
+        if booking.client != u and booking.talent.user != u and booking.partner != u:
+            return None
+        return booking
+
+    def get(self, request, booking_id):
+        booking = self.get_booking(request, booking_id)
+        if not booking:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        packs = booking.production_packs.select_related('pack__partner__user').all()
+        return Response(BookingPackSerializer(packs, many=True, context={'request': request}).data)
+
+    def post(self, request, booking_id):
+        booking = self.get_booking(request, booking_id)
+        if not booking:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if booking.client != request.user:
+            return Response(
+                {'detail': 'Solo el cliente del booking puede agregar packs.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if booking.status in ('confirmada', 'completada', 'cancelada'):
+            return Response(
+                {'detail': 'No se pueden agregar packs a un booking confirmado/cerrado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pack_id = request.data.get('pack_id')
+        try:
+            pack = ProductionPack.objects.get(
+                pk=pack_id, status='published', partner__status='verified'
+            )
+        except ProductionPack.DoesNotExist:
+            return Response(
+                {'detail': 'Pack no disponible.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Validar día de la semana
+        if pack.available_days and booking.event_date:
+            DAY_MAP = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+            day_slug = DAY_MAP[booking.event_date.weekday()]
+            if day_slug not in pack.available_days:
+                return Response(
+                    {'detail': f'Este pack no está disponible los {day_slug.upper()}.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Validar capacidad del partner ese día (max_simultaneous_events)
+        max_simul = pack.partner.max_simultaneous_events or 1
+        same_day_uses = BookingPack.objects.filter(
+            pack__partner=pack.partner,
+            booking__event_date=booking.event_date,
+            booking__status__in=['aceptada', 'pendiente_pago', 'confirmada'],
+        ).exclude(booking=booking).count()
+        if same_day_uses >= max_simul:
+            return Response(
+                {'detail': f'El Aliado ya tiene {same_day_uses} evento(s) reservado(s) ese día (máx {max_simul}).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        bp, created = BookingPack.objects.get_or_create(
+            booking=booking,
+            pack=pack,
+            defaults={
+                'price_at_booking': pack.price,
+                'quantity': max(1, int(request.data.get('quantity', 1) or 1)),
+                'notes': request.data.get('notes', ''),
+            },
+        )
+        if not created:
+            return Response(
+                {'detail': 'Este pack ya está agregado al booking.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            BookingPackSerializer(bp, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class BookingPackRemoveView(APIView):
+    """DELETE /api/bookings/<booking_id>/packs/<pk>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, booking_id, pk):
+        try:
+            bp = BookingPack.objects.select_related('booking').get(pk=pk, booking_id=booking_id)
+        except BookingPack.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if bp.booking.client != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        if bp.booking.status in ('confirmada', 'completada', 'cancelada'):
+            return Response(
+                {'detail': 'No se pueden quitar packs de un booking confirmado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        bp.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Perfil dual: packs públicos de un partner DJ (Fase 8) ──
+
+class PartnerPublicPacksView(APIView):
+    """GET /api/users/<user_id>/production-packs/"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, user_id):
+        qs = ProductionPack.objects.filter(
+            partner__user_id=user_id,
+            status='published',
+            partner__status='verified',
+            partner__user__is_active=True,
+        ).select_related('partner__user').order_by('-rentals_count', '-created_at')
+        return Response(
+            ProductionPackPublicSerializer(qs, many=True, context={'request': request}).data
+        )
+
+
+# ── Perfil público del Aliado de producción ──
+
+class PartnerPublicProfileView(APIView):
+    """GET /api/aliado/<user_id>/ → perfil público completo de un aliado verificado."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, user_id):
+        try:
+            profile = PartnerProductionProfile.objects.select_related('user').prefetch_related(
+                'photos', 'packs', 'bundles'
+            ).get(
+                user_id=user_id,
+                status='verified',
+                user__is_active=True,
+            )
+        except PartnerProductionProfile.DoesNotExist:
+            return Response({'detail': 'Aliado no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        user = profile.user
+        published_packs = profile.packs.filter(status='published').order_by('-rentals_count', '-created_at')
+        published_bundles = profile.bundles.filter(status='published').order_by('-rentals_count', '-created_at')
+
+        # Stats agregadas: total rentas y rating promedio ponderado por rentas
+        total_rentals = sum(p.rentals_count or 0 for p in published_packs)
+        rated_packs = [p for p in published_packs if p.rating_avg and p.rentals_count]
+        if rated_packs:
+            weighted_sum = sum(float(p.rating_avg) * (p.rentals_count or 0) for p in rated_packs)
+            total_rated = sum((p.rentals_count or 0) for p in rated_packs)
+            rating_avg = round(weighted_sum / total_rated, 2) if total_rated else None
+        else:
+            rating_avg = None
+
+        avatar_url = None
+        if user.avatar:
+            try:
+                avatar_url = user.avatar.url
+            except Exception:
+                avatar_url = None
+
+        # Fotos del equipo (URL relativa)
+        photos = []
+        for ph in profile.photos.all().order_by('order', 'uploaded_at'):
+            try:
+                photos.append({
+                    'id': ph.id,
+                    'file': ph.file.url if ph.file else None,
+                    'caption': ph.caption,
+                })
+            except Exception:
+                pass
+
+        return Response({
+            'user_id': user.id,
+            'username': user.username,
+            'full_name': user.get_full_name() or user.username,
+            'avatar': avatar_url,
+            'bio': user.bio or '',
+            'is_dj_partner': user.role == 'talent',  # DJ que además ofrece producción
+            'categories': profile.categories or [],
+            'main_city': profile.main_city,
+            'coverage_radius_km': profile.coverage_radius_km,
+            'travel_fee_extra': str(profile.travel_fee_extra) if profile.travel_fee_extra is not None else None,
+            'max_simultaneous_events': profile.max_simultaneous_events,
+            'notes': profile.notes or '',
+            'photos': photos,
+            'stats': {
+                'total_packs': published_packs.count(),
+                'total_bundles': published_bundles.count(),
+                'total_rentals': total_rentals,
+                'rating_avg': rating_avg,
+                'verified_since': profile.verified_at.isoformat() if profile.verified_at else None,
+            },
+            'packs': ProductionPackPublicSerializer(
+                published_packs, many=True, context={'request': request}
+            ).data,
+            'bundles': PackBundlePublicSerializer(
+                published_bundles, many=True, context={'request': request}
+            ).data,
+        })
+
+
+# ── Bundles (combo packs con descuento) ──
+
+class MyPackBundleListCreateView(APIView):
+    """GET/POST /api/partner/production/bundles/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        ok, err = _ensure_partner_active(request.user)
+        if not ok:
+            return err
+        try:
+            profile = PartnerProductionProfile.objects.get(user=request.user)
+            bundles = profile.bundles.prefetch_related('packs').all()
+        except PartnerProductionProfile.DoesNotExist:
+            bundles = PackBundle.objects.none()
+        return Response(
+            PackBundleSerializer(bundles, many=True, context={'request': request}).data
+        )
+
+    def post(self, request):
+        profile, err = _get_verified_partner_profile(request.user)
+        if err:
+            return err
+        serializer = PackBundleSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        # Validar que todos los packs sean del mismo partner
+        packs = serializer.validated_data.get('packs', [])
+        bad = [p for p in packs if p.partner_id != profile.id]
+        if bad:
+            return Response(
+                {'detail': 'Solo podés agrupar packs propios en un bundle.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(packs) < 2:
+            return Response(
+                {'detail': 'Un bundle debe tener al menos 2 packs.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save(partner=profile)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MyPackBundleDetailView(APIView):
+    """GET/PATCH/DELETE /api/partner/production/bundles/<pk>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, request, pk):
+        try:
+            return PackBundle.objects.get(pk=pk, partner__user=request.user)
+        except PackBundle.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        bundle = self.get_object(request, pk)
+        if not bundle:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(PackBundleSerializer(bundle, context={'request': request}).data)
+
+    def patch(self, request, pk):
+        bundle = self.get_object(request, pk)
+        if not bundle:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = PackBundleSerializer(
+            bundle, data=request.data, partial=True, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        bundle = self.get_object(request, pk)
+        if not bundle:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        bundle.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PublicPackBundleCatalogView(APIView):
+    """GET /api/production-bundles/  → bundles publicados con discounted_price"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        qs = PackBundle.objects.filter(
+            status='published',
+            partner__status='verified',
+            partner__user__is_active=True,
+        ).select_related('partner__user').prefetch_related('packs').order_by('-rentals_count', '-created_at')
+        return Response(
+            PackBundlePublicSerializer(qs, many=True, context={'request': request}).data
+        )
+
+
+class AddBundleToBookingView(APIView):
+    """POST /api/bookings/<booking_id>/bundles/  body: {bundle_id}
+    Agrega todos los packs del bundle al booking aplicando el descuento prorrateado por pack."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(pk=booking_id)
+        except Booking.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if booking.client != request.user:
+            return Response(
+                {'detail': 'Solo el cliente del booking puede agregar bundles.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if booking.status in ('confirmada', 'completada', 'cancelada'):
+            return Response(
+                {'detail': 'Booking ya cerrado.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        bundle_id = request.data.get('bundle_id')
+        try:
+            bundle = PackBundle.objects.prefetch_related('packs').get(
+                pk=bundle_id, status='published', partner__status='verified'
+            )
+        except PackBundle.DoesNotExist:
+            return Response({'detail': 'Bundle no disponible.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Calcular factor de descuento
+        discount_factor = (Decimal('100') - Decimal(str(bundle.discount_percentage))) / Decimal('100')
+
+        created = []
+        for pack in bundle.packs.all():
+            discounted_price = (Decimal(str(pack.price)) * discount_factor).quantize(Decimal('0.01'))
+            bp, was_created = BookingPack.objects.get_or_create(
+                booking=booking,
+                pack=pack,
+                defaults={
+                    'price_at_booking': discounted_price,
+                    'quantity': 1,
+                    'notes': f'Bundle: {bundle.name} (-{bundle.discount_percentage}%)',
+                },
+            )
+            if was_created:
+                created.append(bp)
+
+        bundle.rentals_count += 1
+        bundle.save(update_fields=['rentals_count', 'updated_at'])
+
+        return Response({
+            'detail': f'Bundle agregado: {len(created)} pack(s) nuevos.',
+            'added': BookingPackSerializer(created, many=True, context={'request': request}).data,
+        }, status=status.HTTP_201_CREATED)

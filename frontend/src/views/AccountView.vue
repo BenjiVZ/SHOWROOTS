@@ -93,6 +93,95 @@
             </div>
           </section>
 
+          <!-- Mis roles -->
+          <section v-else-if="activeTab === 'roles'" class="account-section">
+            <h2>Mis roles en Pulsar</h2>
+            <p class="section-sub">Activá las capas que correspondan a lo que ofrecés. Podés tener varios roles al mismo tiempo.</p>
+
+            <!-- Rol primario: Talento o Cliente -->
+            <div class="role-card role-card-on">
+              <div class="role-card-icon role-card-icon-primary">
+                <span v-if="auth.user?.role === 'talent'">🎵</span>
+                <span v-else>👤</span>
+              </div>
+              <div class="role-card-info">
+                <div class="role-card-name">{{ primaryRoleLabel }}</div>
+                <div class="role-card-desc">{{ primaryRoleDesc }}</div>
+              </div>
+              <span class="role-status on">✓ Activo</span>
+            </div>
+
+            <!-- Rol Aliado / Partner -->
+            <div class="role-card" :class="{ 'role-card-on': partnerRole.active }">
+              <div class="role-card-icon" :class="{ 'role-card-icon-partner': partnerRole.active }">📦</div>
+              <div class="role-card-info">
+                <div class="role-card-name">Aliado</div>
+                <div class="role-card-desc">
+                  Trae clientes a Pulsar y cobra comisión por cada reserva que gestionás. Próximamente: rentar packs de producción y ofrecer venues.
+                </div>
+              </div>
+              <span v-if="partnerRole.active" class="role-status on">✓ Activo</span>
+              <span v-else class="role-status off">○ Inactivo</span>
+              <button
+                class="role-toggle"
+                :class="{ on: partnerRole.active }"
+                :disabled="partnerRole.saving"
+                @click="togglePartnerRole"
+                :aria-label="partnerRole.active ? 'Desactivar Aliado' : 'Activar Aliado'"
+              ></button>
+            </div>
+
+            <!-- Sub-opciones cuando Aliado está activo -->
+            <div v-if="partnerRole.active" class="role-suboptions">
+              <div class="role-suboptions-title">→ Sub-opciones disponibles:</div>
+              <label class="suboption suboption-on">
+                <input type="checkbox" :checked="partnerRole.offers.includes('referral')" disabled />
+                <div>
+                  <strong>Traer clientes (referral)</strong>
+                  <div class="suboption-desc">Gestionás reservas en nombre de tus clientes y cobrás comisión.</div>
+                </div>
+              </label>
+              <button
+                type="button"
+                class="suboption suboption-interactive"
+                :class="{ 'suboption-on': productionStatus === 'verified', 'suboption-pending': productionStatus === 'pending' }"
+                @click="openProductionOnboarding"
+              >
+                <input type="checkbox" :checked="productionStatus === 'verified'" :indeterminate.prop="productionStatus === 'pending'" tabindex="-1" />
+                <div class="suboption-body">
+                  <strong>
+                    Packs de producción
+                    <span v-if="productionStatus === 'pending'" class="status-tag pending">En verificación</span>
+                    <span v-else-if="productionStatus === 'verified'" class="status-tag verified">Verificado ✓</span>
+                    <span v-else-if="productionStatus === 'rejected'" class="status-tag rejected">Rechazado</span>
+                    <span v-else-if="productionStatus === 'draft'" class="status-tag draft">En progreso</span>
+                  </strong>
+                  <div class="suboption-desc">
+                    <span v-if="productionStatus === 'pending'">Un admin revisará tu solicitud en máximo 48h.</span>
+                    <span v-else-if="productionStatus === 'verified'">Ya podés publicar packs de equipo.</span>
+                    <span v-else-if="productionStatus === 'rejected'">Tu solicitud fue rechazada. Tocá para revisar y reenviar.</span>
+                    <span v-else-if="productionStatus === 'draft'">Continúa donde lo dejaste.</span>
+                    <span v-else>Renta de equipo (sonido, luces, DJ booth). Requiere verificación. Tocá para empezar →</span>
+                  </div>
+                </div>
+              </button>
+              <label class="suboption suboption-locked">
+                <input type="checkbox" disabled />
+                <div>
+                  <strong>Venue <span class="soon-tag">próximamente</span></strong>
+                  <div class="suboption-desc">Ofrecé tu espacio físico (terraza, salón, club) en Pulsar.</div>
+                </div>
+              </label>
+
+              <router-link to="/partner" class="btn btn-primary btn-sm role-cta">
+                Ir al dashboard de Aliado →
+              </router-link>
+            </div>
+
+            <p v-if="partnerRole.error" class="role-error">{{ partnerRole.error }}</p>
+            <p v-if="partnerRole.success" class="save-success">✓ Cambios guardados</p>
+          </section>
+
           <!-- Cambiar contraseña -->
           <section v-else-if="activeTab === 'password'" class="account-section">
             <h2>Cambiar contraseña</h2>
@@ -202,13 +291,87 @@ const form = reactive({
   avatar: '',
 })
 
-const tabs = [
-  { key: 'info', label: 'Información', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
-  { key: 'password', label: 'Contraseña', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>' },
-  { key: 'danger', label: 'Cuenta', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
-]
+const tabs = computed(() => {
+  const base = [
+    { key: 'info', label: 'Información', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+  ]
+  if (auth.user?.role !== 'admin') {
+    base.push({ key: 'roles', label: 'Mis roles', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>' })
+  }
+  base.push(
+    { key: 'password', label: 'Contraseña', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>' },
+    { key: 'danger', label: 'Cuenta', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+  )
+  return base
+})
 
 const pendingAvatar = ref(null)
+
+// ── Partner role state ──
+const partnerRole = reactive({
+  active: false,
+  offers: [],
+  saving: false,
+  success: false,
+  error: '',
+})
+const productionStatus = ref(null) // null = no profile, 'draft' | 'pending' | 'verified' | 'rejected'
+
+async function fetchProductionStatus() {
+  if (!partnerRole.active) {
+    productionStatus.value = null
+    return
+  }
+  try {
+    const { data } = await api.get('/partner/production/')
+    productionStatus.value = data.status || null
+  } catch {
+    productionStatus.value = null
+  }
+}
+
+function openProductionOnboarding() {
+  router.push('/partner/onboarding')
+}
+
+// Sync from auth store whenever it changes
+function syncPartnerFromAuth() {
+  partnerRole.active = !!auth.user?.is_partner_active
+  partnerRole.offers = Array.isArray(auth.user?.partner_offers) ? [...auth.user.partner_offers] : []
+}
+
+const primaryRoleLabel = computed(() => {
+  const map = { talent: 'Talento', client: 'Cliente', admin: 'Admin' }
+  return map[auth.user?.role] || 'Usuario'
+})
+const primaryRoleDesc = computed(() => {
+  if (auth.user?.role === 'talent') return 'Ofrecés tu performance como DJ, músico o banda.'
+  if (auth.user?.role === 'client') return 'Reservás talentos para tus eventos.'
+  return 'Cuenta básica de Pulsar.'
+})
+
+async function togglePartnerRole() {
+  partnerRole.saving = true
+  partnerRole.error = ''
+  partnerRole.success = false
+  const willActivate = !partnerRole.active
+  try {
+    const { data } = await api.post('/auth/me/partner-role/', {
+      active: willActivate,
+      offers: willActivate ? ['referral'] : [],
+    })
+    // Update auth store + localStorage so isPartner / nav reflects el cambio inmediatamente
+    auth.user = data
+    localStorage.setItem('user', JSON.stringify(data))
+    syncPartnerFromAuth()
+    fetchProductionStatus()
+    partnerRole.success = true
+    setTimeout(() => { partnerRole.success = false }, 3000)
+  } catch (e) {
+    partnerRole.error = e?.response?.data?.detail || 'No se pudo guardar el cambio.'
+  }
+  partnerRole.saving = false
+}
 
 function onAvatarPick(e) {
   const file = e.target.files?.[0]
@@ -336,6 +499,11 @@ onMounted(async () => {
       bio: data.bio || '',
       avatar: data.avatar || '',
     })
+    // Refresh auth store con los flags nuevos (is_partner_active, partner_offers)
+    auth.user = data
+    localStorage.setItem('user', JSON.stringify(data))
+    syncPartnerFromAuth()
+    fetchProductionStatus()
     // Para talent: obtener talent_profile.id para link público
     if (auth.isTalent) {
       try {
@@ -592,5 +760,167 @@ onMounted(async () => {
 .btn-danger-solid:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Roles section ── */
+.role-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  margin-bottom: var(--space-3);
+  transition: all var(--transition-fast);
+}
+.role-card-on {
+  border-color: var(--color-primary);
+  background: rgba(193, 216, 47, 0.04);
+}
+.role-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(193, 216, 47, 0.12);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.role-card-icon-primary { background: var(--color-primary); color: var(--color-bg); }
+.role-card-icon-partner { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.role-card-info { flex: 1; min-width: 0; }
+.role-card-name { color: var(--color-text-primary); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.role-card-desc { color: var(--color-text-muted); font-size: 13px; line-height: 1.5; }
+.role-status {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.role-status.on { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.role-status.off { background: rgba(140, 140, 140, 0.12); color: var(--color-text-muted); }
+
+.role-toggle {
+  width: 44px;
+  height: 24px;
+  background: var(--color-border);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+  transition: background 0.2s;
+}
+.role-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s, background 0.2s;
+}
+.role-toggle.on { background: var(--color-primary); }
+.role-toggle.on::after { left: 22px; background: var(--color-bg); }
+.role-toggle:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.role-suboptions {
+  margin-top: var(--space-3);
+  margin-left: 64px;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.role-suboptions-title {
+  color: var(--color-primary);
+  font-size: 12px;
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+.suboption {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-soft, rgba(255,255,255,0.02));
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+.suboption input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--color-primary);
+}
+.suboption-on {
+  border-color: rgba(193, 216, 47, 0.4);
+  background: rgba(193, 216, 47, 0.05);
+}
+.suboption-locked { opacity: 0.55; }
+
+.suboption-interactive {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  transition: all var(--transition-fast);
+}
+.suboption-interactive:hover {
+  border-color: var(--color-primary);
+  background: rgba(193, 216, 47, 0.04);
+}
+.suboption-pending {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+.suboption-body { flex: 1; }
+.suboption-body strong { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.status-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-tag.draft    { background: rgba(140,140,140,0.15); color: var(--color-text-muted); }
+.status-tag.pending  { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.status-tag.verified { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.status-tag.rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.suboption-desc {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-top: 3px;
+  font-weight: 400;
+}
+.soon-tag {
+  background: rgba(193, 216, 47, 0.12);
+  color: var(--color-text-muted);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: 500;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+}
+.role-cta { margin-top: var(--space-2); align-self: flex-start; }
+.role-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: var(--space-3);
 }
 </style>

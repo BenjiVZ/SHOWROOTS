@@ -4,6 +4,8 @@ from talents.serializers import TalentListSerializer
 from .models import (
     Booking, Payment, Message, Notification, Review, PlatformConfig,
     PremiumInvitation, ClientCredit,
+    PartnerProductionProfile, PartnerProductionPhoto,
+    ProductionPack, BookingPack, PackBundle,
 )
 
 
@@ -184,6 +186,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     total_client_cost = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
+    packs_subtotal = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    total_to_pay = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
     service_fee_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -198,6 +206,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'budget', 'precio_estimado', 'quoted_price',
             'deposit_percentage', 'amount_paid',
             'service_fee', 'service_fee_name', 'tax_amount',
+            'packs_subtotal', 'total_to_pay',
             'total_client_cost', 'remaining_balance',
             'additional_services', 'additional_services_notes', 'expires_at',
             'status', 'status_display',
@@ -290,15 +299,16 @@ class PlatformConfigSerializer(serializers.ModelSerializer):
     standard_commission_pct = serializers.SerializerMethodField()
     premium_commission_pct = serializers.SerializerMethodField()
     partner_commission_pct = serializers.SerializerMethodField()
+    pack_commission_pct = serializers.SerializerMethodField()
     service_fee_pct = serializers.SerializerMethodField()
 
     class Meta:
         model = PlatformConfig
         fields = [
             'standard_commission_rate', 'premium_commission_rate',
-            'partner_commission_rate',
+            'partner_commission_rate', 'pack_commission_rate',
             'standard_commission_pct', 'premium_commission_pct',
-            'partner_commission_pct',
+            'partner_commission_pct', 'pack_commission_pct',
             'service_fee_name', 'service_fee_mode', 'service_fee_rate',
             'service_fee_pct',
             'service_fee_small', 'service_fee_medium', 'service_fee_large',
@@ -315,6 +325,174 @@ class PlatformConfigSerializer(serializers.ModelSerializer):
     def get_partner_commission_pct(self, obj):
         return float(obj.partner_commission_rate * 100)
 
+    def get_pack_commission_pct(self, obj):
+        return float(obj.pack_commission_rate * 100)
+
     def get_service_fee_pct(self, obj):
         return float(obj.service_fee_rate * 100)
 
+
+class PartnerProductionPhotoSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PartnerProductionPhoto
+        fields = ['id', 'file', 'caption', 'order', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
+
+    def get_file(self, obj):
+        """URL relativa (/media/...) — el frontend la resuelve vía proxy de Vite."""
+        if not obj.file:
+            return None
+        try:
+            return obj.file.url
+        except Exception:
+            return None
+
+
+class PartnerProductionProfileSerializer(serializers.ModelSerializer):
+    photos = PartnerProductionPhotoSerializer(many=True, read_only=True)
+    photo_count = serializers.IntegerField(read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = PartnerProductionProfile
+        fields = [
+            'id', 'categories', 'main_city', 'coverage_radius_km',
+            'travel_fee_extra', 'max_simultaneous_events', 'notes',
+            'status', 'status_display', 'onboarding_step',
+            'submitted_at', 'verified_at', 'rejection_reason',
+            'photos', 'photo_count', 'created_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'id', 'status', 'status_display', 'submitted_at', 'verified_at',
+            'rejection_reason', 'photos', 'photo_count', 'created_at', 'updated_at',
+        ]
+
+    def validate_categories(self, value):
+        valid = {c[0] for c in PartnerProductionProfile.CATEGORY_CHOICES}
+        invalid = [c for c in value if c not in valid]
+        if invalid:
+            raise serializers.ValidationError(f'Categorías inválidas: {invalid}')
+        return value
+
+
+class ProductionPackSerializer(serializers.ModelSerializer):
+    """Pack para CRUD del partner (incluye campos write)."""
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    event_size_display = serializers.CharField(source='get_event_size_display', read_only=True)
+
+    class Meta:
+        model = ProductionPack
+        fields = [
+            'id', 'name', 'category', 'category_display', 'short_description',
+            'event_size', 'event_size_display', 'equipment_items',
+            'price', 'currency',
+            'includes_technician', 'includes_setup', 'setup_hours_before',
+            'available_days', 'cover_image',
+            'status', 'rentals_count', 'rating_avg',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'rentals_count', 'rating_avg', 'created_at', 'updated_at']
+        # cover_image queda como ImageField writable (default); el formateo lo hace to_representation
+
+    def to_representation(self, instance):
+        """En la salida, devolver cover_image como URL relativa (/media/...)."""
+        data = super().to_representation(instance)
+        if instance.cover_image:
+            try:
+                data['cover_image'] = instance.cover_image.url
+            except Exception:
+                data['cover_image'] = None
+        else:
+            data['cover_image'] = None
+        return data
+
+
+class ProductionPackPublicSerializer(serializers.ModelSerializer):
+    """Pack para el catálogo público — incluye info del partner sin exponer todo."""
+    cover_image = serializers.SerializerMethodField()
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    event_size_display = serializers.CharField(source='get_event_size_display', read_only=True)
+    vendor = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductionPack
+        fields = [
+            'id', 'name', 'category', 'category_display', 'short_description',
+            'event_size', 'event_size_display', 'equipment_items',
+            'price', 'currency',
+            'includes_technician', 'includes_setup', 'setup_hours_before',
+            'cover_image', 'rentals_count', 'rating_avg', 'vendor',
+        ]
+
+    def get_cover_image(self, obj):
+        """URL relativa (/media/...) — el frontend la resuelve vía proxy."""
+        if not obj.cover_image:
+            return None
+        try:
+            return obj.cover_image.url
+        except Exception:
+            return None
+
+    def get_vendor(self, obj):
+        u = obj.partner.user
+        return {
+            'id': u.id,
+            'name': u.get_full_name() or u.username,
+            'city': obj.partner.main_city,
+            'is_dj_partner': u.role == 'talent',  # DJ que también es partner
+        }
+
+
+class BookingPackSerializer(serializers.ModelSerializer):
+    pack = ProductionPackPublicSerializer(read_only=True)
+    line_total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = BookingPack
+        fields = ['id', 'pack', 'price_at_booking', 'quantity', 'notes', 'line_total', 'created_at']
+        read_only_fields = ['id', 'price_at_booking', 'line_total', 'created_at']
+
+
+class PackBundleSerializer(serializers.ModelSerializer):
+    pack_ids = serializers.PrimaryKeyRelatedField(
+        source='packs', queryset=ProductionPack.objects.all(),
+        many=True, write_only=True, required=False
+    )
+    packs = ProductionPackPublicSerializer(many=True, read_only=True)
+    base_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    discounted_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = PackBundle
+        fields = [
+            'id', 'name', 'description', 'discount_percentage',
+            'packs', 'pack_ids', 'status', 'rentals_count',
+            'base_price', 'discounted_price',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'rentals_count', 'base_price', 'discounted_price', 'created_at', 'updated_at']
+
+
+class PackBundlePublicSerializer(serializers.ModelSerializer):
+    """Bundle para catálogo público."""
+    packs = ProductionPackPublicSerializer(many=True, read_only=True)
+    base_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    discounted_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    vendor = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PackBundle
+        fields = [
+            'id', 'name', 'description', 'discount_percentage',
+            'packs', 'base_price', 'discounted_price', 'rentals_count', 'vendor',
+        ]
+
+    def get_vendor(self, obj):
+        u = obj.partner.user
+        return {
+            'id': u.id,
+            'name': u.get_full_name() or u.username,
+            'city': obj.partner.main_city,
+        }

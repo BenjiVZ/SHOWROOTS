@@ -15,9 +15,13 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'first_name', 'last_name',
             'role', 'avatar', 'phone', 'city', 'country', 'bio',
             'discovery_source',
+            'is_partner_active', 'partner_offers',
             'is_verified', 'is_active', 'date_joined', 'created_at'
         ]
-        read_only_fields = ['id', 'is_verified', 'is_active', 'date_joined', 'created_at']
+        read_only_fields = [
+            'id', 'is_verified', 'is_active', 'date_joined', 'created_at',
+            'is_partner_active', 'partner_offers',
+        ]
 
     def get_avatar(self, obj):
         if not obj.avatar:

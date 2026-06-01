@@ -13,7 +13,7 @@ TIER_LIMITS = {
         'max_videos': 0,
         'max_packs': 0,
         'max_faqs': 0,
-        'max_bio_chars': 200,
+        'max_bio_chars': 400,
         'can_respond_to_reviews': False,
         'can_use_dynamic_pricing': False,
         'can_sync_calendar': False,

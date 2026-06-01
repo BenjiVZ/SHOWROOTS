@@ -23,10 +23,15 @@ class IsAdmin(permissions.BasePermission):
 # ── Talent Management ──
 
 class AdminTalentListView(generics.ListAPIView):
-    """List all talent profiles for admin management."""
+    """List all talent profiles for admin management (excluye cuentas eliminadas por defecto)."""
     serializer_class = TalentListSerializer
     permission_classes = [IsAdmin]
-    queryset = TalentProfile.objects.select_related('user').all().order_by('-created_at')
+
+    def get_queryset(self):
+        qs = TalentProfile.objects.select_related('user').order_by('-created_at')
+        if self.request.query_params.get('include_deleted') != '1':
+            qs = qs.filter(user__is_active=True)
+        return qs
 
 
 class AdminTalentUpdateView(APIView):
@@ -75,10 +80,15 @@ class AdminBookingListView(generics.ListAPIView):
 # ── User Management ──
 
 class AdminUserListView(generics.ListAPIView):
-    """List all users."""
+    """List users (excluye cuentas eliminadas; ?include_deleted=1 para verlas)."""
     serializer_class = UserSerializer
     permission_classes = [IsAdmin]
-    queryset = User.objects.all().order_by('-date_joined')
+
+    def get_queryset(self):
+        qs = User.objects.all().order_by('-date_joined')
+        if self.request.query_params.get('include_deleted') != '1':
+            qs = qs.filter(is_active=True)
+        return qs
 
 
 # ── Payment Management ──

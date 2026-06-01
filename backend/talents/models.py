@@ -12,6 +12,8 @@ class Genre(models.Model):
     class Meta:
         db_table = 'genres'
         ordering = ['name']
+        verbose_name = 'Género musical'
+        verbose_name_plural = 'Géneros musicales'
 
     def __str__(self):
         return self.name
@@ -115,6 +117,12 @@ class TalentProfile(models.Model):
         max_digits=8, decimal_places=2, null=True, blank=True,
         help_text='Cargo adicional por traslado fuera del área de cobertura'
     )
+    recommended_partners = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='recommended_by_talents',
+        help_text='Aliados de producción recomendados por este DJ (aparecen primero en su booking flow)'
+    )
     website = models.URLField(blank=True)
     instagram = models.CharField(max_length=100, blank=True)
     tiktok = models.CharField(max_length=100, blank=True)
@@ -127,6 +135,8 @@ class TalentProfile(models.Model):
 
     class Meta:
         db_table = 'talent_profiles'
+        verbose_name = 'Perfil de talento'
+        verbose_name_plural = 'Perfiles de talento'
         # Premium first, then featured, then by rating
         ordering = [
             models.Case(
@@ -171,6 +181,8 @@ class TalentMedia(models.Model):
     class Meta:
         db_table = 'talent_media'
         ordering = ['order', '-created_at']
+        verbose_name = 'Media del talento'
+        verbose_name_plural = 'Media del talento'
 
     def __str__(self):
         return f"{self.talent.stage_name} - {self.title or self.get_media_type_display()}"
@@ -194,6 +206,8 @@ class TalentExperience(models.Model):
     class Meta:
         db_table = 'talent_experiences'
         ordering = ['-date']
+        verbose_name = 'Experiencia (evento pasado)'
+        verbose_name_plural = 'Experiencias (eventos pasados)'
 
     def __str__(self):
         return f"{self.talent.stage_name} @ {self.event_name}"
@@ -224,6 +238,8 @@ class Availability(models.Model):
         db_table = 'talent_availability'
         ordering = ['date', 'time_start']
         unique_together = ['talent', 'date']
+        verbose_name = 'Disponibilidad'
+        verbose_name_plural = 'Disponibilidades'
 
     def __str__(self):
         return f"{self.talent.stage_name} - {self.date} ({self.get_status_display()})"
@@ -260,6 +276,8 @@ class Pack(models.Model):
     class Meta:
         db_table = 'talent_packs'
         ordering = ['order', 'price']
+        verbose_name = 'Paquete del talento'
+        verbose_name_plural = 'Paquetes del talento'
 
     def __str__(self):
         return f"{self.talent.stage_name} · {self.name}"
@@ -281,6 +299,8 @@ class TalentFAQ(models.Model):
     class Meta:
         db_table = 'talent_faqs'
         ordering = ['order', 'created_at']
+        verbose_name = 'FAQ del talento'
+        verbose_name_plural = 'FAQs del talento'
 
     def __str__(self):
         return f"{self.talent.stage_name} · {self.question[:50]}"

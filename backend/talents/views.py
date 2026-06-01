@@ -31,7 +31,8 @@ class TalentListView(generics.ListAPIView):
 
     def get_queryset(self):
         return TalentProfile.objects.filter(
-            is_approved=True
+            is_approved=True,
+            user__is_active=True,  # excluir cuentas eliminadas
         ).select_related('user').prefetch_related('genres')
 
 
@@ -172,7 +173,8 @@ class FeaturedTalentsView(generics.ListAPIView):
 
     def get_queryset(self):
         return TalentProfile.objects.filter(
-            is_featured=True, is_available=True, is_approved=True
+            is_featured=True, is_available=True, is_approved=True,
+            user__is_active=True,
         ).select_related('user').prefetch_related('genres')[:8]
 
 
@@ -362,3 +364,75 @@ class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return TalentFAQ.objects.filter(talent__user=self.request.user)
+
+
+# ── Recommended Partners para el booking flow ──
+
+class MyRecommendedPartnersView(APIView):
+    """
+    GET  /api/talents/me/recommended-partners/
+    PUT  /api/talents/me/recommended-partners/  body: {user_ids: [1, 2, 3]}
+    Solo talentos. Marca Aliados de producción verificados que aparecen primero
+    en el booking flow de sus clientes.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            tp = TalentProfile.objects.prefetch_related('recommended_partners').get(user=request.user)
+        except TalentProfile.DoesNotExist:
+            return Response({'detail': 'No tienes perfil de talento.'}, status=status.HTTP_404_NOT_FOUND)
+        # Excluir cuentas eliminadas / desactivadas
+        partners = tp.recommended_partners.filter(is_active=True)
+        return Response([
+            {
+                'id': u.id,
+                'username': u.username,
+                'full_name': u.get_full_name() or u.username,
+            }
+            for u in partners
+        ])
+
+    def put(self, request):
+        try:
+            tp = TalentProfile.objects.get(user=request.user)
+        except TalentProfile.DoesNotExist:
+            return Response({'detail': 'No tienes perfil de talento.'}, status=status.HTTP_404_NOT_FOUND)
+        user_ids = request.data.get('user_ids', [])
+        if not isinstance(user_ids, list):
+            return Response({'detail': 'user_ids debe ser lista.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Solo permitir Aliados verificados
+        from bookings.models import PartnerProductionProfile
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        verified_ids = set(PartnerProductionProfile.objects.filter(
+            user_id__in=user_ids, status='verified'
+        ).values_list('user_id', flat=True))
+        valid_users = User.objects.filter(id__in=verified_ids)
+        tp.recommended_partners.set(valid_users)
+        return Response([
+            {'id': u.id, 'username': u.username, 'full_name': u.get_full_name() or u.username}
+            for u in valid_users
+        ])
+
+
+class VerifiedPartnersListView(APIView):
+    """GET /api/partner/production/verified/  → lista de Aliados verificados para que un DJ los recomiende."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from bookings.models import PartnerProductionProfile
+        # Excluir aliados con cuenta eliminada (is_active=False)
+        qs = PartnerProductionProfile.objects.filter(
+            status='verified', user__is_active=True
+        ).select_related('user')
+        return Response([
+            {
+                'user_id': p.user.id,
+                'username': p.user.username,
+                'full_name': p.user.get_full_name() or p.user.username,
+                'city': p.main_city,
+                'categories': p.categories,
+            }
+            for p in qs
+        ])

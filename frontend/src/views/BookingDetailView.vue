@@ -140,6 +140,72 @@
             </div>
           </div>
 
+          <!-- ── Production Packs (Fase 7) ── -->
+          <div class="info-card glass">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+              Packs de Producción
+              <button v-if="isClientView && canEditPacks" class="btn btn-outline btn-sm" style="margin-left:auto" @click="openPackPicker">+ Agregar pack</button>
+            </h3>
+
+            <div v-if="bookingPacks.length === 0" class="empty-mini">
+              <span>Sin packs agregados.</span>
+              <router-link to="/packs" class="link-muted">Ver catálogo →</router-link>
+            </div>
+            <div v-else class="bp-list">
+              <div v-for="bp in bookingPacks" :key="bp.id" class="bp-row">
+                <div class="bp-thumb">{{ prodCatIcon(bp.pack?.category) }}</div>
+                <div class="bp-info">
+                  <div class="bp-name">{{ bp.pack?.name }}</div>
+                  <div class="bp-meta">{{ bp.pack?.vendor?.name }} · {{ bp.pack?.event_size_display }}</div>
+                </div>
+                <div class="bp-price">${{ Number(bp.line_total).toFixed(2) }}</div>
+                <button v-if="isClientView && canEditPacks" class="bp-remove" @click="removeBookingPack(bp.id)" :disabled="removingPackId === bp.id" title="Quitar">×</button>
+              </div>
+              <div class="bp-total">
+                Subtotal packs: <strong>${{ packsSubtotal.toFixed(2) }}</strong>
+              </div>
+            </div>
+
+            <!-- Picker modal -->
+            <Teleport to="body">
+              <div v-if="packPicker.open" class="bp-picker-backdrop" @click.self="packPicker.open = false">
+                <div class="bp-picker-modal">
+                  <h3>Agregar pack al booking</h3>
+                  <div v-if="packPicker.loading" class="empty-mini">Cargando…</div>
+                  <div v-else-if="!packPicker.available.length" class="empty-mini">
+                    No hay packs disponibles. <router-link to="/packs">Ir al catálogo →</router-link>
+                  </div>
+                  <div v-else class="bp-picker-list">
+                    <button
+                      v-for="pk in packPicker.available"
+                      :key="pk.id"
+                      class="bp-picker-row"
+                      :class="{ 'bp-picker-recommended': pk.is_recommended }"
+                      :disabled="isPackAlreadyAdded(pk.id) || packPicker.adding === pk.id"
+                      @click="addBookingPack(pk.id)"
+                    >
+                      <span class="bp-thumb">{{ prodCatIcon(pk.category) }}</span>
+                      <span class="bp-picker-info">
+                        <strong>
+                          <span v-if="pk.is_recommended" class="bp-rec-badge">★ RECOMENDADO POR {{ (booking.talent?.stage_name || 'TU DJ').toUpperCase() }}</span>
+                          {{ pk.name }}
+                        </strong>
+                        <small>{{ pk.vendor?.name }} · {{ pk.event_size_display }}</small>
+                      </span>
+                      <span class="bp-picker-price">${{ Number(pk.price).toFixed(0) }}</span>
+                      <span v-if="isPackAlreadyAdded(pk.id)" class="bp-picker-tag">Ya agregado</span>
+                    </button>
+                  </div>
+                  <p v-if="packPicker.error" class="form-error">{{ packPicker.error }}</p>
+                  <div class="bp-picker-actions">
+                    <button class="btn btn-ghost btn-sm" @click="packPicker.open = false">Cerrar</button>
+                  </div>
+                </div>
+              </div>
+            </Teleport>
+          </div>
+
           <!-- Talent Actions (accept/reject/adjust) -->
           <div v-if="isTalentView && canTalentAct" class="action-card glass">
             <h3>Responder Solicitud</h3>
@@ -829,6 +895,76 @@ async function submitReview() {
   }
 }
 
+// ── Production packs ──
+const PROD_CAT_ICONS = { sound: '🔊', lights: '💡', screens: '📺', mics: '🎤', dj_booth: '🎚', fx: '🪩' }
+function prodCatIcon(c) { return PROD_CAT_ICONS[c] || '📦' }
+
+const bookingPacks = ref([])
+const removingPackId = ref(null)
+const packPicker = ref({ open: false, loading: false, adding: null, available: [], error: '' })
+
+const canEditPacks = computed(() => {
+  if (!booking.value) return false
+  return !['confirmada', 'completada', 'cancelada'].includes(booking.value.status)
+})
+
+const packsSubtotal = computed(() => {
+  return bookingPacks.value.reduce((s, bp) => s + parseFloat(bp.line_total || 0), 0)
+})
+
+function isPackAlreadyAdded(packId) {
+  return bookingPacks.value.some(bp => bp.pack?.id === packId)
+}
+
+async function fetchBookingPacks() {
+  try {
+    const { data } = await api.get(`/bookings/${route.params.id}/packs/`)
+    bookingPacks.value = Array.isArray(data) ? data : []
+  } catch {
+    bookingPacks.value = []
+  }
+}
+
+async function openPackPicker() {
+  packPicker.value.open = true
+  packPicker.value.loading = true
+  packPicker.value.error = ''
+  try {
+    const params = {}
+    if (booking.value?.talent?.id) {
+      params.for_talent_id = booking.value.talent.id
+    }
+    const { data } = await api.get('/production-packs/', { params })
+    packPicker.value.available = Array.isArray(data) ? data : []
+  } catch {
+    packPicker.value.available = []
+  }
+  packPicker.value.loading = false
+}
+
+async function addBookingPack(packId) {
+  packPicker.value.adding = packId
+  packPicker.value.error = ''
+  try {
+    await api.post(`/bookings/${route.params.id}/packs/`, { pack_id: packId, quantity: 1 })
+    await fetchBookingPacks()
+    packPicker.value.open = false
+  } catch (e) {
+    packPicker.value.error = e?.response?.data?.detail || 'No se pudo agregar.'
+  }
+  packPicker.value.adding = null
+}
+
+async function removeBookingPack(id) {
+  if (!confirm('¿Quitar este pack del booking?')) return
+  removingPackId.value = id
+  try {
+    await api.delete(`/bookings/${route.params.id}/packs/${id}/`)
+    await fetchBookingPacks()
+  } catch { /* silent */ }
+  removingPackId.value = null
+}
+
 onMounted(async () => {
   try {
     const [bookRes, msgRes] = await Promise.all([
@@ -837,6 +973,7 @@ onMounted(async () => {
     ])
     booking.value = bookRes.data
     messages.value = msgRes.data.results || msgRes.data
+    await fetchBookingPacks()
     // Mark messages as read
     await api.post(`/bookings/${route.params.id}/messages/read/`)
     await nextTick()
@@ -1271,4 +1408,91 @@ onMounted(async () => {
   .detail-sidebar { position: static; }
   .info-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Production Packs in booking detail ── */
+.empty-mini { color: var(--color-text-muted); font-size: 0.9rem; display: flex; gap: 8px; align-items: center; }
+.bp-list { display: flex; flex-direction: column; gap: 8px; }
+.bp-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.bp-thumb { width: 40px; height: 40px; border-radius: 8px; background: rgba(245,158,11,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.bp-name { color: var(--color-text-primary); font-weight: 600; }
+.bp-meta { color: var(--color-text-muted); font-size: 0.78rem; margin-top: 2px; }
+.bp-price { color: var(--color-primary); font-weight: 700; }
+.bp-remove {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.bp-remove:hover { border-color: #ef4444; color: #ef4444; }
+.bp-total {
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+}
+.bp-total strong { color: var(--color-primary); font-size: 1.1rem; margin-left: 6px; }
+
+.bp-picker-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1000;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: var(--space-6) var(--space-4);
+  overflow-y: auto;
+}
+.bp-picker-modal {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  max-width: 560px;
+  width: 100%;
+}
+.bp-picker-modal h3 { margin-bottom: var(--space-3); font-size: 1.15rem; }
+.bp-picker-list { display: flex; flex-direction: column; gap: 6px; }
+.bp-picker-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.bp-picker-row:hover:not(:disabled) { border-color: var(--color-primary); background: rgba(193,216,47,0.04); }
+.bp-picker-row:disabled { opacity: 0.5; cursor: not-allowed; }
+.bp-picker-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bp-picker-info small { color: var(--color-text-muted); font-size: 0.78rem; }
+.bp-picker-price { color: var(--color-primary); font-weight: 700; }
+.bp-picker-tag { background: rgba(140,140,140,0.15); color: var(--color-text-muted); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
+.bp-picker-recommended { border-color: #f59e0b; background: rgba(245,158,11,0.04); }
+.bp-rec-badge {
+  display: block;
+  color: #f59e0b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.bp-picker-actions { display: flex; justify-content: flex-end; margin-top: var(--space-3); }
 </style>

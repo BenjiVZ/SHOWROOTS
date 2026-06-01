@@ -66,16 +66,10 @@
             <span class="cell-actions">
               <button v-if="!t.is_approved" class="btn btn-primary btn-sm" @click="approveTalent(t.id, true)">Aprobar</button>
               <button v-else class="btn btn-ghost btn-sm" @click="approveTalent(t.id, false)">Revocar</button>
-              <select
-                class="level-select"
-                :value="t.talent_level"
-                @change="changeLevel(t, $event.target.value)"
-                title="Cambiar plan del talento"
-              >
-                <option value="standard">Standard</option>
-                <option value="pro">Pro</option>
-                <option value="premium">Premium</option>
-              </select>
+              <LevelPicker
+                :model-value="t.talent_level"
+                @change="changeLevel(t, $event)"
+              />
               <button class="btn btn-ghost btn-sm" @click="toggleFeatured(t)" :title="t.is_featured ? 'Quitar destacado' : 'Destacar'">
                 {{ t.is_featured ? '★' : '☆' }}
               </button>
@@ -198,6 +192,74 @@
         </div>
       </section>
 
+      <!-- ═══ Aliados Producción (Fase 4 admin) ═══ -->
+      <section v-if="activeTab === 'partners'" class="tab-panel animate-fade-in">
+        <div class="filters-bar">
+          <select v-model="partnerProductionFilter" class="input-field" style="max-width:200px">
+            <option value="pending">Pendientes verificación</option>
+            <option value="verified">Verificados</option>
+            <option value="rejected">Rechazados</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+
+        <div v-if="!filteredPartnerProductions.length" class="empty-row">Sin solicitudes en este filtro.</div>
+
+        <div v-for="pp in filteredPartnerProductions" :key="pp.id" class="pp-card">
+          <div class="pp-head">
+            <div>
+              <strong>{{ pp.user_info?.full_name || pp.user_info?.username }}</strong>
+              <small style="color:var(--color-text-muted)"> · {{ pp.user_info?.email }}</small>
+            </div>
+            <span :class="['badge', pp.status === 'verified' ? 'badge-success' : pp.status === 'pending' ? 'badge-warning' : 'badge-error']">
+              {{ pp.status_display }}
+            </span>
+          </div>
+          <div class="pp-body">
+            <div class="pp-info-row"><strong>Categorías:</strong> {{ (pp.categories || []).join(', ') || '—' }}</div>
+            <div class="pp-info-row"><strong>Ciudad:</strong> {{ pp.main_city || '—' }} · {{ pp.coverage_radius_km }} km</div>
+            <div class="pp-info-row"><strong>Capacidad:</strong> {{ pp.max_simultaneous_events }} evento(s) simultáneos</div>
+            <div v-if="pp.notes" class="pp-info-row"><strong>Notas:</strong> {{ pp.notes }}</div>
+            <CoverageMap
+              v-if="pp.main_city"
+              :city="pp.main_city"
+              :radius="Number(pp.coverage_radius_km) || 50"
+            />
+          </div>
+          <div v-if="pp.photos?.length" class="pp-photos">
+            <a v-for="ph in pp.photos" :key="ph.id" :href="ph.file" target="_blank" rel="noopener" class="pp-photo">
+              <img :src="ph.file" :alt="ph.caption || 'Foto'" />
+            </a>
+          </div>
+          <div v-else class="pp-info-row" style="color:#ef4444">⚠ Sin fotos cargadas</div>
+
+          <div v-if="pp.rejection_reason" class="pp-rejection">Motivo del rechazo: {{ pp.rejection_reason }}</div>
+
+          <div v-if="pp.status === 'pending'" class="pp-actions">
+            <button class="btn btn-primary btn-sm" @click="approvePartner(pp.id)" :disabled="ppActionLoading === pp.id">Aprobar</button>
+            <button class="btn btn-ghost btn-sm" @click="openRejectModal(pp)" :disabled="ppActionLoading === pp.id">Rechazar</button>
+          </div>
+        </div>
+
+        <!-- Reject modal -->
+        <Teleport to="body">
+          <div v-if="rejectModal.open" class="refund-modal-backdrop" @click.self="rejectModal.open = false">
+            <div class="refund-modal">
+              <h3>Rechazar Aliado de Producción</h3>
+              <p class="refund-sub">{{ rejectModal.partnerName }}</p>
+              <div class="form-group">
+                <label class="label">Motivo (se envía al partner)</label>
+                <textarea v-model="rejectModal.reason" rows="3" class="input-field" placeholder="Ej: Fotos no son del equipo real, faltan datos de cobertura, etc."></textarea>
+              </div>
+              <div class="refund-actions">
+                <button class="btn btn-ghost btn-sm" @click="rejectModal.open = false">Cancelar</button>
+                <button class="btn btn-primary btn-sm" :disabled="!rejectModal.reason.trim() || ppActionLoading" @click="confirmReject">Rechazar</button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
+      </section>
+
       <!-- ═══ Mensajes filtrados (anti-desintermediación) ═══ -->
       <section v-if="activeTab === 'flagged'" class="tab-panel animate-fade-in">
         <div v-if="flaggedStats" class="flagged-stats">
@@ -310,6 +372,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api'
+import CoverageMap from '@/components/common/CoverageMap.vue'
+import LevelPicker from '@/components/common/LevelPicker.vue'
 
 const activeTab = ref('talents')
 const talents = ref([])
@@ -322,6 +386,63 @@ const bookingFilter = ref('all')
 // Mensajes flagged
 const flaggedMessages = ref([])
 const flaggedStats = ref(null)
+
+// Aliados Producción (Fase 4 admin)
+const partnerProductions = ref([])
+const partnerProductionFilter = ref('pending')
+const ppActionLoading = ref(null)
+const rejectModal = ref({ open: false, partnerId: null, partnerName: '', reason: '' })
+
+const pendingPartnerProductions = computed(() =>
+  partnerProductions.value.filter(pp => pp.status === 'pending')
+)
+const filteredPartnerProductions = computed(() => {
+  if (partnerProductionFilter.value === 'all') return partnerProductions.value
+  return partnerProductions.value.filter(pp => pp.status === partnerProductionFilter.value)
+})
+
+async function fetchPartnerProductions() {
+  try {
+    const { data } = await api.get('/admin/partner-production/')
+    partnerProductions.value = Array.isArray(data) ? data : []
+  } catch { partnerProductions.value = [] }
+}
+
+async function approvePartner(id) {
+  ppActionLoading.value = id
+  try {
+    await api.post(`/admin/partner-production/${id}/action/`, { action: 'approve' })
+    await fetchPartnerProductions()
+  } catch (e) {
+    alert(e?.response?.data?.detail || 'No se pudo aprobar.')
+  }
+  ppActionLoading.value = null
+}
+
+function openRejectModal(pp) {
+  rejectModal.value = {
+    open: true,
+    partnerId: pp.id,
+    partnerName: pp.user_info?.full_name || pp.user_info?.username || `Partner #${pp.id}`,
+    reason: '',
+  }
+}
+
+async function confirmReject() {
+  const id = rejectModal.value.partnerId
+  ppActionLoading.value = id
+  try {
+    await api.post(`/admin/partner-production/${id}/action/`, {
+      action: 'reject',
+      reason: rejectModal.value.reason.trim(),
+    })
+    rejectModal.value.open = false
+    await fetchPartnerProductions()
+  } catch (e) {
+    alert(e?.response?.data?.detail || 'No se pudo rechazar.')
+  }
+  ppActionLoading.value = null
+}
 
 // Disputas
 const disputes = ref([])
@@ -425,6 +546,7 @@ const tabs = computed(() => [
   { key: 'payments', label: 'Pagos', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' },
   { key: 'flagged', label: 'Mensajes filtrados', badge: flaggedStats.value?.total_flagged || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>' },
   { key: 'disputes', label: 'Disputas', badge: openDisputesCount.value || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>' },
+  { key: 'partners', label: 'Aliados Producción', badge: pendingPartnerProductions.value.length || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>' },
 ])
 
 const filteredTalents = computed(() => {
@@ -510,7 +632,7 @@ async function fetchBookings() { try { const { data } = await api.get('/admin/bo
 async function fetchUsers() { try { const { data } = await api.get('/admin/users/'); users.value = data.results || data } catch { /* */ } }
 async function fetchPayments() { try { const { data } = await api.get('/admin/payments/'); payments.value = data.results || data } catch { /* */ } }
 
-onMounted(() => Promise.all([fetchTalents(), fetchBookings(), fetchUsers(), fetchPayments(), fetchFlagged(), fetchDisputes()]))
+onMounted(() => Promise.all([fetchTalents(), fetchBookings(), fetchUsers(), fetchPayments(), fetchFlagged(), fetchDisputes(), fetchPartnerProductions()]))
 </script>
 
 <style scoped>
@@ -793,4 +915,28 @@ onMounted(() => Promise.all([fetchTalents(), fetchBookings(), fetchUsers(), fetc
   .pending-banner { flex-wrap: wrap; }
   .pending-banner-body { flex-basis: 100%; }
 }
+
+/* ── Partner Production cards (admin) ── */
+.pp-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.pp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2); }
+.pp-info-row { font-size: 0.9rem; margin-bottom: 4px; color: var(--color-text-primary); }
+.pp-info-row strong { color: var(--color-text-muted); font-weight: 500; margin-right: 6px; }
+.pp-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin: var(--space-3) 0; }
+.pp-photo img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-border); }
+.pp-rejection {
+  background: rgba(239,68,68,0.06);
+  border-left: 3px solid #ef4444;
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0;
+  font-size: 0.85rem;
+  color: #ef4444;
+  border-radius: 0 6px 6px 0;
+}
+.pp-actions { display: flex; gap: 8px; margin-top: var(--space-3); }
 </style>

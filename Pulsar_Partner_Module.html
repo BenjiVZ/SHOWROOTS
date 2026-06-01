@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pulsar · Módulo de Partners — Especificación visual</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #000000;
+    --bg-soft: #0a0a0a;
+    --bg-card: #141414;
+    --bg-card-2: #1a1a1a;
+    --border: #222;
+    --border-light: #2a2a2a;
+    --lime: #c8f04a;
+    --lime-soft: rgba(200,240,74,0.1);
+    --lime-bg: #1a2010;
+    --cyan: #22d3ee;
+    --gold: #f59e0b;
+    --gold-glow: rgba(245,158,11,0.3);
+    --pink: #ec4899;
+    --orange: #fb923c;
+    --red: #ef4444;
+    --green: #10b981;
+    --violet: #a78bfa;
+    --white: #ffffff;
+    --text: #e5e5e5;
+    --text-muted: #888;
+    --text-dim: #555;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* MASTER HEADER */
+  .master-header {
+    text-align: center;
+    padding: 48px 32px 32px;
+    background: linear-gradient(180deg, #14141a 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .master-header h1 {
+    font-size: 36px;
+    color: var(--white);
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .master-header h1 .lime { color: var(--lime); }
+  .master-header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 720px;
+    margin: 0 auto 24px;
+  }
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .toc a {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .toc a:hover { border-color: var(--lime); color: var(--lime); }
+
+  .layout {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 48px 0 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    background: var(--lime);
+    color: var(--bg);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-info h2 {
+    color: var(--white);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .section-info p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* SHARED COMPONENTS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .btn {
+    background: var(--lime);
+    color: var(--bg);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn.outline {
+    background: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--text);
+  }
+
+  /* ============ SECTION 1: ROLE ACTIVATION ============ */
+  .settings-screen {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+  }
+  .settings-nav {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .settings-nav-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .settings-nav-item.active {
+    background: var(--lime-soft);
+    color: var(--lime);
+  }
+  .settings-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+  .settings-title { color: var(--white); font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .settings-subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+
+  .role-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .role-card.active {
+    border-color: var(--lime);
+    background: rgba(200,240,74,0.04);
+  }
+  .role-card.new-recommend {
+    border-color: var(--gold);
+    background: rgba(245,158,11,0.04);
+    position: relative;
+  }
+  .role-card.new-recommend::before {
+    content: '✨ TENÉS EQUIPO? ACTIVALO';
+    position: absolute;
+    top: -10px;
+    right: 14px;
+    background: var(--gold);
+    color: var(--bg);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .role-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--lime-bg);
+    color: var(--lime);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .role-card.active .role-icon { background: var(--lime); color: var(--bg); }
+  .role-card.new-recommend .role-icon { background: rgba(245,158,11,0.15); color: var(--gold); }
+  .role-info { flex: 1; }
+  .role-name { color: var(--white); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .role-desc { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+  .role-status {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .role-status.on { background: rgba(16,185,129,0.15); color: var(--green); }
+  .role-status.off { background: rgba(140,140,140,0.1); color: var(--text-muted); }
+  .toggle {
+    width: 44px;
+    height: 24px;
+    background: var(--border);
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: var(--white);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .toggle.on { background: var(--lime); }
+  .toggle.on::after { left: 22px; background: var(--bg); }
+
+  .partner-suboptions {
+    margin-top: 12px;
+    margin-left: 64px;
+    padding-left: 16px;
+    border-left: 2px solid var(--gold);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .suboption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .suboption input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--gold);
+  }
+  .suboption .icon { font-size: 14px; }
+
+  /* ============ SECTION 2: ONBOARDING ============ */
+  .steps-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .step {
+    flex: 1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+  }
+  .step.done {
+    color: var(--green);
+    background: rgba(16,185,129,0.08);
+    border-color: rgba(16,185,129,0.3);
+  }
+  .step.active {
+    color: var(--lime);
+    background: var(--lime-soft);
+    border-color: var(--lime);
+    font-weight: 600;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .form-input {
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 13px;
+    width: 100%;
+  }
+  .form-input:focus { border-color: var(--lime); outline: none; }
+  .form-row select.form-input { cursor: pointer; }
+
+  /* CHECKBOX TILES */
+  .check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .check-tile {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .check-tile.checked {
+    border-color: var(--lime);
+    background: rgba(200,240,74,0.04);
+  }
+  .check-tile .icon { font-size: 24px; margin-bottom: 6px; color: var(--lime); }
+  .check-tile .name { color: var(--white); font-weight: 600; font-size: 13px; }
+  .check-tile .meta { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+  .photo-upload {
+    border: 2px dashed var(--border-light);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--bg-soft);
+  }
+  .photo-upload .icon { font-size: 32px; margin-bottom: 8px; }
+  .photo-upload .hint { font-size: 11px; margin-top: 4px; }
+
+  /* ============ SECTION 3: PARTNER DASHBOARD ============ */
+  .nav-bar {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px 12px 0 0;
+  }
+  .nav-logo { font-weight: 900; color: var(--white); letter-spacing: 1px; }
+  .nav-tabs { display: flex; gap: 16px; }
+  .nav-tab {
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .nav-tab.active {
+    color: var(--lime);
+    border: 1px solid var(--lime);
+  }
+
+  .role-switcher {
+    background: var(--bg-card-2);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .role-switcher .icon { font-size: 22px; color: var(--gold); }
+  .role-switcher .label { color: var(--text-muted); font-size: 12px; }
+  .role-switcher .current { color: var(--white); font-weight: 600; font-size: 14px; }
+  .role-tabs { margin-left: auto; display: flex; gap: 6px; background: var(--bg); padding: 4px; border-radius: 999px; border: 1px solid var(--border-light); }
+  .role-tab {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .role-tab.active {
+    background: var(--gold);
+    color: var(--bg);
+    font-weight: 600;
+  }
+
+  .partner-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .partner-kpi {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .partner-kpi .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .partner-kpi .v { color: var(--white); font-size: 22px; font-weight: 700; line-height: 1; }
+  .partner-kpi .l { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+
+  .partner-section { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .partner-section.full { grid-template-columns: 1fr; }
+
+  .pack-list-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .pack-list-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .pack-list-head h3 { color: var(--white); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .pack-list-head .icon { color: var(--gold); }
+
+  .pack-row {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .pack-row.disabled { opacity: 0.5; }
+  .pack-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold), #5a3a10);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .pack-name { color: var(--white); font-weight: 600; font-size: 14px; }
+  .pack-meta { color: var(--text-muted); font-size: 11px; margin-top: 3px; display: flex; gap: 10px; }
+  .pack-meta .price { color: var(--lime); font-weight: 700; }
+  .pack-status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pack-status.active { background: rgba(16,185,129,0.15); color: var(--green); }
+  .pack-status.paused { background: rgba(140,140,140,0.15); color: var(--text-muted); }
+  .pack-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .icon-btn:hover { border-color: var(--lime); color: var(--lime); }
+
+  .rental-req {
+    background: var(--bg-soft);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+  .rr-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .rr-from { color: var(--white); font-weight: 600; font-size: 13px; }
+  .rr-when { color: var(--text-muted); font-size: 11px; }
+  .rr-details { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+  .rr-details strong { color: var(--text); }
+  .rr-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .rr-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .rr-btn.accept { background: var(--lime); color: var(--bg); }
+  .rr-btn.reject { background: transparent; color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+  /* ============ SECTION 4: PACK CREATION FORM ============ */
+  .form-preview-split {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 24px;
+  }
+  .form-side {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .form-section { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .form-section:last-child { border-bottom: none; padding-bottom: 0; }
+  .form-section h4 { color: var(--white); font-size: 13px; margin-bottom: 10px; }
+
+  .equipment-list {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 6px;
+  }
+  .equipment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--text);
+    border-bottom: 1px dashed var(--border);
+  }
+  .equipment-item:last-child { border-bottom: none; }
+  .equipment-item .remove { color: var(--red); cursor: pointer; font-size: 16px; }
+  .add-equip {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .add-equip input { flex: 1; }
+  .add-equip button {
+    background: var(--lime);
+    color: var(--bg);
+    border: none;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .preview-side {
+    background: var(--bg-card);
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    padding: 18px;
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+  .preview-side .label {
+    color: var(--gold);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .pack-preview {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .pp-hero {
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #2a1a3e, #1a3a2e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    opacity: 0.5;
+  }
+  .pp-body { padding: 14px; }
+  .pp-badge {
+    background: rgba(245,158,11,0.15);
+    color: var(--gold);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .pp-name { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .pp-vendor { color: var(--text-muted); font-size: 11px; margin-bottom: 8px; }
+  .pp-price { color: var(--lime); font-weight: 800; font-size: 20px; margin-bottom: 8px; }
+  .pp-incl { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .pp-incl li { padding-left: 14px; position: relative; }
+  .pp-incl li::before { content: '✓'; position: absolute; left: 0; color: var(--green); }
+
+  /* ============ SECTION 5: CLIENT PACK VIEW ============ */
+  .pack-catalog {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+  }
+  .filter-side {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    height: fit-content;
+  }
+  .filter-side h4 { color: var(--white); font-size: 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .filter-group { margin-bottom: 16px; }
+  .filter-group label { display: block; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filter-chip {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .filter-chip.active { background: var(--lime); color: var(--bg); border-color: var(--lime); font-weight: 600; }
+
+  .pack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .pack-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .pack-card.recommended { border-color: var(--gold); box-shadow: 0 0 24px rgba(245,158,11,0.1); position: relative; }
+  .pack-card.recommended::before {
+    content: '★ RECOMENDADO POR TU DJ';
+    position: absolute;
+    top: -10px;
+    left: 14px;
+    background: var(--gold);
+    color: var(--bg);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    z-index: 2;
+  }
+  .pack-card-thumb {
+    aspect-ratio: 16/10;
+    background: linear-gradient(135deg, #2a1a3e, #1a3a2e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    opacity: 0.5;
+    position: relative;
+  }
+  .pack-card.recommended .pack-card-thumb {
+    background: linear-gradient(135deg, #3a2a1e, #1a1a3a);
+  }
+  .vendor-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 10px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .vendor-badge.official { background: var(--gold); color: var(--bg); font-weight: 700; }
+  .pack-card-body { padding: 14px; }
+  .pack-card-name { color: var(--white); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .pack-card-vendor { color: var(--text-muted); font-size: 11px; margin-bottom: 8px; }
+  .pack-card-vendor a { color: var(--cyan); }
+  .pack-card-price { color: var(--lime); font-weight: 800; font-size: 22px; }
+  .pack-card-meta { color: var(--text-muted); font-size: 11px; display: flex; gap: 10px; margin-top: 4px; }
+  .pack-card-actions { padding: 0 14px 14px; display: flex; gap: 8px; }
+  .pack-card-btn { flex: 1; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-light); background: transparent; color: var(--text); cursor: pointer; }
+  .pack-card-btn.primary { background: var(--lime); color: var(--bg); border-color: var(--lime); }
+
+  /* ============ SECTION 6: BOOKING FLOW STEP 3 ============ */
+  .booking-flow {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+  }
+  .bf-steps {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    justify-content: center;
+  }
+  .bf-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .bf-step .circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .bf-step.done .circle { background: var(--green); color: var(--bg); border-color: var(--green); }
+  .bf-step.done { color: var(--green); }
+  .bf-step.active .circle { background: var(--lime); color: var(--bg); border-color: var(--lime); }
+  .bf-step.active { color: var(--lime); font-weight: 600; }
+  .bf-line { width: 32px; height: 2px; background: var(--border-light); }
+  .bf-line.done { background: var(--green); }
+
+  .bf-title { color: var(--white); font-size: 28px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+  .bf-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; text-align: center; }
+
+  .bf-summary-bar {
+    background: rgba(16,185,129,0.05);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .bf-summary-icon { color: var(--green); font-size: 20px; }
+  .bf-summary-text { color: var(--text); font-size: 13px; flex: 1; }
+  .bf-summary-text strong { color: var(--white); }
+  .bf-summary-price { color: var(--green); font-weight: 700; font-size: 16px; }
+
+  .bf-section-title {
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bf-skip {
+    background: var(--bg-soft);
+    border: 1px dashed var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 14px;
+  }
+  .bf-skip:hover { border-color: var(--lime); color: var(--lime); }
+
+  .bf-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .bf-running-total { color: var(--text); font-size: 14px; }
+  .bf-running-total strong { color: var(--lime); font-size: 22px; font-weight: 800; }
+
+  /* ============ SECTION 7: DUAL ROLE PROFILE ============ */
+  .dual-profile-tabs {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+    display: flex;
+    margin-bottom: 16px;
+  }
+  .dual-tab {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .dual-tab.active.dj { background: var(--lime-soft); color: var(--lime); }
+  .dual-tab.active.partner { background: rgba(245,158,11,0.1); color: var(--gold); }
+
+  .dual-section {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .ds-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .ds-title { color: var(--white); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .ds-title.dj .icon { color: var(--lime); }
+  .ds-title.partner .icon { color: var(--gold); }
+  .ds-actions a { color: var(--cyan); font-size: 12px; }
+
+  /* DEV NOTES */
+  .dev-note {
+    background: rgba(255,200,120,0.06);
+    border-left: 3px solid var(--orange);
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: var(--orange);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+  }
+  .dev-note strong { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<header class="master-header">
+  <h1>Módulo de <span class="lime">Partners</span> · Especificación visual</h1>
+  <p>Todo lo que el módulo de Partners (DJs con equipo + productores) necesita para construirse. 7 secciones cubren desde activación del rol hasta el momento de compra del cliente.</p>
+  <div class="toc">
+    <a href="#s1">1. Activar rol</a>
+    <a href="#s2">2. Onboarding</a>
+    <a href="#s3">3. Dashboard Partner</a>
+    <a href="#s4">4. Crear Pack</a>
+    <a href="#s5">5. Catálogo cliente</a>
+    <a href="#s6">6. Booking flow paso 3</a>
+    <a href="#s7">7. Perfil con doble rol</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- =================== SECTION 1: ROLE ACTIVATION =================== -->
+  <div id="s1" class="section-divider">
+    <div class="section-num">1</div>
+    <div class="section-info">
+      <h2>Activación del rol Partner</h2>
+      <p>En Configuración de cuenta. El usuario puede activar múltiples roles simultáneamente (Talento + Partner + Venue si aplica).</p>
+    </div>
+  </div>
+
+  <div class="settings-screen">
+    <div class="settings-nav">
+      <div class="settings-nav-item">👤 Perfil</div>
+      <div class="settings-nav-item active">🎭 Mis roles</div>
+      <div class="settings-nav-item">💳 Pagos</div>
+      <div class="settings-nav-item">🔔 Notificaciones</div>
+      <div class="settings-nav-item">🔒 Privacidad</div>
+      <div class="settings-nav-item">🆘 Soporte</div>
+    </div>
+
+    <div class="settings-content">
+      <div class="settings-title">Mis roles en Pulsar</div>
+      <div class="settings-subtitle">Activá los roles que correspondan a lo que ofrecés. Podés activar varios al mismo tiempo.</div>
+
+      <!-- TALENT ROLE -->
+      <div class="role-card active">
+        <div class="role-icon">🎵</div>
+        <div class="role-info">
+          <div class="role-name">Talento</div>
+          <div class="role-desc">Ofrecés tu performance como DJ, músico o banda. Pulsar te conecta con clientes y eventos.</div>
+        </div>
+        <span class="role-status on">✓ Activo</span>
+        <div class="toggle on"></div>
+      </div>
+
+      <!-- PARTNER ROLE -->
+      <div class="role-card new-recommend">
+        <div class="role-icon">📦</div>
+        <div class="role-info">
+          <div class="role-name">Partner</div>
+          <div class="role-desc">Ofrecés equipo, espacios o producción. Tu inventario aparece en el catálogo de Pulsar.</div>
+        </div>
+        <span class="role-status off">○ Inactivo</span>
+        <div class="toggle"></div>
+      </div>
+
+      <div class="partner-suboptions">
+        <div style="color:var(--gold); font-size:11px; margin-bottom:4px;">→ Al activar Partner, elegí qué ofrecés:</div>
+        <label class="suboption">
+          <input type="checkbox" checked>
+          <span class="icon">🎛</span>
+          <div>
+            <div style="font-weight:600;">Packs de producción</div>
+            <div style="color:var(--text-muted); font-size:11px;">Sonido, luces, DJ booth, pantallas, micrófonos. Para DJs con equipo propio o empresas de sonido.</div>
+          </div>
+        </label>
+        <label class="suboption">
+          <input type="checkbox">
+          <span class="icon">🏠</span>
+          <div>
+            <div style="font-weight:600;">Venue</div>
+            <div style="color:var(--text-muted); font-size:11px;">Espacio físico para eventos (terraza, salón, club, etc.).</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="dev-note" style="margin-top:24px;">
+        <strong>Nota dev:</strong> El rol Partner es una capa adicional sobre el rol existente. Un usuario puede ser solo Talento, solo Partner, o ambos. Al activar Partner se muestran los sub-checkboxes "Packs de producción" / "Venue". Si marca uno, lo lleva al flujo de onboarding correspondiente (sección 2).
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 2: ONBOARDING =================== -->
+  <div id="s2" class="section-divider">
+    <div class="section-num">2</div>
+    <div class="section-info">
+      <h2>Onboarding del Partner de Producción</h2>
+      <p>Después de activar el rol, el DJ pasa por 4 pasos antes de poder publicar packs. Esto sirve también como verificación.</p>
+    </div>
+  </div>
+
+  <div class="steps-bar">
+    <div class="step done">✓ Tipo de equipo</div>
+    <div class="step done">✓ Fotos del setup</div>
+    <div class="step active">3. Cobertura y disponibilidad</div>
+    <div class="step">4. Verificación</div>
+  </div>
+
+  <div class="card">
+    <div class="settings-title">Tu equipo y cobertura</div>
+    <div class="settings-subtitle">Esta info nos sirve para verificarte y mostrar tus packs al cliente correcto.</div>
+
+    <div class="form-row">
+      <label>Categorías que ofrecés</label>
+      <div class="check-grid">
+        <div class="check-tile checked">
+          <div class="icon">🔊</div>
+          <div class="name">Sonido</div>
+          <div class="meta">Monitores, subs, mixers</div>
+        </div>
+        <div class="check-tile checked">
+          <div class="icon">💡</div>
+          <div class="name">Iluminación</div>
+          <div class="meta">Par cans, moving heads</div>
+        </div>
+        <div class="check-tile">
+          <div class="icon">📺</div>
+          <div class="name">Pantallas</div>
+          <div class="meta">LED, proyección</div>
+        </div>
+        <div class="check-tile checked">
+          <div class="icon">🎤</div>
+          <div class="name">Microfonía</div>
+          <div class="meta">SM58, inalámbricos</div>
+        </div>
+        <div class="check-tile">
+          <div class="icon">🎚</div>
+          <div class="name">DJ Booth</div>
+          <div class="meta">Estándar, con branding</div>
+        </div>
+        <div class="check-tile">
+          <div class="icon">🪩</div>
+          <div class="name">FX / Especiales</div>
+          <div class="meta">Humo, láser, piro</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Ciudad principal</label>
+        <select class="form-input">
+          <option>Ciudad de Panamá</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Radio de cobertura</label>
+        <select class="form-input">
+          <option>50 km (Panamá Centro, Costa del Este, Casco)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Fee por traslado fuera de cobertura</label>
+        <input type="text" class="form-input" value="$50 (Coronado, Decapolis, etc.)">
+      </div>
+      <div class="form-row">
+        <label>Capacidad máxima de eventos simultáneos</label>
+        <select class="form-input">
+          <option>1 evento por noche</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Fotos del equipo (mínimo 4 · verificación)</label>
+      <div class="photo-upload">
+        <div class="icon">📸</div>
+        <div>Subí fotos claras de tu equipo</div>
+        <div class="hint">Setup armado, equipos individuales, garage/depósito donde lo guardás</div>
+      </div>
+    </div>
+
+    <div class="dev-note">
+      <strong>Nota dev:</strong> Las fotos son obligatorias para verificación humana. Un admin de Pulsar las revisa y aprueba el rol Partner. Tiempo de verificación target: 48hrs. Hasta que esté aprobado, los packs creados quedan en estado "pendiente_verificacion" y no son visibles al cliente.
+    </div>
+
+    <div style="display:flex; justify-content:space-between; margin-top:20px;">
+      <button class="btn outline">← Anterior</button>
+      <button class="btn">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 3: PARTNER DASHBOARD =================== -->
+  <div id="s3" class="section-divider">
+    <div class="section-num">3</div>
+    <div class="section-info">
+      <h2>Dashboard del Partner</h2>
+      <p>Para usuarios con doble rol (Talento + Partner), un switcher arriba permite cambiar entre los dos dashboards. Mismo login, dos negocios.</p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="nav-bar">
+      <div class="nav-logo">PULSAR</div>
+      <div class="nav-tabs">
+        <span class="nav-tab">🔍 Talentos</span>
+        <span class="nav-tab">🏠 Venues</span>
+        <span class="nav-tab active">📋 Dashboard</span>
+      </div>
+      <div style="color:var(--text); font-size:13px;">👤 Carlos M.</div>
+    </div>
+
+    <div style="padding:24px;">
+      <!-- ROLE SWITCHER -->
+      <div class="role-switcher">
+        <span class="icon">🎭</span>
+        <div>
+          <div class="label">Estás gestionando:</div>
+          <div class="current">📦 Tu negocio de producción</div>
+        </div>
+        <div class="role-tabs">
+          <span class="role-tab">🎵 DJ</span>
+          <span class="role-tab active">📦 Partner</span>
+        </div>
+      </div>
+
+      <div class="dev-note">
+        <strong>Nota dev:</strong> El role switcher es solo visible si el usuario tiene ambos roles activos. Si solo tiene rol Partner, va directo al dashboard de Partner sin tab.
+      </div>
+
+      <!-- KPIs -->
+      <div class="partner-kpi-grid">
+        <div class="partner-kpi">
+          <div class="icon" style="background:rgba(251,146,60,0.15); color:var(--orange);">⚡</div>
+          <div>
+            <div class="v">2</div>
+            <div class="l">Solicitudes de renta</div>
+          </div>
+        </div>
+        <div class="partner-kpi">
+          <div class="icon" style="background:rgba(245,158,11,0.15); color:var(--gold);">📅</div>
+          <div>
+            <div class="v">7</div>
+            <div class="l">Rentas confirmadas</div>
+          </div>
+        </div>
+        <div class="partner-kpi">
+          <div class="icon" style="background:rgba(16,185,129,0.15); color:var(--green);">💰</div>
+          <div>
+            <div class="v">$3,840</div>
+            <div class="l">Ingreso mes (estimado)</div>
+          </div>
+        </div>
+        <div class="partner-kpi">
+          <div class="icon" style="background:rgba(245,158,11,0.15); color:var(--gold);">★</div>
+          <div>
+            <div class="v">4.7</div>
+            <div class="l">Rating Partner (12)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PACK LIST + RENTAL REQUESTS -->
+      <div class="partner-section">
+        <div class="pack-list-card">
+          <div class="pack-list-head">
+            <h3><span class="icon">📦</span> Mis Packs publicados</h3>
+            <button class="btn">+ Crear Pack</button>
+          </div>
+
+          <div class="pack-row">
+            <div class="pack-thumb">🔊</div>
+            <div>
+              <div class="pack-name">Pack Sonido Pro · 80-300 personas</div>
+              <div class="pack-meta">
+                <span>4 monitores · 2 subs · mixer</span>
+                <span class="price">$500</span>
+                <span>5 rentas este mes</span>
+              </div>
+            </div>
+            <div class="pack-actions">
+              <span class="pack-status active">Activo</span>
+              <button class="icon-btn">✏️</button>
+            </div>
+          </div>
+
+          <div class="pack-row">
+            <div class="pack-thumb">💡</div>
+            <div>
+              <div class="pack-name">Pack Iluminación Show</div>
+              <div class="pack-meta">
+                <span>6 moving heads · DMX · operador</span>
+                <span class="price">$450</span>
+                <span>3 rentas este mes</span>
+              </div>
+            </div>
+            <div class="pack-actions">
+              <span class="pack-status active">Activo</span>
+              <button class="icon-btn">✏️</button>
+            </div>
+          </div>
+
+          <div class="pack-row disabled">
+            <div class="pack-thumb">🎤</div>
+            <div>
+              <div class="pack-name">Pack Microfonía Pro</div>
+              <div class="pack-meta">
+                <span>4 inalámbricos · 2 cableados</span>
+                <span class="price">$150</span>
+                <span>Pausado</span>
+              </div>
+            </div>
+            <div class="pack-actions">
+              <span class="pack-status paused">Pausado</span>
+              <button class="icon-btn">✏️</button>
+            </div>
+          </div>
+
+          <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:12px; margin-top:8px;">
+            ¿Querés agregar otro pack? Te sugerimos crear un Bundle "Sonido + Luces" combinado con 10% descuento — convierte 2.3x mejor.
+          </div>
+        </div>
+
+        <div class="pack-list-card">
+          <div class="pack-list-head">
+            <h3><span class="icon">⚡</span> Solicitudes</h3>
+          </div>
+
+          <div class="rental-req">
+            <div class="rr-head">
+              <span class="rr-from">DJ Rubs · Boda</span>
+              <span class="rr-when">Hace 2hr</span>
+            </div>
+            <div class="rr-details">
+              <strong>22 may · 18-23hs</strong><br>
+              Casco Antiguo · 350 invitados<br>
+              Solicita: <strong>Pack Sonido Pro + Luces Show</strong>
+            </div>
+            <div class="rr-actions">
+              <button class="rr-btn accept">✓ Confirmar</button>
+              <button class="rr-btn reject">✕ Rechazar</button>
+            </div>
+          </div>
+
+          <div class="rental-req">
+            <div class="rr-head">
+              <span class="rr-from">Cliente directo · Corporativo</span>
+              <span class="rr-when">Hace 8hr</span>
+            </div>
+            <div class="rr-details">
+              <strong>7 jun · 19-22hs</strong><br>
+              Hotel Marriott · 150 personas<br>
+              Solicita: <strong>Pack Sonido Pro</strong>
+            </div>
+            <div class="rr-actions">
+              <button class="rr-btn accept">✓ Confirmar</button>
+              <button class="rr-btn reject">✕ Rechazar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 4: PACK CREATION FORM =================== -->
+  <div id="s4" class="section-divider">
+    <div class="section-num">4</div>
+    <div class="section-info">
+      <h2>Crear o editar un Pack</h2>
+      <p>Formulario en split-view: a la izquierda los campos, a la derecha la preview en vivo de cómo va a verlo el cliente. UX importante: el Partner ve qué está creando mientras lo crea.</p>
+    </div>
+  </div>
+
+  <div class="form-preview-split">
+    <div class="form-side">
+      <div class="settings-title" style="font-size:18px;">Crear Pack de Producción</div>
+      <div class="settings-subtitle">Define qué equipo incluye, para qué evento sirve, y a qué precio.</div>
+
+      <div class="form-section">
+        <h4>Información básica</h4>
+        <div class="form-row">
+          <label>Nombre del pack</label>
+          <input type="text" class="form-input" value="Pack Sonido Pro">
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Categoría</label>
+            <select class="form-input"><option>🔊 Sonido</option></select>
+          </div>
+          <div class="form-row">
+            <label>Tamaño de evento ideal</label>
+            <select class="form-input"><option>80-300 personas</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Descripción corta</label>
+          <input type="text" class="form-input" value="Sonido profesional para eventos medianos a grandes">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4>Equipo incluido</h4>
+        <div class="equipment-list">
+          <div class="equipment-item">
+            <span>🔊 2x QSC KW153 — monitores principales</span>
+            <span class="remove">×</span>
+          </div>
+          <div class="equipment-item">
+            <span>🔊 2x QSC KS118 — subs</span>
+            <span class="remove">×</span>
+          </div>
+          <div class="equipment-item">
+            <span>🎚 1x Pioneer DJM-A9 — mixer</span>
+            <span class="remove">×</span>
+          </div>
+          <div class="equipment-item">
+            <span>🎤 1x micrófono inalámbrico</span>
+            <span class="remove">×</span>
+          </div>
+          <div class="equipment-item">
+            <span>🔌 Cabling y stage box</span>
+            <span class="remove">×</span>
+          </div>
+        </div>
+        <div class="add-equip">
+          <input class="form-input" placeholder="+ Agregar item">
+          <button>Agregar</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4>Precio y logística</h4>
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Precio (USD)</label>
+            <input type="text" class="form-input" value="500">
+          </div>
+          <div class="form-row">
+            <label>Comisión Pulsar</label>
+            <input type="text" class="form-input" value="20% · te quedan $400" disabled>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label>¿Incluye técnico in-situ?</label>
+            <select class="form-input"><option>Sí (sin costo extra)</option></select>
+          </div>
+          <div class="form-row">
+            <label>¿Incluye montaje y desmontaje?</label>
+            <select class="form-input"><option>Sí</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Tiempo de setup necesario</label>
+          <select class="form-input"><option>2 horas antes del evento</option></select>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4>Disponibilidad</h4>
+        <div class="form-row">
+          <label>Días disponibles</label>
+          <div class="filter-chips">
+            <span class="filter-chip active">Lun</span>
+            <span class="filter-chip active">Mar</span>
+            <span class="filter-chip active">Mié</span>
+            <span class="filter-chip active">Jue</span>
+            <span class="filter-chip active">Vie</span>
+            <span class="filter-chip active">Sáb</span>
+            <span class="filter-chip">Dom</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn outline">Guardar borrador</button>
+        <button class="btn">Publicar pack</button>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview-side">
+      <div class="label">★ VISTA PREVIA · COMO LO VERÁ EL CLIENTE</div>
+      <div class="pack-preview">
+        <div class="pp-hero">🔊</div>
+        <div class="pp-body">
+          <span class="pp-badge">VERIFICADO PULSAR</span>
+          <div class="pp-name">Pack Sonido Pro</div>
+          <div class="pp-vendor">Por <strong style="color:var(--cyan);">Carlos M.</strong> · Partner ★ 4.7</div>
+          <div class="pp-price">$500</div>
+          <ul class="pp-incl">
+            <li>2x QSC KW153 — monitores</li>
+            <li>2x QSC KS118 — subs</li>
+            <li>1x Pioneer DJM-A9</li>
+            <li>Micrófono inalámbrico</li>
+            <li>Cabling + stage box</li>
+            <li>Técnico in-situ incluido</li>
+          </ul>
+          <div style="background:rgba(16,185,129,0.06); padding:8px; border-radius:6px; margin-top:10px; font-size:11px; color:var(--green);">
+            🛡️ Garantía Pulsar · 100% reembolso si no se presenta
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; color:var(--text-muted); font-size:11px; line-height:1.5;">
+        <strong style="color:var(--gold);">Tip:</strong> Packs con técnico in-situ incluido convierten 1.8x más. Subí 2-3 fotos del equipo para que el cliente vea qué está pagando.
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SECTION 5: CLIENT PACK CATALOG =================== -->
+  <div id="s5" class="section-divider">
+    <div class="section-num">5</div>
+    <div class="section-info">
+      <h2>Catálogo de Packs · vista del cliente</h2>
+      <p>Cuando el cliente explora producción, ve este catálogo con filtros por tipo + tamaño de evento + presupuesto. Mezcla packs de ShowRoots + Partners.</p>
+    </div>
+  </div>
+
+  <div class="pack-catalog">
+    <div class="filter-side">
+      <h4>🔍 Filtros</h4>
+      <div class="filter-group">
+        <label>Categoría</label>
+        <div class="filter-chips">
+          <span class="filter-chip active">Sonido</span>
+          <span class="filter-chip">Luces</span>
+          <span class="filter-chip">DJ Booth</span>
+          <span class="filter-chip">Pantallas</span>
+          <span class="filter-chip">Micros</span>
+          <span class="filter-chip">Bundles</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Tamaño de evento</label>
+        <div class="filter-chips">
+          <span class="filter-chip">&lt;80 pers</span>
+          <span class="filter-chip active">80-300 pers</span>
+          <span class="filter-chip">300+ pers</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Proveedor</label>
+        <div class="filter-chips">
+          <span class="filter-chip active">Todos</span>
+          <span class="filter-chip">🏆 Oficial</span>
+          <span class="filter-chip">Partners</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Precio máximo</label>
+        <input class="form-input" type="text" value="$800">
+      </div>
+    </div>
+
+    <div class="pack-grid">
+
+      <!-- RECOMMENDED PACK -->
+      <div class="pack-card recommended">
+        <div class="pack-card-thumb">
+          🔊
+          <span class="vendor-badge">Partner · ★ 4.9</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Sonido Pro</div>
+          <div class="pack-card-vendor">Por <a>Sonido del Pacífico</a></div>
+          <div class="pack-card-price">$520</div>
+          <div class="pack-card-meta">
+            <span>👥 80-300</span>
+            <span>⚡ Técnico incl.</span>
+            <span>📦 38 rentas</span>
+          </div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn">Ver detalle</button>
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- OFFICIAL PACK (SHOWROOTS) -->
+      <div class="pack-card">
+        <div class="pack-card-thumb">
+          🔊
+          <span class="vendor-badge official">🏆 OFICIAL</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Sonido Pro</div>
+          <div class="pack-card-vendor">Por <a>ShowRoots</a> · Verificación máxima</div>
+          <div class="pack-card-price">$500</div>
+          <div class="pack-card-meta">
+            <span>👥 80-300</span>
+            <span>⚡ Técnico incl.</span>
+            <span>📦 200+ rentas</span>
+          </div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn">Ver detalle</button>
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- PARTNER PACK -->
+      <div class="pack-card">
+        <div class="pack-card-thumb">
+          🔊
+          <span class="vendor-badge">Partner · ★ 4.7</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Sonido Pro</div>
+          <div class="pack-card-vendor">Por <a>Carlos M.</a> · DJ + Partner</div>
+          <div class="pack-card-price">$450</div>
+          <div class="pack-card-meta">
+            <span>👥 80-300</span>
+            <span>⚡ Técnico incl.</span>
+            <span>📦 12 rentas</span>
+          </div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn">Ver detalle</button>
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- BUNDLE -->
+      <div class="pack-card" style="grid-column: span 2;">
+        <div class="pack-card-thumb" style="aspect-ratio: 16/6;">
+          🔊 + 💡
+          <span class="vendor-badge official">🏆 BUNDLE OFICIAL · AHORRÁ 15%</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Bundle Boda Completa · Sonido Pro + Luces Show + Pantalla</div>
+          <div class="pack-card-vendor">Por <a>ShowRoots</a> · Configuración curada</div>
+          <div class="pack-card-price">$1,200 <span style="font-size:13px; color:var(--text-muted); text-decoration:line-through;">$1,420</span></div>
+          <div class="pack-card-meta">
+            <span>👥 80-300</span>
+            <span>⚡ Técnico incl.</span>
+            <span>📦 La opción más completa</span>
+          </div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn">Ver detalle</button>
+          <button class="pack-card-btn primary">+ Agregar bundle</button>
+        </div>
+      </div>
+
+      <!-- LIGHT PACK -->
+      <div class="pack-card">
+        <div class="pack-card-thumb">
+          💡
+          <span class="vendor-badge official">🏆 OFICIAL</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Iluminación Show</div>
+          <div class="pack-card-vendor">Por <a>ShowRoots</a></div>
+          <div class="pack-card-price">$450</div>
+          <div class="pack-card-meta">
+            <span>6 moving heads</span>
+            <span>⚡ Operador</span>
+          </div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn">Ver detalle</button>
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =================== SECTION 6: BOOKING FLOW STEP 3 =================== -->
+  <div id="s6" class="section-divider">
+    <div class="section-num">6</div>
+    <div class="section-info">
+      <h2>Booking flow · Paso 3 (el momento clave)</h2>
+      <p>Después de elegir DJ y confirmar detalles del evento, el cliente ve este paso. Es donde Pulsar / ShowRoots monetiza la producción. Crítico: muestra "Recomendado por tu DJ" arriba.</p>
+    </div>
+  </div>
+
+  <div class="booking-flow">
+    <div class="bf-steps">
+      <div class="bf-step done"><span class="circle">✓</span> Evento</div>
+      <div class="bf-line done"></div>
+      <div class="bf-step done"><span class="circle">✓</span> Talento</div>
+      <div class="bf-line done"></div>
+      <div class="bf-step active"><span class="circle">3</span> Producción</div>
+      <div class="bf-line"></div>
+      <div class="bf-step"><span class="circle">4</span> Pago</div>
+    </div>
+
+    <div class="bf-title">¿Querés agregar producción?</div>
+    <div class="bf-subtitle">Tu DJ trae su equipo de mixing. Para sonido del evento, iluminación y más, elegí un pack a continuación o saltá si ya tenés producción propia.</div>
+
+    <!-- Booking summary so far -->
+    <div class="bf-summary-bar">
+      <span class="bf-summary-icon">🎵</span>
+      <div class="bf-summary-text">
+        <strong>DJ Rubs (Pro)</strong> · Boda · 22 may · 5 horas · Casco Antiguo
+      </div>
+      <span class="bf-summary-price">$700</span>
+    </div>
+
+    <!-- DJ recommendation -->
+    <div class="bf-section-title">★ Recomendado por tu DJ</div>
+    <div class="pack-card recommended" style="max-width: none;">
+      <div style="display:flex; align-items:center; gap:18px; padding:14px;">
+        <div style="width:80px; height:80px; border-radius:12px; background:linear-gradient(135deg, #2a1a3e, #1a3a2e); display:flex; align-items:center; justify-content:center; font-size:32px;">🔊</div>
+        <div style="flex:1;">
+          <div style="color:var(--gold); font-size:10px; font-weight:700; letter-spacing:1.5px; margin-bottom:4px;">RECOMENDADO POR DJ RUBS</div>
+          <div style="color:var(--white); font-weight:700; font-size:16px;">Pack Sonido Pro · Sonido del Pacífico</div>
+          <div style="color:var(--text-muted); font-size:12px; margin-top:4px;">"Es con quien trabajo siempre" — DJ Rubs · ★ 4.9 (38 rentas)</div>
+          <div style="color:var(--text); font-size:12px; margin-top:6px;">4 monitores · 2 subs · mixer · técnico in-situ incluido</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:var(--lime); font-weight:800; font-size:24px;">$520</div>
+          <button class="btn" style="margin-top:6px;">+ Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alternatives -->
+    <div class="bf-section-title">Otras opciones verificadas en tu ciudad</div>
+    <div class="pack-grid">
+      <div class="pack-card">
+        <div class="pack-card-thumb">
+          🔊
+          <span class="vendor-badge official">🏆 OFICIAL</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Sonido Pro · ShowRoots</div>
+          <div class="pack-card-vendor">200+ rentas · ★ 4.9</div>
+          <div class="pack-card-price">$500</div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+      <div class="pack-card">
+        <div class="pack-card-thumb">
+          🔊
+          <span class="vendor-badge">Partner</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Sonido Pro · Audio Central</div>
+          <div class="pack-card-vendor">52 rentas · ★ 4.7</div>
+          <div class="pack-card-price">$480</div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+      <div class="pack-card">
+        <div class="pack-card-thumb">
+          💡
+          <span class="vendor-badge official">🏆 OFICIAL</span>
+        </div>
+        <div class="pack-card-body">
+          <div class="pack-card-name">Pack Iluminación Show</div>
+          <div class="pack-card-vendor">ShowRoots · ★ 4.8</div>
+          <div class="pack-card-price">$450</div>
+        </div>
+        <div class="pack-card-actions">
+          <button class="pack-card-btn primary">+ Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skip option -->
+    <div class="bf-skip">
+      Ya tengo producción propia · Continuar sin agregar packs →
+    </div>
+
+    <!-- Footer with running total -->
+    <div class="bf-footer">
+      <div class="bf-running-total">
+        Subtotal: <strong>$1,220</strong> <span style="color:var(--text-muted); font-size:11px;">(DJ + Pack Sonido)</span>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn outline">← Atrás</button>
+        <button class="btn">Continuar al pago →</button>
+      </div>
+    </div>
+
+    <div class="dev-note">
+      <strong>Nota dev:</strong> El "running total" arriba a la derecha se actualiza cada vez que el cliente agrega/quita un pack. Esto es importante: el cliente siempre sabe cuánto va total. Cuando llega al paso 4 (pago), el escrow se aplica al total completo (DJ + packs).
+    </div>
+
+  </div>
+
+  <!-- =================== SECTION 7: DUAL ROLE PROFILE =================== -->
+  <div id="s7" class="section-divider">
+    <div class="section-num">7</div>
+    <div class="section-info">
+      <h2>Perfil público con doble rol (Talento + Partner)</h2>
+      <p>Cuando un DJ tiene también equipo de producción, su perfil muestra ambos lados. El cliente puede contratarlo como DJ, rentar sus packs, o ambos.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+      <div style="width:80px; height:80px; border-radius:50%; border:3px solid var(--lime); background:linear-gradient(135deg,#2a1a3e,#1a2a3e); display:flex; align-items:center; justify-content:center; font-size:32px;">🎧</div>
+      <div>
+        <div style="color:var(--white); font-weight:800; font-size:24px;">Carlos M.</div>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <span style="background:var(--lime-bg); color:var(--lime); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600;">🎵 DJ · Pro</span>
+          <span style="background:rgba(245,158,11,0.15); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600;">📦 Partner Verificado</span>
+        </div>
+        <div style="color:var(--text-muted); font-size:13px; margin-top:6px;">📍 Ciudad de Panamá · ★ 4.8 como DJ · ★ 4.7 como Partner</div>
+      </div>
+    </div>
+
+    <!-- DUAL TABS -->
+    <div class="dual-profile-tabs">
+      <div class="dual-tab active dj">
+        🎵 Como DJ (24 eventos)
+      </div>
+      <div class="dual-tab active partner" style="background:rgba(245,158,11,0.05);">
+        📦 Mis Packs de Producción (3 packs)
+      </div>
+    </div>
+
+    <!-- DJ SECTION -->
+    <div class="dual-section">
+      <div class="ds-head">
+        <div class="ds-title dj"><span class="icon">🎵</span> Como DJ</div>
+        <div class="ds-actions"><a>Ver perfil completo de DJ →</a></div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 200px; gap:16px; align-items:center;">
+        <div>
+          <div style="color:var(--text); font-size:13px; line-height:1.6;">DJ con 8 años de experiencia en Panamá. Especialista en bodas, corporativo y residencias premium. Bilingüe ES/EN.</div>
+          <div style="display:flex; gap:6px; margin-top:10px;">
+            <span style="background:rgba(200,240,74,0.1); color:var(--lime); padding:3px 8px; border-radius:999px; font-size:11px;">Electrónica</span>
+            <span style="background:rgba(200,240,74,0.1); color:var(--lime); padding:3px 8px; border-radius:999px; font-size:11px;">House</span>
+            <span style="background:rgba(200,240,74,0.1); color:var(--lime); padding:3px 8px; border-radius:999px; font-size:11px;">Latin</span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:var(--text-muted); font-size:11px;">DJ Performance</div>
+          <div style="color:var(--lime); font-size:22px; font-weight:800;">$700 / 4hr</div>
+          <button class="btn" style="margin-top:6px;">Contratar como DJ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARTNER SECTION -->
+    <div class="dual-section" style="border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.02);">
+      <div class="ds-head">
+        <div class="ds-title partner"><span class="icon">📦</span> Mis Packs de Producción · Partner Verificado</div>
+        <div class="ds-actions"><a>Ver todos mis packs →</a></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+        <div class="pack-card">
+          <div class="pack-card-thumb">
+            🔊
+            <span class="vendor-badge">★ 4.7</span>
+          </div>
+          <div class="pack-card-body">
+            <div class="pack-card-name">Pack Sonido Pro</div>
+            <div class="pack-card-vendor">12 rentas · 80-300 pers</div>
+            <div class="pack-card-price">$450</div>
+          </div>
+          <div class="pack-card-actions">
+            <button class="pack-card-btn primary">+ Agregar</button>
+          </div>
+        </div>
+        <div class="pack-card">
+          <div class="pack-card-thumb">
+            💡
+            <span class="vendor-badge">★ 4.6</span>
+          </div>
+          <div class="pack-card-body">
+            <div class="pack-card-name">Pack Iluminación Show</div>
+            <div class="pack-card-vendor">8 rentas · 6 moving heads</div>
+            <div class="pack-card-price">$400</div>
+          </div>
+          <div class="pack-card-actions">
+            <button class="pack-card-btn primary">+ Agregar</button>
+          </div>
+        </div>
+        <div class="pack-card">
+          <div class="pack-card-thumb">
+            🔊+💡
+            <span class="vendor-badge">★ 4.8 · BUNDLE</span>
+          </div>
+          <div class="pack-card-body">
+            <div class="pack-card-name">Bundle Carlos</div>
+            <div class="pack-card-vendor">Sonido + Luces · Mi combo</div>
+            <div class="pack-card-price">$780</div>
+          </div>
+          <div class="pack-card-actions">
+            <button class="pack-card-btn primary">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:12px; margin-top:14px; font-size:12px; color:var(--text-muted);">
+        💡 <strong style="color:var(--text);">Tip:</strong> Estos packs los podés rentar incluso si NO contratás a Carlos como DJ. Disponibles para cualquier evento que cuadre con su agenda.
+      </div>
+    </div>
+
+    <div class="dev-note">
+      <strong>Nota dev:</strong> En perfiles con doble rol, los packs aparecen como sección secundaria PERO también deben aparecer en el catálogo general de packs (sección 5) y en el booking flow paso 3 (sección 6). Mismo pack, múltiples puntos de entrada al inventario. Importante: si el cliente contrata el DJ + sus packs en el mismo booking, Pulsar muestra esto como "Bundle completo de Carlos" en el resumen.
+    </div>
+  </div>
+
+  <!-- ================== FOOTER NOTE ================== -->
+  <div style="background:var(--bg-card); border:1px dashed var(--border-light); border-radius:16px; padding:24px; margin:40px 0 20px; color:var(--text-muted); font-size:13px;">
+    <h3 style="color:var(--white); margin-bottom:12px;">📋 Resumen para tu primo</h3>
+    <p style="margin-bottom:10px;">Este módulo agrega <strong style="color:var(--lime);">7 vistas nuevas</strong> a la plataforma existente:</p>
+    <ol style="padding-left:20px; line-height:1.8;">
+      <li>Configuración de cuenta · activación del rol Partner con sub-opciones</li>
+      <li>Onboarding de 4 pasos (categorías → fotos → cobertura → verificación humana)</li>
+      <li>Dashboard del Partner (KPIs propios + lista de packs + solicitudes de renta)</li>
+      <li>Formulario de creación/edición de Pack con preview en vivo</li>
+      <li>Catálogo público de Packs con filtros (categoría, tamaño evento, proveedor, precio)</li>
+      <li>Paso 3 del booking actualizado con "Recomendado por tu DJ" + alternativas</li>
+      <li>Perfil público con doble rol (DJ + Partner) en mismo screen</li>
+    </ol>
+    <p style="margin-top:16px;"><strong style="color:var(--gold);">Decisiones clave del modelo:</strong></p>
+    <ul style="padding-left:20px; line-height:1.8; margin-top:6px;">
+      <li>Un usuario puede tener múltiples roles simultáneamente (Talento + Partner = misma cuenta, dos dashboards)</li>
+      <li>Los packs requieren verificación humana (fotos + revisión de admin Pulsar) antes de publicar</li>
+      <li>ShowRoots aparece como un Partner más con badge "🏆 OFICIAL" — compite por precio/calidad</li>
+      <li>"Recomendado por tu DJ" prioriza visualmente el proveedor preferido del DJ, pero no oculta alternativas</li>
+      <li>Comisión Pulsar sobre packs: 20% para DJ Partners, 15% Production Partners, 12% Premium Partners</li>
+      <li>Producción standalone (sin contratar DJ) NO se vende en MVP — fase 2 post año 1</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>

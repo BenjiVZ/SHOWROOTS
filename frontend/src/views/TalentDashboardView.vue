@@ -321,7 +321,7 @@
         </section>
 
         <!-- ═══ Calendario ═══ -->
-        <section v-if="activeTab === 'calendar'" class="tab-panel animate-fade-in">
+        <section v-if="activeTab === 'calendar'" class="tab-panel animate-fade-in" id="calendar-section" :class="{ 'section-flash': highlightedAnchor === 'calendar-section' }">
           <div class="calendar-container glass">
             <div class="calendar-header">
               <button class="btn btn-ghost btn-sm" @click="changeMonth(-1)">← Anterior</button>
@@ -350,6 +350,7 @@
 
         <!-- ═══ Galería ═══ -->
         <section v-if="activeTab === 'gallery'" class="tab-panel animate-fade-in">
+          <div id="gallery-photos-section" :class="{ 'section-flash': highlightedAnchor === 'gallery-photos-section' }">
           <div class="gallery-header">
             <div>
               <h3 class="gallery-h3">Fotos de eventos</h3>
@@ -406,8 +407,10 @@
           <div v-else-if="!loadingMedia" class="empty-state" style="padding: var(--space-8)">
             <p style="opacity: 0.6">Aún no has subido fotos. Las primeras 6 fotos son las que los clientes ven primero.</p>
           </div>
+          </div><!-- /gallery-photos-section -->
 
           <!-- Mixes / Audio -->
+          <div id="gallery-mixes-section" :class="{ 'section-flash': highlightedAnchor === 'gallery-mixes-section' }">
           <div class="gallery-header" style="margin-top: var(--space-10)">
             <div>
               <h3 class="gallery-h3">Mixes & sets</h3>
@@ -456,7 +459,10 @@
             </div>
           </div>
 
+          </div><!-- /gallery-mixes-section -->
+
           <!-- Video en vivo -->
+          <div id="gallery-video-section" :class="{ 'section-flash': highlightedAnchor === 'gallery-video-section' }">
           <div class="gallery-header" style="margin-top: var(--space-10)">
             <div>
               <h3 class="gallery-h3">
@@ -503,10 +509,11 @@
               </div>
             </div>
           </template>
+          </div><!-- /gallery-video-section -->
         </section>
 
         <!-- ═══ Paquetes ═══ -->
-        <section v-if="activeTab === 'packs'" class="tab-panel animate-fade-in">
+        <section v-if="activeTab === 'packs'" class="tab-panel animate-fade-in" id="packs-section" :class="{ 'section-flash': highlightedAnchor === 'packs-section' }">
           <div class="gallery-header">
             <div>
               <h3 class="gallery-h3">Mis Tarifas</h3>
@@ -526,8 +533,8 @@
             </p>
             <p>
               ¿Tienes equipo propio de sonido?
-              <router-link to="/account" class="partner-link">Activa tu rol Aliado →</router-link>
-              para ofrecer también paquetes de producción y ganar más por evento.
+              <span class="partner-link partner-link-soon">Aliado (próximamente)</span>
+              te permitirá ofrecer también paquetes de producción y ganar más por evento.
             </p>
           </div>
 
@@ -703,7 +710,7 @@
 
           <form @submit.prevent="saveProfile" class="profile-form">
             <!-- Cover Photo Upload -->
-            <div class="cover-upload-section">
+            <div class="cover-upload-section" id="profile-cover-section" :class="{ 'section-flash': highlightedAnchor === 'profile-cover-section' }">
               <label class="label">Foto de Portada</label>
               <div class="cover-upload-area" @click="$refs.coverInput.click()" @dragover.prevent @drop.prevent="handleCoverDrop">
                 <img v-if="coverPreview || profile?.cover_photo" :src="coverPreview || profile?.cover_photo" class="cover-preview" />
@@ -740,7 +747,7 @@
                   <option value="band">Banda</option>
                 </select>
               </div>
-              <div class="form-group">
+              <div class="form-group" id="profile-rate-section" :class="{ 'section-flash': highlightedAnchor === 'profile-rate-section' }">
                 <label class="label">Tarifa por Hora ($)</label>
                 <input v-model.number="profileForm.hourly_rate" type="number" class="input-field" />
               </div>
@@ -756,13 +763,35 @@
                 <label class="label">Tagline</label>
                 <input v-model="profileForm.tagline" class="input-field" placeholder="Frase corta que te describe" />
               </div>
-              <div class="form-group full">
+              <div class="form-group full" id="profile-bio-section" :class="{ 'section-flash': highlightedAnchor === 'profile-bio-section' }">
                 <label class="label">Descripción / Biografía</label>
                 <textarea v-model="profileForm.description" class="input-field" rows="4"></textarea>
               </div>
               <div class="form-group">
                 <label class="label">Años de Experiencia</label>
                 <input v-model.number="profileForm.experience_years" type="number" class="input-field" />
+              </div>
+
+              <!-- Géneros musicales -->
+              <div class="form-group full" id="profile-genres-section" :class="{ 'section-flash': highlightedAnchor === 'profile-genres-section' }">
+                <label class="label">
+                  Géneros musicales
+                  <span v-if="profileForm.genre_ids.length" class="label-count">({{ profileForm.genre_ids.length }} seleccionados)</span>
+                </label>
+                <p class="form-hint">Elige al menos 3 — los clientes filtran por género.</p>
+                <div v-if="availableGenres.length" class="genre-chip-grid">
+                  <button
+                    v-for="g in availableGenres"
+                    :key="g.id"
+                    type="button"
+                    class="genre-chip"
+                    :class="{ selected: profileForm.genre_ids.includes(g.id) }"
+                    @click="toggleProfileGenre(g.id)"
+                  >
+                    <span v-if="g.icon">{{ g.icon }}</span> {{ g.name }}
+                  </button>
+                </div>
+                <p v-else class="form-hint">Cargando géneros…</p>
               </div>
 
               <div class="form-group full">
@@ -874,6 +903,41 @@
               <span v-if="saveSuccess" class="save-msg">✓ Perfil actualizado</span>
             </div>
           </form>
+
+          <!-- Aliados recomendados (Fase 10) -->
+          <div class="recommended-section">
+            <h3>⭐ Aliados de producción recomendados</h3>
+            <p class="form-hint">
+              Marcá los Aliados de producción con los que trabajás siempre. Aparecerán primero
+              cuando tus clientes agreguen packs a sus reservas.
+            </p>
+
+            <div v-if="!verifiedPartners.length" class="form-hint" style="margin-top:12px">
+              Aún no hay Aliados de producción verificados en Pulsar.
+            </div>
+
+            <div v-else class="recommended-grid">
+              <button
+                v-for="vp in verifiedPartners"
+                :key="vp.user_id"
+                type="button"
+                class="recommended-tile"
+                :class="{ selected: recommendedIds.includes(vp.user_id) }"
+                @click="toggleRecommended(vp.user_id)"
+              >
+                <div class="recommended-name">{{ vp.full_name }}</div>
+                <div class="recommended-meta">{{ vp.city || '—' }} · {{ (vp.categories || []).length }} categorías</div>
+                <span v-if="recommendedIds.includes(vp.user_id)" class="recommended-check">✓ Recomendado</span>
+              </button>
+            </div>
+
+            <div class="form-actions" style="margin-top:var(--space-3)">
+              <button type="button" class="btn btn-outline btn-sm" :disabled="savingRecommended" @click="saveRecommended">
+                {{ savingRecommended ? 'Guardando…' : 'Guardar recomendados' }}
+              </button>
+              <span v-if="recommendedSaved" class="save-msg">✓ Guardado</span>
+            </div>
+          </div>
         </section>
 
       </div>
@@ -963,7 +1027,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import ImageCropper from '@/components/common/ImageCropper.vue'
@@ -1194,7 +1258,7 @@ const profileFields = computed(() => {
       done: !!p.user?.avatar,
       desc: p.user?.avatar ? 'Foto subida' : 'Sin foto · Súbela para destacar',
       actionLabel: !p.user?.avatar ? 'Subir' : null,
-      action: () => { document.querySelector('.profile-form .cover-upload-area')?.scrollIntoView({ behavior: 'smooth' }) },
+      action: () => flashSection('profile', 'profile-cover-section'),
     },
     {
       id: 'genres',
@@ -1202,7 +1266,7 @@ const profileFields = computed(() => {
       done: Array.isArray(p.genres) && p.genres.length > 0,
       desc: Array.isArray(p.genres) && p.genres.length > 0 ? `${p.genres.length} géneros configurados` : 'Sin géneros · Elige al menos 3',
       actionLabel: Array.isArray(p.genres) && p.genres.length > 0 ? null : 'Elegir',
-      action: () => { document.querySelector('[name="genre_ids"], .profile-form')?.scrollIntoView({ behavior: 'smooth' }) },
+      action: () => flashSection('profile', 'profile-genres-section'),
     },
     {
       id: 'mixes',
@@ -1210,7 +1274,7 @@ const profileFields = computed(() => {
       done: mixes >= 1,
       desc: mixes === 0 ? 'Sin mixes subidos' : `${mixes} ${mixes === 1 ? 'mix subido' : 'mixes subidos'}`,
       actionLabel: 'Subir',
-      action: () => { activeTab.value = 'gallery' },
+      action: () => flashSection('gallery', 'gallery-mixes-section'),
     },
     {
       id: 'video',
@@ -1221,7 +1285,7 @@ const profileFields = computed(() => {
         ? 'Disponible en plan Pro · Muestra tu show a clientes'
         : 'Sin videos subidos',
       actionLabel: videoLocked.value ? 'Ver Pro' : 'Subir',
-      action: () => { if (videoLocked.value) { pendingUpsell.value = makeUpsell('video') } else { activeTab.value = 'gallery' } },
+      action: () => { if (videoLocked.value) { pendingUpsell.value = makeUpsell('video') } else { flashSection('gallery', 'gallery-video-section') } },
     },
     {
       id: 'bio',
@@ -1233,7 +1297,7 @@ const profileFields = computed(() => {
           ? `${p.description.length}/50 caracteres · Necesitas más`
           : `${p.description.length} caracteres`,
       actionLabel: (!p.description || p.description.length < 50) ? 'Escribir' : null,
-      action: () => { document.querySelector('textarea[v-model*="description"]')?.scrollIntoView({ behavior: 'smooth' }) },
+      action: () => flashSection('profile', 'profile-bio-section'),
     },
     {
       id: 'rate',
@@ -1245,7 +1309,7 @@ const profileFields = computed(() => {
           ? `Desde $${p.price_min}`
           : 'Sin tarifa configurada',
       actionLabel: !(p.hourly_rate || p.price_min) ? 'Configurar' : null,
-      action: () => { activeTab.value = 'packs' },
+      action: () => flashSection('packs', 'packs-section'),
     },
   ]
 
@@ -1270,7 +1334,7 @@ const firstSteps = computed(() => {
       text: 'Foto de perfil',
       done: !!p.user?.avatar,
       actionLabel: 'Subir',
-      action: () => { activeTab.value = 'profile' },
+      action: () => flashSection('profile', 'profile-cover-section'),
     },
     {
       id: 'genres',
@@ -1278,14 +1342,14 @@ const firstSteps = computed(() => {
       note: Array.isArray(p.genres) && p.genres.length > 0 ? `(${p.genres.length} configurados)` : '',
       done: Array.isArray(p.genres) && p.genres.length > 0,
       actionLabel: 'Elegir',
-      action: () => { activeTab.value = 'profile' },
+      action: () => flashSection('profile', 'profile-genres-section'),
     },
     {
       id: 'rate',
       text: 'Tarifa base configurada',
       done: !!(p.hourly_rate || p.price_min),
       actionLabel: 'Configurar',
-      action: () => { activeTab.value = 'profile' },
+      action: () => flashSection('profile', 'profile-rate-section'),
     },
     {
       id: 'mix',
@@ -1293,7 +1357,7 @@ const firstSteps = computed(() => {
       note: `(${mixes}/2)`,
       done: mixes >= 1,
       actionLabel: 'Subir',
-      action: () => { activeTab.value = 'gallery' },
+      action: () => flashSection('gallery', 'gallery-mixes-section'),
     },
     {
       id: 'bio',
@@ -1301,7 +1365,7 @@ const firstSteps = computed(() => {
       note: '(50 caracteres mínimo)',
       done: !!p.description && p.description.length >= 50,
       actionLabel: 'Escribir',
-      action: () => { activeTab.value = 'profile' },
+      action: () => flashSection('profile', 'profile-bio-section'),
     },
     {
       id: 'photos',
@@ -1309,14 +1373,14 @@ const firstSteps = computed(() => {
       note: `(${photos}/3)`,
       done: photos >= 3,
       actionLabel: 'Subir',
-      action: () => { activeTab.value = 'gallery' },
+      action: () => flashSection('gallery', 'gallery-photos-section'),
     },
     {
       id: 'availability',
       text: 'Configura disponibilidad del mes',
       done: availabilityCount > 0,
       actionLabel: 'Configurar',
-      action: () => { activeTab.value = 'calendar' },
+      action: () => flashSection('calendar', 'calendar-section'),
     },
   ]
 })
@@ -1789,6 +1853,7 @@ const profileForm = reactive({
   stage_name: '', talent_type: 'dj', hourly_rate: 0, city: '', country: 'Venezuela',
   tagline: '', description: '', experience_years: 0,
   instagram: '', tiktok: '', soundcloud: '', spotify: '',
+  genre_ids: [],
   mood_tags: [],
   event_types: [],
   languages: [],
@@ -1797,6 +1862,74 @@ const profileForm = reactive({
   service_zones: [],
   travel_fee_extra: null,
 })
+
+const availableGenres = ref([])
+async function fetchGenres() {
+  try {
+    const { data } = await api.get('/genres/')
+    availableGenres.value = data.results || data
+  } catch { /* silent */ }
+}
+
+// ── Aliados recomendados ──
+const verifiedPartners = ref([])
+const recommendedIds = ref([])
+const savingRecommended = ref(false)
+const recommendedSaved = ref(false)
+
+async function fetchVerifiedPartners() {
+  try {
+    const { data } = await api.get('/partner/production/verified/')
+    verifiedPartners.value = Array.isArray(data) ? data : []
+  } catch {
+    verifiedPartners.value = []
+  }
+}
+async function fetchMyRecommended() {
+  try {
+    const { data } = await api.get('/talents/me/recommended-partners/')
+    recommendedIds.value = (Array.isArray(data) ? data : []).map(u => u.id)
+  } catch {
+    recommendedIds.value = []
+  }
+}
+function toggleRecommended(id) {
+  const idx = recommendedIds.value.indexOf(id)
+  if (idx >= 0) recommendedIds.value.splice(idx, 1)
+  else recommendedIds.value.push(id)
+}
+async function saveRecommended() {
+  savingRecommended.value = true
+  recommendedSaved.value = false
+  try {
+    await api.put('/talents/me/recommended-partners/', { user_ids: recommendedIds.value })
+    recommendedSaved.value = true
+    setTimeout(() => { recommendedSaved.value = false }, 3000)
+  } catch { /* silent */ }
+  savingRecommended.value = false
+}
+function toggleProfileGenre(id) {
+  if (!Array.isArray(profileForm.genre_ids)) profileForm.genre_ids = []
+  const idx = profileForm.genre_ids.indexOf(id)
+  if (idx >= 0) profileForm.genre_ids.splice(idx, 1)
+  else profileForm.genre_ids.push(id)
+}
+
+// ── Section flash highlight (UX: marca la sección destino brevemente) ──
+const highlightedAnchor = ref(null)
+let highlightTimer = null
+function flashSection(tab, anchorId) {
+  if (tab) activeTab.value = tab
+  nextTick(() => {
+    if (anchorId) {
+      const el = document.getElementById(anchorId)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      highlightedAnchor.value = anchorId
+      if (highlightTimer) clearTimeout(highlightTimer)
+      highlightTimer = setTimeout(() => { highlightedAnchor.value = null }, 1800)
+    }
+  })
+}
 
 const newZone = ref('')
 function addZone() {
@@ -2087,6 +2220,8 @@ async function fetchProfile() {
     Object.keys(profileForm).forEach(k => {
       if (data[k] !== undefined && data[k] !== null) profileForm[k] = data[k]
     })
+    // Genres llega como [{id, name, ...}] — convertir a array de IDs
+    profileForm.genre_ids = Array.isArray(data.genres) ? data.genres.map(g => g.id || g) : []
     // JSONField list fields pueden venir null en DB antigua → forzar array
     ;['mood_tags', 'event_types', 'languages', 'equipment_brings', 'equipment_not_included', 'service_zones'].forEach(k => {
       if (!Array.isArray(profileForm[k])) profileForm[k] = []
@@ -2104,10 +2239,11 @@ async function fetchAvailability() {
 
 onMounted(async () => {
   loading.value = true
-  await Promise.all([fetchBookings(), fetchProfile()])
+  await Promise.all([fetchBookings(), fetchProfile(), fetchGenres()])
   await Promise.all([
     fetchAvailability(), fetchMedia(), fetchPacks(), fetchFaqs(),
     fetchPremiumInvitation(), fetchTierLimits(), fetchPayout(),
+    fetchVerifiedPartners(), fetchMyRecommended(),
   ])
   loading.value = false
 })
@@ -2395,6 +2531,15 @@ onMounted(async () => {
   text-decoration: none;
 }
 .partner-link:hover { color: var(--color-primary); }
+.partner-link-soon {
+  color: var(--color-text-muted);
+  background: rgba(193, 216, 47, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  cursor: default;
+}
+.partner-link-soon:hover { color: var(--color-text-muted); }
 
 /* Empty state rich (FIX #3) */
 .empty-state-rich {
@@ -3253,6 +3398,96 @@ onMounted(async () => {
 }
 .event-type-tile:hover .event-tile-icon { color: var(--color-text-primary); }
 .event-type-tile.selected .event-tile-icon { color: #f59e0b; }
+
+/* Section flash highlight (cuando navegas desde un checklist item) */
+.section-flash {
+  position: relative;
+  animation: sectionFlash 1.8s ease-out;
+  border-radius: var(--radius-md);
+}
+@keyframes sectionFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(193, 216, 47, 0);
+    background-color: rgba(193, 216, 47, 0);
+  }
+  15% {
+    box-shadow: 0 0 0 4px rgba(193, 216, 47, 0.55), 0 0 32px rgba(193, 216, 47, 0.35);
+    background-color: rgba(193, 216, 47, 0.10);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(193, 216, 47, 0);
+    background-color: rgba(193, 216, 47, 0);
+  }
+}
+
+/* Genre chips */
+.genre-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.genre-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.genre-chip:hover { border-color: var(--color-border-hover); color: var(--color-text-primary); }
+.genre-chip.selected {
+  border-color: var(--color-primary);
+  background: rgba(193, 216, 47, 0.12);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.label-count { color: var(--color-text-muted); font-weight: 400; font-size: 0.78rem; margin-left: 6px; }
+.form-hint { color: var(--color-text-muted); font-size: 0.78rem; margin: 4px 0 0; }
+
+/* Recommended partners */
+.recommended-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+.recommended-section h3 { font-size: 1.05rem; margin-bottom: var(--space-2); }
+.recommended-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.recommended-tile {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: var(--space-3);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+.recommended-tile:hover { border-color: var(--color-primary); }
+.recommended-tile.selected {
+  border-color: #f59e0b;
+  background: rgba(245,158,11,0.06);
+}
+.recommended-name { color: var(--color-text-primary); font-weight: 600; font-size: 0.9rem; }
+.recommended-meta { color: var(--color-text-muted); font-size: 0.78rem; margin-top: 4px; }
+.recommended-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
 
 /* Language + equipment chips */
 .lang-chip {

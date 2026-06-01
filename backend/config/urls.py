@@ -11,6 +11,11 @@ from accounts.admin_views import (
     AdminBookingListView, AdminUserListView, AdminPaymentListView,
 )
 
+# Personalización del admin de Django (en español)
+admin.site.site_header = 'Pulsar — Panel de Administración'
+admin.site.site_title = 'Pulsar Admin'
+admin.site.index_title = 'Gestión de la plataforma'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),

@@ -8,7 +8,13 @@
       "Bash(python manage.py makemigrations bookings)",
       "Bash(powershell -Command \"\\(Get-Content AdminDashboardView.vue\\).Count\")",
       "Bash(python manage.py migrate bookings)",
-      "Bash(python manage.py shell -c \"from rest_framework import status; print\\(status.HTTP_200_OK\\)\")"
+      "Bash(python manage.py shell -c \"from rest_framework import status; print\\(status.HTTP_200_OK\\)\")",
+      "Bash(python manage.py makemigrations accounts)",
+      "Bash(python manage.py migrate accounts)",
+      "Bash(python manage.py makemigrations accounts --empty --name backfill_is_partner_active)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py migrate talents)",
+      "Read(//c/Users/PC/Proyectos/frontend/src/views/**)"
     ]
   }
 }

@@ -1,5 +1,5 @@
 """
-Pulsar by ShowRoots — Email notifications utility.
+Pulsar — Email notifications utility.
 
 In dev mode (console backend), emails are printed to the terminal.
 In production, set environment variables for SMTP delivery.
@@ -38,14 +38,13 @@ def send_password_reset_email(user, uid, token):
         f'{reset_url}\n\n'
         f'Este enlace expira en 24 horas.\n'
         f'Si no solicitaste este cambio, ignora este correo.\n\n'
-        f'— Equipo Pulsar by ShowRoots'
+        f'— Equipo Pulsar'
     )
 
     html = f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0d0d0d; color: #e0e0e0; border-radius: 16px; overflow: hidden;">
       <div style="background: linear-gradient(135deg, #c1d82f, #a9bf26); padding: 32px; text-align: center;">
         <h1 style="margin: 0; font-size: 24px; color: #0d0d0d; font-weight: 800;">PULSAR</h1>
-        <p style="margin: 4px 0 0; font-size: 11px; color: #333; letter-spacing: 2px; text-transform: uppercase;">by ShowRoots</p>
       </div>
       <div style="padding: 32px;">
         <h2 style="color: #c1d82f; margin-top: 0;">Restablecer Contraseña</h2>
@@ -59,7 +58,7 @@ def send_password_reset_email(user, uid, token):
         <p style="color: #888; font-size: 14px;">Este enlace expira en 24 horas. Si no solicitaste este cambio, ignora este correo.</p>
       </div>
       <div style="padding: 16px 32px; background: #111; text-align: center; font-size: 12px; color: #666;">
-        © Pulsar by ShowRoots — Marketplace de Talentos Musicales
+        © Pulsar — Marketplace de Talentos Musicales
       </div>
     </div>
     """
@@ -108,14 +107,13 @@ def send_welcome_email(user):
     text = (
         f'Hola {name},\n\n'
         f'Bienvenido a Pulsar. Visita {cta_url} para continuar.\n\n'
-        f'— Equipo Pulsar by ShowRoots'
+        f'— Equipo Pulsar'
     )
 
     html = f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0d0d0d; color: #e0e0e0; border-radius: 16px; overflow: hidden;">
       <div style="background: linear-gradient(135deg, #c1d82f, #a9bf26); padding: 32px; text-align: center;">
         <h1 style="margin: 0; font-size: 24px; color: #0d0d0d; font-weight: 800;">PULSAR</h1>
-        <p style="margin: 4px 0 0; font-size: 11px; color: #333; letter-spacing: 2px; text-transform: uppercase;">by ShowRoots</p>
       </div>
       <div style="padding: 32px;">
         <h2 style="color: #c1d82f; margin-top: 0;">¡Bienvenido, {name}!</h2>
@@ -129,7 +127,7 @@ def send_welcome_email(user):
         </div>
       </div>
       <div style="padding: 16px 32px; background: #111; text-align: center; font-size: 12px; color: #666;">
-        © Pulsar by ShowRoots — Marketplace de Talentos Musicales
+        © Pulsar — Marketplace de Talentos Musicales
       </div>
     </div>
     """
@@ -152,14 +150,13 @@ def send_new_message_email(recipient, sender, booking, preview):
         f'{sender_name} te envió un mensaje sobre la reserva {booking.booking_code or "#" + str(booking.id)}:\n\n'
         f'"{preview}"\n\n'
         f'Responde desde Pulsar: {booking_url}\n\n'
-        f'— Equipo Pulsar by ShowRoots'
+        f'— Equipo Pulsar'
     )
 
     html = f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0d0d0d; color: #e0e0e0; border-radius: 16px; overflow: hidden;">
       <div style="background: linear-gradient(135deg, #c1d82f, #a9bf26); padding: 24px 32px;">
         <h1 style="margin: 0; font-size: 20px; color: #0d0d0d; font-weight: 800;">PULSAR</h1>
-        <p style="margin: 4px 0 0; font-size: 10px; color: #333; letter-spacing: 2px; text-transform: uppercase;">by ShowRoots</p>
       </div>
       <div style="padding: 32px;">
         <h2 style="color: #c1d82f; margin-top: 0; font-size:18px;">💬 Nuevo mensaje de {sender_name}</h2>
@@ -175,7 +172,7 @@ def send_new_message_email(recipient, sender, booking, preview):
         </div>
       </div>
       <div style="padding: 16px 32px; background: #111; text-align: center; font-size: 12px; color: #666;">
-        © Pulsar by ShowRoots — Marketplace de Talentos Musicales
+        © Pulsar — Marketplace de Talentos Musicales
       </div>
     </div>
     """
@@ -191,7 +188,6 @@ def send_booking_notification_email(user, subject, body_text, booking=None):
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0d0d0d; color: #e0e0e0; border-radius: 16px; overflow: hidden;">
       <div style="background: linear-gradient(135deg, #c1d82f, #a9bf26); padding: 24px 32px;">
         <h1 style="margin: 0; font-size: 20px; color: #0d0d0d; font-weight: 800;">PULSAR</h1>
-        <p style="margin: 4px 0 0; font-size: 10px; color: #333; letter-spacing: 2px; text-transform: uppercase;">by ShowRoots</p>
       </div>
       <div style="padding: 32px;">
         <h2 style="color: #c1d82f; margin-top: 0;">{subject}</h2>
@@ -200,7 +196,7 @@ def send_booking_notification_email(user, subject, body_text, booking=None):
         {'<div style="text-align: center; margin: 24px 0;"><a href="' + booking_url + '" style="display: inline-block; padding: 12px 28px; background: #c1d82f; color: #0d0d0d; text-decoration: none; border-radius: 8px; font-weight: 700;">Ver Reserva</a></div>' if booking_url else ''}
       </div>
       <div style="padding: 16px 32px; background: #111; text-align: center; font-size: 12px; color: #666;">
-        © Pulsar by ShowRoots — Marketplace de Talentos Musicales
+        © Pulsar — Marketplace de Talentos Musicales
       </div>
     </div>
     """

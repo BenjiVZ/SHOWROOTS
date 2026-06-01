@@ -50,6 +50,8 @@ class Venue(models.Model):
     class Meta:
         db_table = 'venues'
         ordering = ['-is_verified', '-rating_avg', 'name']
+        verbose_name = 'Local'
+        verbose_name_plural = 'Locales'
 
     def __str__(self):
         return f"{self.name} ({self.city})"
@@ -68,6 +70,8 @@ class VenuePhoto(models.Model):
     class Meta:
         db_table = 'venue_photos'
         ordering = ['order']
+        verbose_name = 'Foto del local'
+        verbose_name_plural = 'Fotos del local'
 
     def __str__(self):
         return f"{self.venue.name} - Foto #{self.order}"

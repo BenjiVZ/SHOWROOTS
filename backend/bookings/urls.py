@@ -57,6 +57,37 @@ urlpatterns = [
 
     # Partner
     path('partner/dashboard/', views.PartnerDashboardView.as_view(), name='partner-dashboard'),
+    # Partner de producción (onboarding)
+    path('partner/production/', views.PartnerProductionProfileView.as_view(), name='partner-production'),
+    path('partner/production/submit/', views.PartnerProductionSubmitView.as_view(), name='partner-production-submit'),
+    path('partner/production/photos/', views.PartnerProductionPhotosView.as_view(), name='partner-production-photos'),
+    path('partner/production/photos/<int:pk>/', views.PartnerProductionPhotoDeleteView.as_view(), name='partner-production-photo-delete'),
+    path('admin/partner-production/', views.AdminPartnerProductionListView.as_view(), name='admin-partner-production-list'),
+    path('admin/partner-production/<int:pk>/action/', views.AdminPartnerProductionActionView.as_view(), name='admin-partner-production-action'),
+
+    # Production Packs CRUD (Fase 5)
+    path('partner/production/packs/', views.MyProductionPackListCreateView.as_view(), name='my-production-packs'),
+    path('partner/production/packs/<int:pk>/', views.MyProductionPackDetailView.as_view(), name='my-production-pack-detail'),
+
+    # Catálogo público (Fase 6)
+    path('production-packs/', views.PublicProductionPackCatalogView.as_view(), name='production-packs-catalog'),
+    path('production-packs/<int:pk>/', views.PublicProductionPackDetailView.as_view(), name='production-pack-detail'),
+
+    # Booking ↔ Packs (Fase 7)
+    path('bookings/<int:booking_id>/packs/', views.BookingPacksView.as_view(), name='booking-packs'),
+    path('bookings/<int:booking_id>/packs/<int:pk>/', views.BookingPackRemoveView.as_view(), name='booking-pack-remove'),
+
+    # Perfil dual (Fase 8)
+    path('users/<int:user_id>/production-packs/', views.PartnerPublicPacksView.as_view(), name='user-production-packs'),
+
+    # Perfil público del Aliado de producción
+    path('aliado/<int:user_id>/', views.PartnerPublicProfileView.as_view(), name='partner-public-profile'),
+
+    # Bundles (Fase 10)
+    path('partner/production/bundles/', views.MyPackBundleListCreateView.as_view(), name='my-bundles'),
+    path('partner/production/bundles/<int:pk>/', views.MyPackBundleDetailView.as_view(), name='my-bundle-detail'),
+    path('production-bundles/', views.PublicPackBundleCatalogView.as_view(), name='production-bundles-catalog'),
+    path('bookings/<int:booking_id>/bundles/', views.AddBundleToBookingView.as_view(), name='booking-add-bundle'),
 
     # Admin Config
     path('admin/config/', views.PlatformConfigView.as_view(), name='platform-config'),

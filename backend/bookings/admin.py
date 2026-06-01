@@ -102,11 +102,11 @@ class PlatformConfigAdmin(admin.ModelAdmin):
         'partner_commission_rate', 'service_fee_name', 'updated_at'
     ]
     fieldsets = (
-        ('Comisiones por Nivel', {
-            'fields': ('standard_commission_rate', 'premium_commission_rate', 'partner_commission_rate'),
-            'description': 'Standard: 20% | Premium: 15% | Partner: 30% de la comisión de la plataforma'
+        ('Comisiones por plan', {
+            'fields': ('standard_commission_rate', 'pro_commission_rate', 'premium_commission_rate', 'partner_commission_rate'),
+            'description': 'Standard: 20% | Pro: 15% | Premium: 12% | Aliado: 30% de la comisión de la plataforma'
         }),
-        ('Fee al Cliente ("Gestión y garantía")', {
+        ('Fee al cliente ("Gestión y garantía")', {
             'fields': (
                 'service_fee_name', 'service_fee_mode', 'service_fee_rate',
                 'service_fee_small', 'service_fee_medium', 'service_fee_large'
