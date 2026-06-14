@@ -388,7 +388,9 @@ class ProductionPackSerializer(serializers.ModelSerializer):
             'id', 'name', 'category', 'category_display', 'short_description',
             'event_size', 'event_size_display', 'equipment_items',
             'price', 'currency',
-            'includes_technician', 'includes_setup', 'setup_hours_before',
+            'includes_technician', 'includes_setup',
+            'includes_dj', 'dj_name',
+            'setup_hours_before',
             'available_days', 'cover_image',
             'status', 'rentals_count', 'rating_avg',
             'created_at', 'updated_at',
@@ -422,7 +424,9 @@ class ProductionPackPublicSerializer(serializers.ModelSerializer):
             'id', 'name', 'category', 'category_display', 'short_description',
             'event_size', 'event_size_display', 'equipment_items',
             'price', 'currency',
-            'includes_technician', 'includes_setup', 'setup_hours_before',
+            'includes_technician', 'includes_setup',
+            'includes_dj', 'dj_name',
+            'setup_hours_before',
             'cover_image', 'rentals_count', 'rating_avg', 'vendor',
         ]
 

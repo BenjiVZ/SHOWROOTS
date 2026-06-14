@@ -83,6 +83,30 @@
           </div>
 
           <div class="filter-group">
+            <label class="filter-label">¿Incluye DJ?</label>
+            <div class="chip-grid">
+              <button
+                type="button"
+                class="filter-chip"
+                :class="{ active: !filters.includes_dj }"
+                @click="filters.includes_dj = ''; fetchPacks()"
+              >Cualquiera</button>
+              <button
+                type="button"
+                class="filter-chip"
+                :class="{ active: filters.includes_dj === 'true' }"
+                @click="filters.includes_dj = 'true'; fetchPacks()"
+              >Con DJ (turnkey)</button>
+              <button
+                type="button"
+                class="filter-chip"
+                :class="{ active: filters.includes_dj === 'false' }"
+                @click="filters.includes_dj = 'false'; fetchPacks()"
+              >Sólo equipo</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
             <label class="filter-label">Precio máximo (USD)</label>
             <input v-model.number="filters.max_price" type="number" min="0" class="input-field" placeholder="Sin límite" @change="fetchPacks" />
           </div>
@@ -160,6 +184,10 @@
                   <span class="vendor-badge" :class="{ dj: p.vendor?.is_dj_partner }">
                     {{ p.vendor?.is_dj_partner ? 'DJ + equipo' : 'Aliado' }}
                   </span>
+                  <span v-if="p.includes_dj" class="dj-pack-badge" title="Pack incluye DJ — turnkey">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    Con DJ
+                  </span>
                   <span class="cat-pill" v-html="categoryIcon(p.category)"></span>
                 </div>
                 <div class="pack-card-body">
@@ -174,7 +202,7 @@
                   </div>
                   <!-- Preview de items incluidos -->
                   <div v-if="p.equipment_items?.length" class="pack-items-preview">
-                    <span v-for="(item, idx) in p.equipment_items.slice(0, 2)" :key="idx" class="item-chip">{{ item }}</span>
+                    <span v-for="(item, idx) in p.equipment_items.slice(0, 2)" :key="idx" class="item-chip">{{ stripBullet(item) }}</span>
                     <span v-if="p.equipment_items.length > 2" class="item-chip more">+{{ p.equipment_items.length - 2 }}</span>
                   </div>
                   <div class="pack-card-price-row">
@@ -212,38 +240,80 @@
               <span v-else class="pack-emoji-lg" v-html="categoryIcon(detail.pack?.category)"></span>
             </div>
             <div class="detail-body">
-              <h2>{{ detail.pack?.name }}</h2>
-              <div class="detail-vendor">
-                Por
-                <router-link v-if="detail.pack?.vendor?.id" :to="`/aliado/${detail.pack.vendor.id}`" class="vendor-link" @click="closeDetail">
-                  <strong>{{ detail.pack?.vendor?.name }}</strong>
-                </router-link>
-                <strong v-else>{{ detail.pack?.vendor?.name }}</strong>
-                <span v-if="detail.pack?.vendor?.is_dj_partner" class="vendor-tag">DJ + equipo</span>
+              <div class="detail-header">
+                <div class="detail-header-text">
+                  <h2>{{ detail.pack?.name }}</h2>
+                  <div class="detail-vendor">
+                    Por
+                    <router-link v-if="detail.pack?.vendor?.id" :to="`/aliado/${detail.pack.vendor.id}`" class="vendor-link" @click="closeDetail">
+                      <strong>{{ detail.pack?.vendor?.name }}</strong>
+                    </router-link>
+                    <strong v-else>{{ detail.pack?.vendor?.name }}</strong>
+                    <span v-if="detail.pack?.vendor?.is_dj_partner" class="vendor-tag">DJ + equipo</span>
+                  </div>
+                </div>
+                <div class="detail-price-pill">
+                  <span class="price-label">Desde</span>
+                  <span class="price-value">${{ formatMoney(detail.pack?.price) }}</span>
+                </div>
               </div>
-              <div class="detail-price">${{ formatMoney(detail.pack?.price) }}</div>
-              <p v-if="detail.pack?.short_description">{{ detail.pack.short_description }}</p>
 
-              <h4>Incluye</h4>
-              <ul class="detail-items">
-                <li v-for="(item, idx) in detail.pack?.equipment_items || []" :key="idx">{{ item }}</li>
-                <li v-if="detail.pack?.includes_technician" class="ok">✓ Técnico in-situ incluido</li>
-                <li v-if="detail.pack?.includes_setup" class="ok">✓ Montaje y desmontaje incluidos</li>
+              <p v-if="detail.pack?.short_description" class="detail-desc">{{ detail.pack.short_description }}</p>
+
+              <!-- Extras / features como badges destacados -->
+              <div v-if="hasFeatures(detail.pack)" class="feature-badges">
+                <span v-if="detail.pack?.includes_dj" class="feature-badge feature-dj">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  <div>
+                    <strong>DJ incluido</strong>
+                    <small v-if="detail.pack?.dj_name">{{ detail.pack.dj_name }}</small>
+                  </div>
+                </span>
+                <span v-if="detail.pack?.includes_technician" class="feature-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                  <div><strong>Técnico in-situ</strong><small>Operador del equipo</small></div>
+                </span>
+                <span v-if="detail.pack?.includes_setup" class="feature-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <div><strong>Montaje incluido</strong><small>Setup y desmontaje</small></div>
+                </span>
+              </div>
+
+              <h4 class="detail-section-h">Equipo del pack</h4>
+              <ul class="equipment-list">
+                <li v-for="(item, idx) in detail.pack?.equipment_items || []" :key="idx">
+                  <span class="equip-check">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span>{{ stripBullet(item) }}</span>
+                </li>
+                <li v-if="!detail.pack?.equipment_items?.length" class="empty-equip">El aliado no detalló los items.</li>
               </ul>
 
               <div class="detail-info-grid">
-                <div><strong>Tamaño evento:</strong> {{ detail.pack?.event_size_display }}</div>
-                <div><strong>Setup:</strong> {{ detail.pack?.setup_hours_before }}h antes</div>
+                <div class="info-pill">
+                  <span class="info-pill-label">Tamaño evento</span>
+                  <strong>{{ detail.pack?.event_size_display }}</strong>
+                </div>
+                <div class="info-pill">
+                  <span class="info-pill-label">Setup</span>
+                  <strong>{{ detail.pack?.setup_hours_before }}h antes</strong>
+                </div>
               </div>
 
-              <div class="detail-note">
-                Para agregar este pack a un evento, creá una reserva con un DJ y lo agregás desde el booking.
+              <div class="detail-note" :class="{ 'detail-note-dj': detail.pack?.includes_dj }">
+                <template v-if="detail.pack?.includes_dj">
+                  Este pack es <strong>turnkey</strong> — incluye el DJ. Reservalo directamente desde el perfil del aliado.
+                </template>
+                <template v-else>
+                  Para agregar este pack a un evento, creá una reserva con un DJ y lo agregás desde el booking.
+                </template>
               </div>
 
               <div class="detail-actions">
                 <button class="btn btn-ghost" @click="closeDetail">Cerrar</button>
                 <router-link v-if="detail.pack?.vendor?.id" :to="`/aliado/${detail.pack.vendor.id}`" class="btn btn-outline" @click="closeDetail">Ver perfil del aliado</router-link>
-                <router-link to="/search" class="btn btn-primary" @click="closeDetail">Buscar DJ →</router-link>
+                <router-link v-if="!detail.pack?.includes_dj" to="/search" class="btn btn-primary" @click="closeDetail">Buscar DJ →</router-link>
               </div>
             </div>
           </div>
@@ -282,6 +352,7 @@ const filters = reactive({
   category: '',
   event_size: '',
   vendor_type: '',
+  includes_dj: '',
   max_price: null,
 })
 const detail = reactive({ open: false, pack: null })
@@ -291,6 +362,7 @@ const activeFiltersCount = computed(() => {
   if (filters.category) c++
   if (filters.event_size) c++
   if (filters.vendor_type) c++
+  if (filters.includes_dj) c++
   if (filters.max_price) c++
   return c
 })
@@ -324,6 +396,7 @@ function resetFilters() {
   filters.category = ''
   filters.event_size = ''
   filters.vendor_type = ''
+  filters.includes_dj = ''
   filters.max_price = null
   fetchPacks()
 }
@@ -341,12 +414,23 @@ function formatMoney(v) {
   return parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
+function hasFeatures(pack) {
+  if (!pack) return false
+  return !!(pack.includes_dj || pack.includes_technician || pack.includes_setup)
+}
+
+function stripBullet(item) {
+  // Algunos aliados escriben los items con "•" o "-" delante; los limpiamos para mostrar más prolijo.
+  return String(item || '').replace(/^\s*[•·\-*]\s*/, '').trim()
+}
+
 async function fetchPacks() {
   loading.value = true
   const params = {}
   if (filters.category) params.category = filters.category
   if (filters.event_size) params.event_size = filters.event_size
   if (filters.vendor_type) params.vendor_type = filters.vendor_type
+  if (filters.includes_dj) params.includes_dj = filters.includes_dj
   if (filters.max_price) params.max_price = filters.max_price
   try {
     const { data } = await api.get('/production-packs/', { params })
@@ -373,10 +457,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.packs-catalog { padding-top: 100px; padding-bottom: var(--space-12); min-height: 100vh; }
+.packs-catalog { padding-top: 84px; padding-bottom: var(--space-12); min-height: 100vh; }
 .container { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-4); }
 
-.catalog-header { margin-bottom: var(--space-8); }
+.catalog-header { margin-bottom: var(--space-5); }
 .catalog-header h1 { font-family: 'Poppins', sans-serif; font-size: 2.2rem; margin-bottom: var(--space-2); }
 .catalog-sub { color: var(--color-text-muted); max-width: 600px; line-height: 1.55; }
 
@@ -565,22 +649,29 @@ onMounted(() => {
 .pack-items-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 8px;
+  gap: 5px;
+  margin-bottom: 10px;
 }
 .item-chip {
-  font-size: 0.7rem;
-  padding: 3px 8px;
+  font-size: 0.72rem;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: var(--color-bg-elevated, rgba(255,255,255,0.04));
+  background: rgba(193,216,47,0.07);
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(193,216,47,0.18);
   white-space: nowrap;
-  max-width: 130px;
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: border-color 0.15s, color 0.15s;
 }
-.item-chip.more { color: var(--color-primary); font-weight: 600; }
+.pack-card:hover .item-chip { border-color: rgba(193,216,47,0.35); color: var(--color-text-primary); }
+.item-chip.more {
+  color: var(--color-primary);
+  font-weight: 700;
+  background: rgba(193,216,47,0.14);
+  border-color: rgba(193,216,47,0.4);
+}
 
 .pack-card-price-row {
   display: flex;
@@ -631,6 +722,31 @@ onMounted(() => {
   border-radius: 6px;
 }
 .vendor-badge.dj { background: rgba(245,158,11,0.85); color: #0d0d0d; }
+.dj-pack-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(245,158,11,0.92);
+  color: #0d0d0d;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.detail-note-dj {
+  background: rgba(245,158,11,0.08);
+  border-left: 3px solid #f59e0b;
+  padding: 10px 12px;
+  border-radius: 0 6px 6px 0;
+  color: var(--color-text-secondary);
+}
+.detail-note-dj strong { color: #f59e0b; }
+.detail-items li.ok.dj { color: #f59e0b; font-weight: 600; }
 .pack-card-body { padding: var(--space-3); flex: 1; }
 .pack-card-name { color: var(--color-text-primary); font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
 .pack-card-vendor { color: var(--color-text-muted); font-size: 0.8rem; margin-bottom: 6px; }
@@ -693,17 +809,153 @@ onMounted(() => {
   justify-content: center;
 }
 .detail-hero img { width: 100%; height: 100%; object-fit: cover; }
-.detail-body { padding: var(--space-5); }
-.detail-body h2 { font-size: 1.4rem; margin-bottom: 4px; }
-.detail-vendor { color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: var(--space-2); }
-.vendor-tag { background: rgba(245,158,11,0.15); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; }
-.detail-price { color: var(--color-primary); font-weight: 800; font-size: 2rem; margin-bottom: var(--space-3); }
-.detail-body h4 { color: var(--color-text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin: var(--space-3) 0 var(--space-2); }
-.detail-items { list-style: none; padding: 0; margin: 0; }
-.detail-items li { padding: 6px 0; border-bottom: 1px dashed var(--color-border); font-size: 0.9rem; }
-.detail-items li.ok { color: #10b981; }
-.detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-3); font-size: 0.85rem; color: var(--color-text-muted); }
-.detail-info-grid strong { color: var(--color-text-primary); font-weight: 600; }
+.detail-body { padding: var(--space-5) var(--space-5) var(--space-4); }
+.detail-header { display: flex; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-3); }
+.detail-header-text { flex: 1; min-width: 0; }
+.detail-body h2 { font-size: 1.5rem; margin: 0 0 4px; line-height: 1.2; }
+.detail-vendor { color: var(--color-text-muted); font-size: 0.88rem; }
+.vendor-tag { background: rgba(245,158,11,0.15); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; font-weight: 600; }
+
+.detail-price-pill {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 10px 14px;
+  background: rgba(193,216,47,0.10);
+  border: 1px solid rgba(193,216,47,0.35);
+  border-radius: 14px;
+  text-align: right;
+}
+.detail-price-pill .price-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+.detail-price-pill .price-value {
+  color: var(--color-primary);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.detail-desc {
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Features destacados (DJ / Técnico / Montaje) */
+.feature-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: var(--space-4);
+}
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.28);
+  color: var(--color-text-primary);
+}
+.feature-badge svg {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  padding: 5px;
+  background: rgba(16,185,129,0.18);
+  border-radius: 50%;
+  color: #10b981;
+  box-sizing: content-box;
+}
+.feature-badge div { display: flex; flex-direction: column; min-width: 0; }
+.feature-badge strong { font-size: 0.85rem; font-weight: 600; color: var(--color-text-primary); line-height: 1.15; }
+.feature-badge small { font-size: 0.7rem; color: var(--color-text-muted); margin-top: 2px; }
+.feature-badge.feature-dj {
+  background: rgba(245,158,11,0.10);
+  border-color: rgba(245,158,11,0.35);
+}
+.feature-badge.feature-dj svg {
+  background: rgba(245,158,11,0.22);
+  color: #f59e0b;
+}
+.feature-badge.feature-dj strong { color: #f59e0b; }
+
+.detail-section-h {
+  color: var(--color-text-muted) !important;
+  font-size: 0.72rem !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin: 0 0 var(--space-2) !important;
+}
+
+/* Equipment list — clean checked items */
+.equipment-list { list-style: none; padding: 0; margin: 0 0 var(--space-4); display: grid; grid-template-columns: 1fr; gap: 4px; }
+.equipment-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--color-bg-elevated, rgba(255,255,255,0.025));
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+.equipment-list li:hover {
+  border-color: var(--color-border);
+  background: var(--color-bg-card);
+}
+.equip-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(193,216,47,0.18);
+  color: var(--color-primary);
+  margin-top: 1px;
+}
+.empty-equip {
+  color: var(--color-text-muted) !important;
+  font-style: italic;
+  background: transparent !important;
+  border: 1px dashed var(--color-border) !important;
+  justify-content: center;
+}
+
+/* Info pills (tamaño / setup) */
+.detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0; }
+.info-pill {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  background: var(--color-bg-elevated, rgba(255,255,255,0.025));
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+.info-pill-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+}
+.info-pill strong { color: var(--color-text-primary); font-size: 0.92rem; font-weight: 600; }
 .detail-note {
   background: rgba(193,216,47,0.06);
   border-left: 3px solid var(--color-primary);

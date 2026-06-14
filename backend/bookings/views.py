@@ -1395,6 +1395,13 @@ class PublicProductionPackCatalogView(APIView):
         if vendor_type == 'dj':
             qs = qs.filter(partner__user__role='talent')
 
+        # Filtro: ¿incluye DJ en el pack?
+        includes_dj = request.query_params.get('includes_dj')
+        if includes_dj in ('true', '1'):
+            qs = qs.filter(includes_dj=True)
+        elif includes_dj in ('false', '0'):
+            qs = qs.filter(includes_dj=False)
+
         qs = qs.order_by('-rentals_count', '-rating_avg', '-created_at')
 
         # Si se pasa ?for_talent_id=X, marcamos los packs recomendados y los ponemos arriba

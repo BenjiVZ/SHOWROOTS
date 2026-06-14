@@ -134,6 +134,10 @@
                 <div class="pack-name">
                   {{ p.name }}
                   <span class="pack-tag" :class="'tag-' + p.status">{{ packStatusLabel(p.status) }}</span>
+                  <span v-if="p.includes_dj" class="pack-tag tag-dj">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    Con DJ
+                  </span>
                 </div>
                 <div class="pack-meta">
                   <span>{{ p.category_display }}</span>
@@ -235,6 +239,26 @@
                       Incluye montaje/desmontaje
                     </label>
                   </div>
+
+                  <!-- ¿Incluye DJ? -->
+                  <div class="form-group full dj-toggle-block">
+                    <label class="checkbox-label dj-toggle">
+                      <input v-model="packEditor.form.includes_dj" type="checkbox" />
+                      <span class="dj-toggle-text">
+                        <strong>Incluye DJ en este pack</strong>
+                        <small>Activálo si el pack es turnkey — el cliente reserva esto y no necesita buscar un DJ aparte.</small>
+                      </span>
+                    </label>
+                    <div v-if="packEditor.form.includes_dj" class="dj-name-wrap">
+                      <label class="label">Nombre del DJ <span class="optional">(opcional)</span></label>
+                      <input
+                        v-model="packEditor.form.dj_name"
+                        type="text"
+                        class="input-field"
+                        placeholder="Ej: DJ ShowRoots — o dejá vacío si sos vos"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Preview side -->
@@ -263,6 +287,10 @@
                         </li>
                       </ul>
                       <div class="preview-flags">
+                        <span v-if="packEditor.form.includes_dj" class="preview-flag preview-flag-dj">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                          DJ incluido<span v-if="packEditor.form.dj_name">: {{ packEditor.form.dj_name }}</span>
+                        </span>
                         <span v-if="packEditor.form.includes_technician" class="preview-flag">⚡ Técnico incl.</span>
                         <span v-if="packEditor.form.includes_setup" class="preview-flag">🛠 Setup incl.</span>
                       </div>
@@ -483,6 +511,8 @@ function blankPack() {
     setup_hours_before: 2,
     includes_technician: true,
     includes_setup: true,
+    includes_dj: false,
+    dj_name: '',
     cover_image: '',
   }
 }
@@ -520,6 +550,8 @@ function openPackEditor(pack = null) {
       setup_hours_before: pack.setup_hours_before,
       includes_technician: pack.includes_technician,
       includes_setup: pack.includes_setup,
+      includes_dj: !!pack.includes_dj,
+      dj_name: pack.dj_name || '',
       cover_image: pack.cover_image || '',
     }
   } else {
@@ -569,6 +601,8 @@ async function savePack(status) {
       fd.append('setup_hours_before', String(packEditor.form.setup_hours_before))
       fd.append('includes_technician', String(packEditor.form.includes_technician))
       fd.append('includes_setup', String(packEditor.form.includes_setup))
+      fd.append('includes_dj', String(!!packEditor.form.includes_dj))
+      if (packEditor.form.dj_name) fd.append('dj_name', packEditor.form.dj_name)
       fd.append('status', status)
       // JSONField vía FormData: mandar el array completo como string JSON.
       // Si mandamos múltiples `fd.append('equipment_items', 'X')`, DRF intenta parsear "X"
@@ -1069,6 +1103,12 @@ function goToBooking(id) {
 }
 .pack-tag.tag-draft { background: rgba(140,140,140,0.15); color: var(--color-text-muted); }
 .pack-tag.tag-published { background: rgba(16,185,129,0.15); color: #10b981; }
+.pack-tag.tag-dj {
+  background: rgba(245,158,11,0.12);
+  color: #f59e0b;
+  display: inline-flex;
+  align-items: center;
+}
 .pack-tag.tag-paused { background: rgba(245,158,11,0.15); color: #f59e0b; }
 
 .pack-actions { display: flex; gap: 6px; }
@@ -1166,7 +1206,24 @@ function goToBooking(id) {
 .preview-items li::before { content: '✓'; position: absolute; left: 0; color: #10b981; }
 .preview-items .preview-more::before { content: '+'; color: var(--color-text-muted); }
 .preview-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); }
-.preview-flag { background: rgba(16,185,129,0.08); color: #10b981; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; }
+.preview-flag { background: rgba(16,185,129,0.08); color: #10b981; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px; }
+.preview-flag-dj { background: rgba(245,158,11,0.12); color: #f59e0b; }
+
+/* Toggle "Incluye DJ" en el editor de pack */
+.dj-toggle-block {
+  padding: var(--space-3);
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: var(--radius-md);
+}
+.dj-toggle { align-items: flex-start; gap: 10px; padding-top: 0; }
+.dj-toggle input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; }
+.dj-toggle-text { display: flex; flex-direction: column; }
+.dj-toggle-text strong { color: #f59e0b; font-size: 0.92rem; }
+.dj-toggle-text small { color: var(--color-text-muted); font-size: 0.78rem; line-height: 1.45; margin-top: 2px; }
+.dj-name-wrap { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px dashed rgba(245,158,11,0.25); }
+.dj-name-wrap .label { display: block; font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 4px; }
+.dj-name-wrap .optional { color: var(--color-text-muted); font-weight: 400; }
 
 /* Bundles */
 .bundles-list { display: flex; flex-direction: column; gap: var(--space-2); }
