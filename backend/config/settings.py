@@ -1,24 +1,29 @@
 """
-Django settings for WebDJ - DJ Talent Marketplace
+Django settings for Pulsar / SHOWROOTS - DJ Talent Marketplace
 """
 
+import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-webdj-dev-key-change-in-production-2024'
+# Load .env (dev local) — en prod las vars ya vienen del systemd EnvironmentFile
+load_dotenv(BASE_DIR / '.env')
 
-DEBUG = True
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-webdj-dev-key-change-in-production-2024'
+)
 
-# Google OAuth — loaded from backend/.env
-import os
-from pathlib import Path as _Path
-from dotenv import load_dotenv
-load_dotenv(_Path(__file__).resolve().parent.parent / '.env')
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 
-ALLOWED_HOSTS = ['*', 'backend.aplicacionesdamasco.com', 'frontend.aplicacionesdamasco.com', '3000.masterslogic.com', '3001.masterslogic.com', 'localhost']
+# ALLOWED_HOSTS: en prod viene de env (coma-separado). En dev acepta todo.
+_default_hosts = '*,backend.aplicacionesdamasco.com,frontend.aplicacionesdamasco.com,3000.masterslogic.com,3001.masterslogic.com,localhost'
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', _default_hosts).split(',') if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -43,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -51,6 +57,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'accounts.middleware.LastSeenMiddleware',
 ]
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 
 ROOT_URLCONF = 'config.urls'
 
@@ -71,13 +82,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - SQLite for now
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database
+# En prod: setear DB_ENGINE=postgres + DB_NAME/DB_USER/DB_PASSWORD/DB_HOST en .env
+# En dev: SQLite por defecto
+if os.environ.get('DB_ENGINE', '').lower() in ('postgres', 'postgresql'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'pulsar'),
+            'USER': os.environ.get('DB_USER', 'pulsar_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 60,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -187,3 +213,38 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 
 # Frontend URL for building reset links in emails
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://frontend.aplicacionesdamasco.com')
+
+# ── Production hardening ──
+# Cuando DEBUG=False (prod) activamos SSL, HSTS, cookies seguras y proxy headers.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30 días al principio; subir a 1 año cuando esté estable
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
+
+# ── Spaces (S3-compatible) para MEDIA en producción ──
+# Si USE_SPACES=True, los uploads van a DigitalOcean Spaces vía django-storages.
+if os.environ.get('USE_SPACES', 'False') == 'True':
+    INSTALLED_APPS += ['storages']
+    AWS_ACCESS_KEY_ID = os.environ['SPACES_KEY']
+    AWS_SECRET_ACCESS_KEY = os.environ['SPACES_SECRET']
+    AWS_STORAGE_BUCKET_NAME = os.environ['SPACES_BUCKET']
+    AWS_S3_ENDPOINT_URL = os.environ.get('SPACES_ENDPOINT', 'https://nyc3.digitaloceanspaces.com')
+    AWS_S3_REGION_NAME = os.environ.get('SPACES_REGION', 'nyc3')
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # CDN opcional — si activás el CDN del Space, exponé media bajo ese hostname.
+    SPACES_CDN = os.environ.get('SPACES_CDN', '')
+    if SPACES_CDN:
+        MEDIA_URL = f'https://{SPACES_CDN}/'
+    else:
+        MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'

@@ -1,0 +1,1676 @@
+[
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$DEgBQaH17RUllixHI5iwU4$SP18w2Oa4VEp9WKKhoDsJnqWKYkPEG3F7c0BsCrIGfQ=",
+    "last_login": "2026-06-03T01:54:48.833Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "ShowRoots",
+    "last_name": "Admin",
+    "email": "admin@showroots.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-16T20:36:13.774Z",
+    "role": "admin",
+    "avatar": "avatars/logo_show_roots_Blanco-mpbveowh.jpg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-04-16T20:36:14.227Z",
+    "updated_at": "2026-04-25T16:48:14.295Z",
+    "last_seen_at": "2026-06-03T14:15:31.003Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$fkb3zuxqVwfB1BhtqWK2S2$zM/yiZkaXTdndacDP3548RANPUUybBy8sCGIx2q08kY=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "showrootspulse",
+    "first_name": "Ruben",
+    "last_name": "totona",
+    "email": "showrootspulse@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-12T13:38:55.483Z",
+    "role": "talent",
+    "avatar": "avatars/WhatsApp_Image_2026-05-12_at_8.26.39_AM.jpeg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-05-12T13:38:55.887Z",
+    "updated_at": "2026-05-12T13:39:09.350Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$COt78gTgvQOTgXfMDT1fAr$9TiSm68wj7DiE6mPFBF/ASc0WAwcLW5GFX25FSkwcL8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "RubsDJ",
+    "first_name": "Ruben Santana",
+    "last_name": "Santana",
+    "email": "rubensantanadj@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-14T22:16:48.472Z",
+    "role": "talent",
+    "avatar": "avatars/PHOTO-2025-03-23-17-29-03-mpbvu0zp.jpg",
+    "phone": "+507 67084317",
+    "city": "Panama",
+    "country": "Panama",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "social_media",
+    "created_at": "2026-05-14T22:16:48.844Z",
+    "updated_at": "2026-05-19T00:16:09.548Z",
+    "last_seen_at": "2026-05-30T15:16:33.150Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "!KjGVtoD02lKO5EmOPSS3wk8kI9sSO2WPvc8pSgZi",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "rotundod95",
+    "first_name": "Delmar",
+    "last_name": "Rotundo",
+    "email": "rotundod95@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-15T22:44:43.229Z",
+    "role": "client",
+    "avatar": "avatars/google_33.jpg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": true,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-05-15T22:44:43.229Z",
+    "updated_at": "2026-05-15T22:44:43.956Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$BBwZlsQ7AeUfdscNRu5Y0E$Wm1hfsol8HsRKWEU2PZWRet2oBJK2E0d2oG9qi/xclE=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "rubscreative",
+    "first_name": "Luis",
+    "last_name": "Miguel",
+    "email": "rubscreative@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-18T00:02:39.322Z",
+    "role": "client",
+    "avatar": "avatars/google_36.jpg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-05-18T00:02:39.680Z",
+    "updated_at": "2026-05-28T02:26:07.944Z",
+    "last_seen_at": "2026-06-01T21:40:59.490Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "!VlG7inq4gO7ectgaTR2oH47vyNCa795qZjrJ7lv2",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "showrootpty",
+    "first_name": "ShowRoots",
+    "last_name": "Panama",
+    "email": "showrootpty@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-19T00:15:30.274Z",
+    "role": "client",
+    "avatar": "avatars/google_37.jpg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": true,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-05-19T00:15:30.274Z",
+    "updated_at": "2026-05-19T00:15:30.727Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$eARJdrFd3DixEL9irpTW5D$s+D6ql4uv9RKU7fodtPzbmfaNM9Wh1+h7old1/R0Ij8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "Roeostos",
+    "first_name": "Ronald Ostos",
+    "last_name": "Ostos",
+    "email": "roe.aes24@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-22T18:38:10.968Z",
+    "role": "talent",
+    "avatar": "",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-05-22T18:38:11.405Z",
+    "updated_at": "2026-06-03T01:56:51.997Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$WIjefnLIEwzLImWC9ph3A9$869rzyXANebe3OWtXoHcoe7NnkoZHFVzgQP/6gPWMYs=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "Djjuniornava",
+    "first_name": "JUNIOR NAVA",
+    "last_name": "NAVA",
+    "email": "juniorpunior90@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-22T20:42:41.574Z",
+    "role": "talent",
+    "avatar": "avatars/1000458608-mphe0ub5.jpg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "friend",
+    "created_at": "2026-05-22T20:42:41.943Z",
+    "updated_at": "2026-05-22T20:45:20.258Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$8U7HjmmmKQ6bg5F5os5CEZ$YjG8Q5+od0GbAxHAKoGnTxtIhyp6GmwwnJ/RAeKnnj4=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "ramosleon.miguelalejandro",
+    "first_name": "Miguel Ramos",
+    "last_name": "Ramos Leon",
+    "email": "ramosleon.miguelalejandro@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-23T14:16:18.651Z",
+    "role": "talent",
+    "avatar": "avatars/4cedb09b-8d3b-4b2e-a7b1-33dda6efe266-mpifo6fq.jpg",
+    "phone": "+50763016042",
+    "city": "Panama",
+    "country": "Panama",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "",
+    "created_at": "2026-05-23T14:16:19.013Z",
+    "updated_at": "2026-05-24T17:32:55.767Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$ZEgSG72hrAk11HIz4nvbds$OW3erAXJZjdaMXbaExy7xjktUMWVk7uqKH2y9Ye1Sqo=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "dianasantana",
+    "first_name": "Diana Santana",
+    "last_name": "Santana",
+    "email": "dianaasantana0717@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-25T00:32:44.979Z",
+    "role": "talent",
+    "avatar": "avatars/IMG_7001-mpkh7o0n.jpg",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [],
+    "discovery_source": "friend",
+    "created_at": "2026-05-25T00:32:45.347Z",
+    "updated_at": "2026-05-25T00:38:08.897Z",
+    "last_seen_at": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$fH40u9QbDGTC1yVe2Ofg5O$R2b+NWvpH0+fmgabT/T0IHSYtdHP74YNJY6cJ67hfTg=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "benjaminvelazco.01",
+    "first_name": "benjamin",
+    "last_name": "velazco",
+    "email": "benjaminvelazco.01@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-29T17:00:24.834Z",
+    "role": "partner",
+    "avatar": "",
+    "phone": "",
+    "city": "",
+    "country": "Venezuela",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": false,
+    "partner_offers": [
+      "packs"
+    ],
+    "discovery_source": "",
+    "created_at": "2026-05-29T17:00:25.238Z",
+    "updated_at": "2026-05-29T17:17:59.756Z",
+    "last_seen_at": "2026-06-01T01:22:11.394Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$S9Ghyhid12xjjM5PTp2lPR$kDI8dha+w0xGEhg81FXqVOEtgkel9JLEyBIdFpnkw2s=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "rubsantorres",
+    "first_name": "ShowRoots",
+    "last_name": "",
+    "email": "daritosa33@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-29T21:13:15.634Z",
+    "role": "partner",
+    "avatar": "",
+    "phone": "60683829",
+    "city": "",
+    "country": "Panama",
+    "bio": "",
+    "is_verified": false,
+    "is_partner_active": true,
+    "partner_offers": [
+      "referral"
+    ],
+    "discovery_source": "",
+    "created_at": "2026-05-29T21:13:16.033Z",
+    "updated_at": "2026-05-29T21:28:07.017Z",
+    "last_seen_at": "2026-06-01T21:39:51.819Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 1,
+  "fields": {
+    "name": "House",
+    "slug": "",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 2,
+  "fields": {
+    "name": "Techno",
+    "slug": "techno",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 3,
+  "fields": {
+    "name": "Reggaeton",
+    "slug": "reggaeton",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 4,
+  "fields": {
+    "name": "Salsa",
+    "slug": "salsa",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 5,
+  "fields": {
+    "name": "Rock",
+    "slug": "rock",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 6,
+  "fields": {
+    "name": "Pop",
+    "slug": "pop",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 7,
+  "fields": {
+    "name": "Jazz",
+    "slug": "jazz",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 8,
+  "fields": {
+    "name": "Hip Hop",
+    "slug": "hip-hop",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 9,
+  "fields": {
+    "name": "R&B",
+    "slug": "rb",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 10,
+  "fields": {
+    "name": "EDM",
+    "slug": "edm",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 11,
+  "fields": {
+    "name": "Tropical",
+    "slug": "tropical",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 12,
+  "fields": {
+    "name": "Alternativo",
+    "slug": "alternativo",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 13,
+  "fields": {
+    "name": "Merengue",
+    "slug": "merengue",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 14,
+  "fields": {
+    "name": "Vallenato",
+    "slug": "vallenato",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 15,
+  "fields": {
+    "name": "Cumbia",
+    "slug": "cumbia",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 16,
+  "fields": {
+    "name": "Funk",
+    "slug": "funk",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 17,
+  "fields": {
+    "name": "Soul",
+    "slug": "soul",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 18,
+  "fields": {
+    "name": "Latin Pop",
+    "slug": "latin-pop",
+    "icon": ""
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 19,
+  "fields": {
+    "name": "Electrónica",
+    "slug": "electronica",
+    "icon": "⚡"
+  }
+},
+{
+  "model": "talents.genre",
+  "pk": 20,
+  "fields": {
+    "name": "Clásica",
+    "slug": "clasica",
+    "icon": "🎻"
+  }
+},
+{
+  "model": "talents.talentprofile",
+  "pk": 17,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "talent_type": "dj",
+    "talent_level": "premium",
+    "stage_name": "Rubs",
+    "tagline": "",
+    "description": "DJ, amante de la musica y creador de experiencias con mas de 14 años de trayectoria, He colaborado para marcas como Gucci, Ferrari y he abierto a artistas como Rawayana, Ronald Borjas y Magic Juan.",
+    "experience_years": 14,
+    "hourly_rate": "150.00",
+    "price_min": null,
+    "price_max": null,
+    "price_currency": "USD",
+    "equipment_own": false,
+    "equipment_description": "",
+    "cover_photo": "",
+    "city": "Ciudad de Panamá",
+    "country": "Panamá",
+    "latitude": null,
+    "longitude": null,
+    "rating_avg": "0.00",
+    "total_reviews": 0,
+    "total_bookings": 0,
+    "is_featured": true,
+    "is_approved": true,
+    "is_available": true,
+    "experience_level": "professional",
+    "coverage_radius_km": 300,
+    "onboarding_completed": true,
+    "mood_tags": [
+      "Sunsets Sessions"
+    ],
+    "event_types": [
+      "wedding",
+      "corporate",
+      "birthday",
+      "cocktail",
+      "private",
+      "festival",
+      "launch"
+    ],
+    "languages": [],
+    "equipment_brings": [
+      "Pioneer XDJ RX3 Controlador DJ"
+    ],
+    "equipment_not_included": [
+      "Sonido",
+      "Iuminación",
+      "DJ Booth"
+    ],
+    "service_zones": [
+      "Ciudad de Panamá y provincias de Panama (Cargos de transporte y hospedaje aplican)"
+    ],
+    "travel_fee_extra": null,
+    "website": "",
+    "instagram": "",
+    "tiktok": "",
+    "soundcloud": "",
+    "mixcloud": "",
+    "spotify": "",
+    "youtube": "",
+    "created_at": "2026-05-14T22:32:26.599Z",
+    "updated_at": "2026-05-29T21:22:43.924Z",
+    "genres": [
+      19,
+      16,
+      8,
+      1,
+      5,
+      11
+    ],
+    "recommended_partners": [
+      [
+        "rubsantorres"
+      ]
+    ]
+  }
+},
+{
+  "model": "talents.talentprofile",
+  "pk": 21,
+  "fields": {
+    "user": [
+      "Roeostos"
+    ],
+    "talent_type": "dj",
+    "talent_level": "standard",
+    "stage_name": "Roe",
+    "tagline": "Curador musical y creador de experiencias.",
+    "description": "Roe Ostos fusiona funk, latin grooves y electrónica\nen sets vibrantes y envolventes. Con más de una\ndécada de trayectoria y una sólida presencia en\nclubs, conciertos, festivales y activaciones de marca,\ncombina lo clásico y lo moderno en un sonido propio\nque destaca en cualquier escenario.",
+    "experience_years": 10,
+    "hourly_rate": "50.00",
+    "price_min": null,
+    "price_max": null,
+    "price_currency": "USD",
+    "equipment_own": false,
+    "equipment_description": "",
+    "cover_photo": "",
+    "city": "Panama",
+    "country": "Panamá",
+    "latitude": null,
+    "longitude": null,
+    "rating_avg": "0.00",
+    "total_reviews": 0,
+    "total_bookings": 0,
+    "is_featured": true,
+    "is_approved": true,
+    "is_available": true,
+    "experience_level": "beginner",
+    "coverage_radius_km": 50,
+    "onboarding_completed": false,
+    "mood_tags": [
+      "Roe Ostos ha construido una identidad musical marcada por la diversidad, la energía y el groove."
+    ],
+    "event_types": [
+      "wedding",
+      "corporate",
+      "birthday",
+      "cocktail",
+      "club",
+      "launch",
+      "festival",
+      "private"
+    ],
+    "languages": [
+      "Españolw"
+    ],
+    "equipment_brings": [
+      "XDJ RX3 , FLX10 , XDJZX , CDJ, technic 1200 mk2."
+    ],
+    "equipment_not_included": [],
+    "service_zones": [
+      "Ciudad de Panamá, playas y provincias"
+    ],
+    "travel_fee_extra": "100.00",
+    "website": "",
+    "instagram": "",
+    "tiktok": "",
+    "soundcloud": "",
+    "mixcloud": "",
+    "spotify": "",
+    "youtube": "",
+    "created_at": "2026-05-22T18:49:28.441Z",
+    "updated_at": "2026-05-24T20:58:40.723Z",
+    "genres": [],
+    "recommended_partners": []
+  }
+},
+{
+  "model": "talents.talentprofile",
+  "pk": 22,
+  "fields": {
+    "user": [
+      "Djjuniornava"
+    ],
+    "talent_type": "dj",
+    "talent_level": "standard",
+    "stage_name": "DJ JUNIOR NAVA",
+    "tagline": "",
+    "description": "DJ de música Crossover y música electrónica, con el propósito de tener una reunión amena",
+    "experience_years": 0,
+    "hourly_rate": "30.00",
+    "price_min": null,
+    "price_max": null,
+    "price_currency": "USD",
+    "equipment_own": false,
+    "equipment_description": "",
+    "cover_photo": "",
+    "city": "Ciudad de Panamá",
+    "country": "Panamá",
+    "latitude": null,
+    "longitude": null,
+    "rating_avg": "0.00",
+    "total_reviews": 0,
+    "total_bookings": 0,
+    "is_featured": true,
+    "is_approved": true,
+    "is_available": true,
+    "experience_level": "professional",
+    "coverage_radius_km": 110,
+    "onboarding_completed": true,
+    "mood_tags": [],
+    "event_types": [],
+    "languages": [],
+    "equipment_brings": [],
+    "equipment_not_included": [],
+    "service_zones": [],
+    "travel_fee_extra": null,
+    "website": "",
+    "instagram": "",
+    "tiktok": "",
+    "soundcloud": "",
+    "mixcloud": "",
+    "spotify": "",
+    "youtube": "",
+    "created_at": "2026-05-22T20:45:20.747Z",
+    "updated_at": "2026-05-24T20:58:38.827Z",
+    "genres": [
+      12,
+      20,
+      15,
+      19,
+      16,
+      1,
+      18,
+      13,
+      6,
+      9,
+      3,
+      5,
+      4,
+      17,
+      2,
+      11
+    ],
+    "recommended_partners": []
+  }
+},
+{
+  "model": "talents.talentprofile",
+  "pk": 23,
+  "fields": {
+    "user": [
+      "ramosleon.miguelalejandro"
+    ],
+    "talent_type": "dj",
+    "talent_level": "standard",
+    "stage_name": "Dj Miguel",
+    "tagline": "Buena Vibra",
+    "description": "",
+    "experience_years": 5,
+    "hourly_rate": "50.00",
+    "price_min": null,
+    "price_max": null,
+    "price_currency": "USD",
+    "equipment_own": false,
+    "equipment_description": "",
+    "cover_photo": "",
+    "city": "Panama",
+    "country": "Panama",
+    "latitude": null,
+    "longitude": null,
+    "rating_avg": "0.00",
+    "total_reviews": 0,
+    "total_bookings": 0,
+    "is_featured": true,
+    "is_approved": true,
+    "is_available": true,
+    "experience_level": "beginner",
+    "coverage_radius_km": 50,
+    "onboarding_completed": false,
+    "mood_tags": [],
+    "event_types": [
+      "corporate",
+      "birthday",
+      "cocktail",
+      "club",
+      "launch",
+      "private"
+    ],
+    "languages": [
+      "Español"
+    ],
+    "equipment_brings": [
+      "XDJ-RX2"
+    ],
+    "equipment_not_included": [],
+    "service_zones": [
+      "Todo el pais"
+    ],
+    "travel_fee_extra": "100.00",
+    "website": "",
+    "instagram": "",
+    "tiktok": "",
+    "soundcloud": "",
+    "mixcloud": "",
+    "spotify": "",
+    "youtube": "",
+    "created_at": "2026-05-23T14:29:48.867Z",
+    "updated_at": "2026-05-24T20:58:37.471Z",
+    "genres": [
+      12,
+      19,
+      16,
+      8,
+      1,
+      18,
+      13,
+      6,
+      9,
+      3,
+      4,
+      11,
+      14
+    ],
+    "recommended_partners": []
+  }
+},
+{
+  "model": "talents.talentprofile",
+  "pk": 25,
+  "fields": {
+    "user": [
+      "dianasantana"
+    ],
+    "talent_type": "dj",
+    "talent_level": "standard",
+    "stage_name": "Diana Santana",
+    "tagline": "",
+    "description": "Soy Dj venezolana radicada en Panamá",
+    "experience_years": 0,
+    "hourly_rate": "40.00",
+    "price_min": null,
+    "price_max": null,
+    "price_currency": "USD",
+    "equipment_own": false,
+    "equipment_description": "",
+    "cover_photo": "",
+    "city": "Ciudad de Panamá",
+    "country": "Panamá",
+    "latitude": null,
+    "longitude": null,
+    "rating_avg": "0.00",
+    "total_reviews": 0,
+    "total_bookings": 0,
+    "is_featured": true,
+    "is_approved": true,
+    "is_available": true,
+    "experience_level": "semi_professional",
+    "coverage_radius_km": 50,
+    "onboarding_completed": true,
+    "mood_tags": [],
+    "event_types": [],
+    "languages": [],
+    "equipment_brings": [],
+    "equipment_not_included": [],
+    "service_zones": [],
+    "travel_fee_extra": null,
+    "website": "",
+    "instagram": "",
+    "tiktok": "",
+    "soundcloud": "",
+    "mixcloud": "",
+    "spotify": "",
+    "youtube": "",
+    "created_at": "2026-05-25T00:38:09.368Z",
+    "updated_at": "2026-05-29T17:24:45.361Z",
+    "genres": [
+      12,
+      19,
+      1,
+      9,
+      11
+    ],
+    "recommended_partners": []
+  }
+},
+{
+  "model": "talents.talentmedia",
+  "pk": 5,
+  "fields": {
+    "talent": 17,
+    "media_type": "audio",
+    "file": "",
+    "url": "https://soundcloud.com/showroots-panama/roots-frecuency-04-rubs-dj-alternative",
+    "title": "Alternative Mix",
+    "description": "",
+    "thumbnail": "",
+    "is_cover": false,
+    "order": 0,
+    "created_at": "2026-05-15T00:12:23.343Z"
+  }
+},
+{
+  "model": "talents.talentmedia",
+  "pk": 6,
+  "fields": {
+    "talent": 17,
+    "media_type": "photo",
+    "file": "talents/media/RUBGYMM-2-cropped.jpg",
+    "url": "",
+    "title": "",
+    "description": "",
+    "thumbnail": "",
+    "is_cover": false,
+    "order": 0,
+    "created_at": "2026-05-15T00:14:06.868Z"
+  }
+},
+{
+  "model": "talents.talentmedia",
+  "pk": 7,
+  "fields": {
+    "talent": 17,
+    "media_type": "photo",
+    "file": "talents/media/IMG_2812-cropped.jpg",
+    "url": "",
+    "title": "",
+    "description": "",
+    "thumbnail": "",
+    "is_cover": false,
+    "order": 0,
+    "created_at": "2026-05-15T00:14:38.928Z"
+  }
+},
+{
+  "model": "talents.talentmedia",
+  "pk": 8,
+  "fields": {
+    "talent": 17,
+    "media_type": "photo",
+    "file": "talents/media/IMG_9612-cropped.jpg",
+    "url": "",
+    "title": "",
+    "description": "",
+    "thumbnail": "",
+    "is_cover": false,
+    "order": 0,
+    "created_at": "2026-05-15T00:15:01.845Z"
+  }
+},
+{
+  "model": "talents.talentmedia",
+  "pk": 9,
+  "fields": {
+    "talent": 17,
+    "media_type": "audio",
+    "file": "",
+    "url": "https://soundcloud.com/showroots-panama/roadtrip-by-rubs-dj",
+    "title": "Rubs Mix 1",
+    "description": "",
+    "thumbnail": "",
+    "is_cover": false,
+    "order": 0,
+    "created_at": "2026-05-15T00:15:40.185Z"
+  }
+},
+{
+  "model": "talents.talentmedia",
+  "pk": 10,
+  "fields": {
+    "talent": 17,
+    "media_type": "video",
+    "file": "",
+    "url": "https://www.youtube.com/watch?v=_eXiAtQ1Yc4&t=3730s",
+    "title": "Rubs DJ Edición Verano",
+    "description": "",
+    "thumbnail": "",
+    "is_cover": false,
+    "order": 0,
+    "created_at": "2026-05-17T17:44:20.091Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 4,
+  "fields": {
+    "client": [
+      "rubscreative"
+    ],
+    "talent": 17,
+    "partner": null,
+    "booking_type": "directa",
+    "event_type": "corporate",
+    "event_name": "Inauguración de tienda",
+    "event_date": "2026-05-18",
+    "event_time_start": "19:00:00",
+    "event_time_end": "22:00:00",
+    "event_duration_hours": "3.00",
+    "event_location": "Multiplaza",
+    "event_city": "Panama",
+    "event_indoor": true,
+    "guest_count": 80,
+    "description": "Un ambiente chill y elegante para la apertura música deep house",
+    "genre_preference": "Afro House",
+    "additional_services": [
+      {
+        "service": "sound",
+        "details": {
+          "capacity": "medium",
+          "microphone": true,
+          "level": "basic"
+        }
+      },
+      {
+        "service": "lights",
+        "details": {
+          "type": "Ambiental",
+          "purpose": "decorative"
+        }
+      },
+      {
+        "service": "booth",
+        "details": {
+          "type": "Con Pantalla"
+        }
+      },
+      {
+        "service": "microphone",
+        "details": {}
+      }
+    ],
+    "additional_services_notes": "Luces inalámbricas",
+    "expires_at": "2026-05-20T00:08:17.426Z",
+    "client_final_name": "",
+    "client_final_email": "",
+    "client_final_phone": "",
+    "budget": "1000.00",
+    "precio_estimado": "600.00",
+    "quoted_price": null,
+    "deposit_percentage": "50.00",
+    "amount_paid": "0.00",
+    "service_fee": "30.00",
+    "tax_amount": "0.00",
+    "booking_code": "PUL-2026-05-AAGR",
+    "status": "cancelada",
+    "talent_notes": "",
+    "client_notes": "Vestimenta negra",
+    "created_at": "2026-05-18T00:08:17.427Z",
+    "updated_at": "2026-05-18T00:08:17.427Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 5,
+  "fields": {
+    "client": [
+      "rubscreative"
+    ],
+    "talent": 17,
+    "partner": null,
+    "booking_type": "directa",
+    "event_type": "private",
+    "event_name": "Evento privado",
+    "event_date": "2026-05-20",
+    "event_time_start": "19:00:00",
+    "event_time_end": "22:00:00",
+    "event_duration_hours": "3.00",
+    "event_location": "Vía España",
+    "event_city": "Panama",
+    "event_indoor": true,
+    "guest_count": 100,
+    "description": "Una fiesta en un club",
+    "genre_preference": "Reggaetón",
+    "additional_services": [
+      {
+        "service": "sound",
+        "details": {
+          "capacity": "",
+          "microphone": false,
+          "level": "basic"
+        }
+      },
+      {
+        "service": "lights",
+        "details": {
+          "type": "Fiesta",
+          "purpose": "show"
+        }
+      },
+      {
+        "service": "booth",
+        "details": {
+          "type": "Estándar"
+        }
+      }
+    ],
+    "additional_services_notes": "",
+    "expires_at": "2026-05-20T00:10:33.977Z",
+    "client_final_name": "",
+    "client_final_email": "",
+    "client_final_phone": "",
+    "budget": "1000.00",
+    "precio_estimado": "600.00",
+    "quoted_price": null,
+    "deposit_percentage": "50.00",
+    "amount_paid": "0.00",
+    "service_fee": "30.00",
+    "tax_amount": "0.00",
+    "booking_code": "PUL-2026-05-XSRN",
+    "status": "cancelada",
+    "talent_notes": "",
+    "client_notes": "Vestimenta negra y playlist de reggaeton de los 90s retro",
+    "created_at": "2026-05-18T00:10:33.978Z",
+    "updated_at": "2026-05-18T00:10:33.978Z"
+  }
+},
+{
+  "model": "bookings.message",
+  "pk": 4,
+  "fields": {
+    "booking": 4,
+    "sender": [
+      "RubsDJ"
+    ],
+    "content": "Hola gracias por contactarme para el evento",
+    "raw_content": "",
+    "flagged": false,
+    "flagged_categories": [],
+    "file_url": "",
+    "is_read": true,
+    "created_at": "2026-05-18T00:17:03.970Z"
+  }
+},
+{
+  "model": "bookings.message",
+  "pk": 5,
+  "fields": {
+    "booking": 4,
+    "sender": [
+      "rubscreative"
+    ],
+    "content": "Hablemos por wasap seis siete cero ocho cuarenta tres diecisiete",
+    "raw_content": "",
+    "flagged": false,
+    "flagged_categories": [],
+    "file_url": "",
+    "is_read": true,
+    "created_at": "2026-05-18T00:21:55.869Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 17,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "system",
+    "title": "¡Tu perfil fue aprobado!",
+    "message": "Un administrador ha aprobado tu perfil. Ya eres visible en la plataforma.",
+    "link": "/talent/17",
+    "is_read": true,
+    "created_at": "2026-05-15T02:44:56.216Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 19,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "new_request",
+    "title": "Nueva solicitud de reserva",
+    "message": "Luis Miguel quiere reservarte para Inauguración de tienda el 2026-05-18.",
+    "link": "/dashboard/bookings/4",
+    "is_read": true,
+    "created_at": "2026-05-18T00:08:17.434Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 20,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "new_request",
+    "title": "Nueva solicitud de reserva",
+    "message": "Luis Miguel quiere reservarte para Evento privado el 2026-05-20.",
+    "link": "/dashboard/bookings/5",
+    "is_read": false,
+    "created_at": "2026-05-18T00:10:33.985Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 21,
+  "fields": {
+    "user": [
+      "rubscreative"
+    ],
+    "notification_type": "new_message",
+    "title": "Nuevo mensaje",
+    "message": "Ruben Santana Santana te envió un mensaje.",
+    "link": "/dashboard/bookings/4",
+    "is_read": false,
+    "created_at": "2026-05-18T00:17:03.977Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 22,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "new_message",
+    "title": "Nuevo mensaje",
+    "message": "Luis Miguel te envió un mensaje.",
+    "link": "/dashboard/bookings/4",
+    "is_read": true,
+    "created_at": "2026-05-18T00:21:55.876Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 24,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "new_message",
+    "title": "Nueva consulta de Ruben Santana Santana",
+    "message": "Hola quiero contratarte para un evento",
+    "link": "/talent-dashboard",
+    "is_read": true,
+    "created_at": "2026-05-19T00:14:22.019Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 25,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "notification_type": "booking_expired",
+    "title": "Solicitud expirada",
+    "message": "Tu solicitud para benjamin expiró por falta de respuesta.",
+    "link": "/dashboard/bookings/3",
+    "is_read": true,
+    "created_at": "2026-05-19T19:18:05.317Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 27,
+  "fields": {
+    "user": [
+      "rubscreative"
+    ],
+    "notification_type": "booking_expired",
+    "title": "Solicitud expirada",
+    "message": "Tu solicitud para Rubs expiró por falta de respuesta.",
+    "link": "/dashboard/bookings/5",
+    "is_read": false,
+    "created_at": "2026-05-20T00:18:05.307Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 28,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "booking_expired",
+    "title": "Solicitud expirada",
+    "message": "La solicitud de Luis Miguel expiró sin respuesta.",
+    "link": "/dashboard/bookings/5",
+    "is_read": false,
+    "created_at": "2026-05-20T00:18:05.313Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 29,
+  "fields": {
+    "user": [
+      "rubscreative"
+    ],
+    "notification_type": "booking_expired",
+    "title": "Solicitud expirada",
+    "message": "Tu solicitud para Rubs expiró por falta de respuesta.",
+    "link": "/dashboard/bookings/4",
+    "is_read": false,
+    "created_at": "2026-05-20T00:18:05.329Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 30,
+  "fields": {
+    "user": [
+      "RubsDJ"
+    ],
+    "notification_type": "booking_expired",
+    "title": "Solicitud expirada",
+    "message": "La solicitud de Luis Miguel expiró sin respuesta.",
+    "link": "/dashboard/bookings/4",
+    "is_read": false,
+    "created_at": "2026-05-20T00:18:05.335Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 31,
+  "fields": {
+    "user": [
+      "Roeostos"
+    ],
+    "notification_type": "system",
+    "title": "¡Tu perfil fue aprobado!",
+    "message": "Un administrador ha aprobado tu perfil. Ya eres visible en la plataforma.",
+    "link": "/talent/21",
+    "is_read": false,
+    "created_at": "2026-05-22T19:34:13.788Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 32,
+  "fields": {
+    "user": [
+      "Djjuniornava"
+    ],
+    "notification_type": "system",
+    "title": "¡Tu perfil fue aprobado!",
+    "message": "Un administrador ha aprobado tu perfil. Ya eres visible en la plataforma.",
+    "link": "/talent/22",
+    "is_read": true,
+    "created_at": "2026-05-22T20:49:26.838Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 33,
+  "fields": {
+    "user": [
+      "ramosleon.miguelalejandro"
+    ],
+    "notification_type": "system",
+    "title": "¡Tu perfil fue aprobado!",
+    "message": "Un administrador ha aprobado tu perfil. Ya eres visible en la plataforma.",
+    "link": "/talent/23",
+    "is_read": false,
+    "created_at": "2026-05-23T21:49:39.948Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 35,
+  "fields": {
+    "user": [
+      "dianasantana"
+    ],
+    "notification_type": "system",
+    "title": "¡Tu perfil fue aprobado!",
+    "message": "Un administrador ha aprobado tu perfil. Ya eres visible en la plataforma.",
+    "link": "/talent/25",
+    "is_read": false,
+    "created_at": "2026-05-25T00:41:24.343Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 38,
+  "fields": {
+    "user": [
+      "benjaminvelazco.01"
+    ],
+    "notification_type": "system",
+    "title": "✅ Aliado de Producción verificado",
+    "message": "Tu perfil de producción fue aprobado. Ya podés publicar packs.",
+    "link": "/partner",
+    "is_read": false,
+    "created_at": "2026-05-29T21:17:11.860Z"
+  }
+},
+{
+  "model": "bookings.notification",
+  "pk": 39,
+  "fields": {
+    "user": [
+      "rubsantorres"
+    ],
+    "notification_type": "system",
+    "title": "✅ Aliado de Producción verificado",
+    "message": "Tu perfil de producción fue aprobado. Ya podés publicar packs.",
+    "link": "/partner",
+    "is_read": true,
+    "created_at": "2026-05-29T21:17:13.936Z"
+  }
+},
+{
+  "model": "bookings.platformconfig",
+  "pk": 1,
+  "fields": {
+    "standard_commission_rate": "0.2000",
+    "pro_commission_rate": "0.1500",
+    "premium_commission_rate": "0.1200",
+    "partner_commission_rate": "0.3000",
+    "pack_commission_rate": "0.2000",
+    "auto_promote_min_events": 10,
+    "auto_promote_min_rating": "4.50",
+    "cancel_full_refund_days": 7,
+    "cancel_partial_refund_days": 2,
+    "cancel_partial_refund_rate": "0.50",
+    "high_season_months": [],
+    "high_season_surcharge_rate": "0.15",
+    "service_fee_name": "Gestión y garantía",
+    "service_fee_mode": "percentage",
+    "service_fee_rate": "0.0500",
+    "service_fee_small": "12.00",
+    "service_fee_medium": "20.00",
+    "service_fee_large": "25.00",
+    "updated_at": "2026-05-24T22:55:51.234Z"
+  }
+},
+{
+  "model": "bookings.auditlog",
+  "pk": 1,
+  "fields": {
+    "actor": [
+      "admin"
+    ],
+    "action": "talent_approve",
+    "target_type": "partner_production_profile",
+    "target_id": 1,
+    "details": {},
+    "ip_address": null,
+    "created_at": "2026-05-29T16:12:59.809Z"
+  }
+},
+{
+  "model": "bookings.auditlog",
+  "pk": 2,
+  "fields": {
+    "actor": [
+      "admin"
+    ],
+    "action": "talent_approve",
+    "target_type": "partner_production_profile",
+    "target_id": 2,
+    "details": {},
+    "ip_address": null,
+    "created_at": "2026-05-29T21:17:11.866Z"
+  }
+},
+{
+  "model": "bookings.auditlog",
+  "pk": 3,
+  "fields": {
+    "actor": [
+      "admin"
+    ],
+    "action": "talent_approve",
+    "target_type": "partner_production_profile",
+    "target_id": 3,
+    "details": {},
+    "ip_address": null,
+    "created_at": "2026-05-29T21:17:13.942Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionprofile",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "benjaminvelazco.01"
+    ],
+    "categories": [
+      "screens",
+      "lights",
+      "fx"
+    ],
+    "main_city": "Arraiján",
+    "coverage_radius_km": 80,
+    "travel_fee_extra": "345.00",
+    "max_simultaneous_events": 1,
+    "notes": "EJEMPLO",
+    "status": "verified",
+    "submitted_at": "2026-05-29T17:17:59.751Z",
+    "verified_at": "2026-05-29T21:17:11.853Z",
+    "verified_by": [
+      "admin"
+    ],
+    "rejection_reason": "",
+    "onboarding_step": 4,
+    "created_at": "2026-05-29T17:00:40.493Z",
+    "updated_at": "2026-05-29T21:17:11.853Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionprofile",
+  "pk": 3,
+  "fields": {
+    "user": [
+      "rubsantorres"
+    ],
+    "categories": [
+      "sound",
+      "lights",
+      "dj_booth",
+      "fx",
+      "mics"
+    ],
+    "main_city": "Ciudad de Panamá",
+    "coverage_radius_km": 80,
+    "travel_fee_extra": null,
+    "max_simultaneous_events": 3,
+    "notes": "",
+    "status": "verified",
+    "submitted_at": "2026-05-29T21:16:03.125Z",
+    "verified_at": "2026-05-29T21:17:13.930Z",
+    "verified_by": [
+      "admin"
+    ],
+    "rejection_reason": "",
+    "onboarding_step": 4,
+    "created_at": "2026-05-29T21:13:19.696Z",
+    "updated_at": "2026-05-29T21:17:13.930Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 7,
+  "fields": {
+    "profile": 2,
+    "file": "partner/equipment/4c5ac254-8a20-4f5e-aa29-6b11aa6d2b4c_7BU3FZu.jpg",
+    "caption": "",
+    "order": 0,
+    "uploaded_at": "2026-05-29T17:06:53.571Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 8,
+  "fields": {
+    "profile": 2,
+    "file": "partner/equipment/Captura_de_pantalla_2026-02-26_203656_Zi1FFJq.png",
+    "caption": "",
+    "order": 1,
+    "uploaded_at": "2026-05-29T17:06:57.819Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 9,
+  "fields": {
+    "profile": 2,
+    "file": "partner/equipment/Captura_de_pantalla_2026-02-26_204906_WsmBghe.png",
+    "caption": "",
+    "order": 2,
+    "uploaded_at": "2026-05-29T17:07:04.444Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 10,
+  "fields": {
+    "profile": 2,
+    "file": "partner/equipment/Lidotel.PNG",
+    "caption": "",
+    "order": 3,
+    "uploaded_at": "2026-05-29T17:07:10.350Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 11,
+  "fields": {
+    "profile": 3,
+    "file": "partner/equipment/c27cbfb7-e984-4b75-b12d-6881a9a637a7-2.png",
+    "caption": "",
+    "order": 0,
+    "uploaded_at": "2026-05-29T21:14:19.504Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 12,
+  "fields": {
+    "profile": 3,
+    "file": "partner/equipment/2e5fc8e7-1d1f-469b-af1b-f96fba4dfbed.png",
+    "caption": "",
+    "order": 1,
+    "uploaded_at": "2026-05-29T21:14:32.235Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 13,
+  "fields": {
+    "profile": 3,
+    "file": "partner/equipment/ChatGPT_Image_May_6_2026_at_02_07_48_PM.png",
+    "caption": "",
+    "order": 2,
+    "uploaded_at": "2026-05-29T21:14:43.129Z"
+  }
+},
+{
+  "model": "bookings.partnerproductionphoto",
+  "pk": 14,
+  "fields": {
+    "profile": 3,
+    "file": "partner/equipment/PHOTO-2025-10-16-15-29-13.jpg",
+    "caption": "",
+    "order": 3,
+    "uploaded_at": "2026-05-29T21:15:36.253Z"
+  }
+},
+{
+  "model": "bookings.productionpack",
+  "pk": 2,
+  "fields": {
+    "partner": 3,
+    "name": "PACK ESSENTIAL",
+    "category": "sound",
+    "short_description": "Ideal para cumpleaños, rooftops, eventos pequeños y pop-ups Hasta 50 personas",
+    "event_size": "small",
+    "equipment_items": [
+      "• DJ Booth (Negro o blanco)",
+      "• Sonido profesional básico (Bocinas básicas negras en su trípode)",
+      "• Micrófono inalámbrico (1)",
+      "• Iluminación ambiental (4 pares LED alambricas)",
+      "• Montaje, desmontaje y transporte en ciudad"
+    ],
+    "price": "340.00",
+    "currency": "USD",
+    "includes_technician": false,
+    "includes_setup": true,
+    "includes_dj": false,
+    "dj_name": "",
+    "setup_hours_before": 2,
+    "available_days": [],
+    "cover_image": "partner/packs/2e5fc8e7-1d1f-469b-af1b-f96fba4dfbed.png",
+    "status": "published",
+    "rentals_count": 0,
+    "rating_avg": "0.00",
+    "created_at": "2026-05-29T21:20:13.467Z",
+    "updated_at": "2026-05-29T21:22:10.962Z"
+  }
+}
+]

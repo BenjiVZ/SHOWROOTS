@@ -14,7 +14,19 @@
       "Bash(python manage.py makemigrations accounts --empty --name backfill_is_partner_active)",
       "Bash(python manage.py check)",
       "Bash(python manage.py migrate talents)",
-      "Read(//c/Users/PC/Proyectos/frontend/src/views/**)"
+      "Read(//c/Users/PC/Proyectos/frontend/src/views/**)",
+      "Bash(where python *)",
+      "Bash(pip install *)",
+      "Bash(python -c \"import whitenoise; print\\('whitenoise OK', whitenoise.__version__\\)\")",
+      "Bash(python -c \"import whitenoise; from whitenoise.middleware import WhiteNoiseMiddleware; print\\('whitenoise OK'\\)\")",
+      "Bash(python manage.py showmigrations)",
+      "Bash(python -c \"import secrets; print\\(secrets.token_urlsafe\\(64\\)\\)\")",
+      "Bash(python -c \"import secrets, string; alphabet = string.ascii_letters + string.digits; print\\(''.join\\(secrets.choice\\(alphabet\\) for _ in range\\(32\\)\\)\\)\")",
+      "Bash(python manage.py dumpdata --natural-foreign --natural-primary --indent 2 -e contenttypes -e auth.permission -e admin.logentry -e sessions -o pulsar_dump.json)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('pulsar_dump.json'\\)\\); print\\(f'Total objects: {len\\(d\\)}'\\); from collections import Counter; c=Counter\\(o['model'] for o in d\\); [print\\(f'  {m}: {n}'\\) for m,n in c.most_common\\(\\)]\")",
+      "Bash(python -c ' *)",
+      "Bash(ls c:/Users/PC/.claude/projects/c--Users-PC-Proyectos-SHOWROOTS/memory/MEMORY.md 2>&1 || echo \"no MEMORY.md yet\")",
+      "Read(//c/Users/PC/.claude/projects/c--Users-PC-Proyectos-SHOWROOTS/memory/**)"
     ]
   }
 }

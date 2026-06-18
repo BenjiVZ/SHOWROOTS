@@ -1,0 +1,26 @@
+[Unit]
+Description=Pulsar Django (gunicorn)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=notify
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/pulsar/backend
+EnvironmentFile=/home/deploy/pulsar/backend/.env
+ExecStart=/home/deploy/pulsar/backend/venv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/run/pulsar.sock \
+    --access-logfile /home/deploy/logs/gunicorn-access.log \
+    --error-logfile /home/deploy/logs/gunicorn-error.log \
+    --timeout 60 \
+    config.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
