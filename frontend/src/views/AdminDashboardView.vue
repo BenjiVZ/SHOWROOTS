@@ -158,6 +158,105 @@
         </div>
       </section>
 
+      <!-- ═══ Pagos a Proveedores (Payouts) ═══ -->
+      <section v-if="activeTab === 'payouts'" class="tab-panel animate-fade-in">
+        <div class="earnings-grid" style="margin-bottom:var(--space-8)">
+          <div class="earnings-card glass">
+            <h3>Por pagar</h3>
+            <p class="earnings-amount" style="color:var(--color-warning)">${{ payoutStats.pendingAmount.toFixed(2) }}</p>
+            <p class="text-muted" style="font-size:var(--font-size-xs)">{{ payoutStats.pendingCount }} pendientes</p>
+          </div>
+          <div class="earnings-card glass">
+            <h3>Ya pagado</h3>
+            <p class="earnings-amount" style="color:var(--color-success)">${{ payoutStats.paidAmount.toFixed(2) }}</p>
+            <p class="text-muted" style="font-size:var(--font-size-xs)">{{ payoutStats.paidCount }} transferencias</p>
+          </div>
+        </div>
+
+        <div class="filter-bar" style="margin-bottom:var(--space-4); display:flex; gap:var(--space-2); flex-wrap:wrap">
+          <button :class="['chip', { active: payoutFilter === 'pending' }]" @click="payoutFilter = 'pending'">
+            Pendientes ({{ payoutStats.pendingCount }})
+          </button>
+          <button :class="['chip', { active: payoutFilter === 'paid' }]" @click="payoutFilter = 'paid'">
+            Pagados ({{ payoutStats.paidCount }})
+          </button>
+          <button :class="['chip', { active: payoutFilter === 'all' }]" @click="payoutFilter = 'all'">
+            Todos
+          </button>
+        </div>
+
+        <div v-if="!filteredPayouts.length" class="empty-state" style="padding: var(--space-8)">
+          <p style="opacity: 0.6">No hay pagos {{ payoutFilter === 'pending' ? 'pendientes' : payoutFilter === 'paid' ? 'pagados' : '' }}.</p>
+        </div>
+
+        <div v-else class="payouts-list">
+          <div v-for="po in filteredPayouts" :key="po.id" class="payout-card glass">
+            <div class="payout-head">
+              <div>
+                <div class="payout-recipient">
+                  <strong>{{ po.recipient_name }}</strong>
+                  <span class="badge" :class="po.recipient_kind === 'talent' ? 'badge-info' : 'badge-success'">
+                    {{ po.recipient_kind === 'talent' ? 'DJ / Talento' : 'Aliado' }}
+                  </span>
+                </div>
+                <div class="payout-meta">
+                  {{ po.recipient_email }} · Reserva <code>{{ po.booking_code || `#${po.booking}` }}</code>
+                </div>
+              </div>
+              <div class="payout-amount-wrap">
+                <span class="payout-amount">${{ Number(po.amount).toFixed(2) }}</span>
+                <span class="payout-currency">{{ po.currency }}</span>
+              </div>
+            </div>
+            <div v-if="po.notes" class="payout-notes">{{ po.notes }}</div>
+            <div class="payout-actions">
+              <span :class="['badge', po.status === 'paid' ? 'badge-success' : 'badge-warning']">{{ po.status_display || po.status }}</span>
+              <span class="text-muted" style="font-size:var(--font-size-xs)">
+                Creado {{ formatDate(po.created_at) }}
+                <template v-if="po.paid_at"> · Pagado {{ formatDate(po.paid_at) }}</template>
+              </span>
+              <span v-if="po.reference" class="text-muted" style="font-size:var(--font-size-xs)">
+                Ref: <code>{{ po.reference }}</code>
+              </span>
+              <button v-if="po.status === 'pending'" class="btn btn-sm btn-primary" @click="openPayoutModal(po)">
+                Marcar como pagado
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modal: Marcar payout como pagado -->
+      <div v-if="payoutToMark" class="modal-overlay" @click.self="closePayoutModal">
+        <div class="modal glass">
+          <h3>Marcar pago como hecho</h3>
+          <p class="text-muted" style="margin-bottom:var(--space-4)">
+            <strong>{{ payoutToMark.recipient_name }}</strong> · ${{ Number(payoutToMark.amount).toFixed(2) }} USD
+          </p>
+          <div class="form-row">
+            <label>Método</label>
+            <select v-model="payoutForm.method" class="form-input">
+              <option value="bank_transfer">Transferencia bancaria</option>
+              <option value="yappy">Yappy</option>
+              <option value="cash">Efectivo</option>
+              <option value="other">Otro</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Referencia bancaria *</label>
+            <input v-model="payoutForm.reference" class="form-input" placeholder="Ej: TRF-983221" />
+          </div>
+          <div class="form-row">
+            <label>Notas (opcional)</label>
+            <textarea v-model="payoutForm.notes" class="form-input" rows="2" placeholder="Detalles del pago..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closePayoutModal">Cancelar</button>
+            <button class="btn btn-primary" @click="markPayoutPaid">Confirmar pago</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ Disputas ═══ -->
       <section v-if="activeTab === 'disputes'" class="tab-panel animate-fade-in">
         <div v-if="!disputes.length" class="empty-state" style="padding: var(--space-8)">
@@ -380,6 +479,10 @@ const talents = ref([])
 const bookingsData = ref([])
 const users = ref([])
 const payments = ref([])
+const payouts = ref([])
+const payoutFilter = ref('pending')
+const payoutToMark = ref(null)
+const payoutForm = ref({ method: 'bank_transfer', reference: '', notes: '' })
 const talentFilter = ref('all')
 const bookingFilter = ref('all')
 
@@ -544,6 +647,7 @@ const tabs = computed(() => [
   { key: 'bookings', label: 'Reservas', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>' },
   { key: 'users', label: 'Usuarios', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
   { key: 'payments', label: 'Pagos', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' },
+  { key: 'payouts', label: 'Pagos a Proveedores', badge: pendingPayoutsCount.value || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' },
   { key: 'flagged', label: 'Mensajes filtrados', badge: flaggedStats.value?.total_flagged || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>' },
   { key: 'disputes', label: 'Disputas', badge: openDisputesCount.value || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>' },
   { key: 'partners', label: 'Aliados Producción', badge: pendingPartnerProductions.value.length || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>' },
@@ -631,8 +735,55 @@ async function fetchTalents() {
 async function fetchBookings() { try { const { data } = await api.get('/admin/bookings/'); bookingsData.value = data.results || data } catch { /* */ } }
 async function fetchUsers() { try { const { data } = await api.get('/admin/users/'); users.value = data.results || data } catch { /* */ } }
 async function fetchPayments() { try { const { data } = await api.get('/admin/payments/'); payments.value = data.results || data } catch { /* */ } }
+async function fetchPayouts() {
+  try {
+    const { data } = await api.get('/payments/admin/payouts/')
+    payouts.value = Array.isArray(data) ? data : (data.results || [])
+  } catch { /* admin only */ }
+}
 
-onMounted(() => Promise.all([fetchTalents(), fetchBookings(), fetchUsers(), fetchPayments(), fetchFlagged(), fetchDisputes(), fetchPartnerProductions()]))
+const pendingPayoutsCount = computed(() => payouts.value.filter(p => p.status === 'pending').length)
+const filteredPayouts = computed(() => {
+  if (payoutFilter.value === 'all') return payouts.value
+  return payouts.value.filter(p => p.status === payoutFilter.value)
+})
+const payoutStats = computed(() => {
+  const pending = payouts.value.filter(p => p.status === 'pending')
+  const paid = payouts.value.filter(p => p.status === 'paid')
+  return {
+    pendingAmount: pending.reduce((s, p) => s + parseFloat(p.amount || 0), 0),
+    pendingCount: pending.length,
+    paidAmount: paid.reduce((s, p) => s + parseFloat(p.amount || 0), 0),
+    paidCount: paid.length,
+  }
+})
+
+function openPayoutModal(payout) {
+  payoutToMark.value = payout
+  payoutForm.value = { method: 'bank_transfer', reference: '', notes: '' }
+}
+
+function closePayoutModal() {
+  payoutToMark.value = null
+}
+
+async function markPayoutPaid() {
+  if (!payoutToMark.value) return
+  const id = payoutToMark.value.id
+  if (!payoutForm.value.reference) {
+    alert('Pegá la referencia bancaria de la transferencia.')
+    return
+  }
+  try {
+    await api.post(`/payments/admin/payouts/${id}/pay/`, payoutForm.value)
+    await fetchPayouts()
+    closePayoutModal()
+  } catch (e) {
+    alert(e?.response?.data?.detail || 'No se pudo marcar como pagado.')
+  }
+}
+
+onMounted(() => Promise.all([fetchTalents(), fetchBookings(), fetchUsers(), fetchPayments(), fetchPayouts(), fetchFlagged(), fetchDisputes(), fetchPartnerProductions()]))
 </script>
 
 <style scoped>
@@ -939,4 +1090,41 @@ onMounted(() => Promise.all([fetchTalents(), fetchBookings(), fetchUsers(), fetc
   border-radius: 0 6px 6px 0;
 }
 .pp-actions { display: flex; gap: 8px; margin-top: var(--space-3); }
+
+/* ── Payouts (Pagos a Proveedores) ── */
+.payouts-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.payout-card { padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
+.payout-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-2); flex-wrap: wrap; }
+.payout-recipient { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 4px; }
+.payout-meta { font-size: 0.85rem; color: var(--color-text-muted); }
+.payout-amount-wrap { text-align: right; }
+.payout-amount { font-family: var(--font-heading); font-size: var(--font-size-xl); display: block; }
+.payout-currency { font-size: 0.75rem; color: var(--color-text-muted); }
+.payout-notes { background: rgba(255,255,255,0.03); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); margin: var(--space-2) 0; font-size: 0.82rem; color: var(--color-text-muted); }
+.payout-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
+.payout-actions .btn { margin-left: auto; }
+
+.chip {
+  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border);
+  background: transparent; color: var(--color-text-muted);
+  font-size: 0.85rem; cursor: pointer; transition: all var(--transition-fast);
+}
+.chip:hover { color: var(--color-text-primary); }
+.chip.active { background: var(--color-primary); color: var(--color-bg); border-color: var(--color-primary); }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: var(--space-4);
+}
+.modal {
+  background: var(--color-bg-card); border-radius: var(--radius-xl);
+  padding: var(--space-6); max-width: 480px; width: 100%; border: 1px solid var(--color-border);
+}
+.modal h3 { margin-top: 0; }
+.form-row { margin-bottom: var(--space-3); }
+.form-row label { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 4px; }
+.form-input { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary); font-size: 0.9rem; }
+.modal-actions { display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-4); }
+
+.badge-info { background: rgba(59,130,246,0.15); color: #60a5fa; }
 </style>

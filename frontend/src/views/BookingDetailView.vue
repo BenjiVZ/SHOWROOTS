@@ -245,7 +245,18 @@
               <strong>Notas del talento:</strong>
               <p>{{ booking.talent_notes }}</p>
             </div>
-            <router-link :to="`/dashboard/bookings/${booking.id}/pay`" class="btn btn-cta btn-lg btn-go-pay">
+            <router-link
+              :to="{
+                name: 'booking-pay',
+                params: { bookingId: booking.id },
+                query: {
+                  amount: Number(booking.total_to_pay ?? booking.quoted_price ?? booking.precio_estimado ?? 0).toFixed(2),
+                  type: 'full',
+                  code: booking.booking_code || `BK${booking.id}`,
+                },
+              }"
+              class="btn btn-cta btn-lg btn-go-pay"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Ir a pagar con Pulsar Escrow
             </router-link>

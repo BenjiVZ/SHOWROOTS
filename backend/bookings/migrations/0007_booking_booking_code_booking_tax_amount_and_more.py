@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='booking',
             name='booking_code',
-            field=models.CharField(blank=True, db_index=True, help_text='Código público corto para mostrar al cliente', max_length=24),
+            field=models.CharField(blank=True, help_text='Código público corto para mostrar al cliente', max_length=24),
         ),
         # Step 2: backfill códigos en bookings existentes
         migrations.RunPython(backfill_booking_codes, reverse_code=migrations.RunPython.noop),
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='booking',
             name='booking_code',
-            field=models.CharField(blank=True, db_index=True, help_text='Código público corto para mostrar al cliente', max_length=24, unique=True),
+            field=models.CharField(blank=True, help_text='Código público corto para mostrar al cliente', max_length=24, unique=True),
         ),
         migrations.AddField(
             model_name='booking',

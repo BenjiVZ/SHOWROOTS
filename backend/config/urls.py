@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/', include('talents.urls')),
     path('api/', include('bookings.urls')),
     path('api/', include('venues.urls')),
+    path('api/', include('payments.urls')),
     # Admin API
     path('api/admin/talents/', AdminTalentListView.as_view(), name='admin-talents'),
     path('api/admin/talents/<int:pk>/', AdminTalentUpdateView.as_view(), name='admin-talent-update'),

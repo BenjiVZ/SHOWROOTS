@@ -49,9 +49,15 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/dashboard/bookings/:id/pay',
+    path: '/dashboard/bookings/:bookingId/pay',
     name: 'booking-pay',
-    component: () => import('@/views/PaymentView.vue'),
+    component: () => import('@/views/PaymentCheckoutView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/payment/return',
+    name: 'payment-return',
+    component: () => import('@/views/PaymentReturnView.vue'),
     meta: { requiresAuth: true },
   },
   {

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'talents',
     'bookings',
     'venues',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -168,6 +169,9 @@ SIMPLE_JWT = {
 # CORS
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
+    'https://im-pulsar.com',
+    'https://www.im-pulsar.com',
+    'https://api.im-pulsar.com',
     'https://frontend.aplicacionesdamasco.com',
     'http://frontend.aplicacionesdamasco.com',
     'https://backend.aplicacionesdamasco.com',
@@ -180,6 +184,9 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://im-pulsar.com',
+    'https://www.im-pulsar.com',
+    'https://api.im-pulsar.com',
     'https://frontend.aplicacionesdamasco.com',
     'https://backend.aplicacionesdamasco.com',
     'https://3000.masterslogic.com',
@@ -213,6 +220,23 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 
 # Frontend URL for building reset links in emails
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://frontend.aplicacionesdamasco.com')
+
+# ── Paguelofacil (pasarela de pagos) ──
+PAGUELOFACIL_ENV = os.environ.get('PAGUELOFACIL_ENV', 'sandbox')
+PAGUELOFACIL_CCLW = os.environ.get('PAGUELOFACIL_CCLW', '')
+PAGUELOFACIL_ACCESS_TOKEN = os.environ.get('PAGUELOFACIL_ACCESS_TOKEN', '')
+PAGUELOFACIL_RETURN_URL = os.environ.get(
+    'PAGUELOFACIL_RETURN_URL',
+    f'{FRONTEND_URL.rstrip("/")}/payment/return'
+)
+PAGUELOFACIL_WEBHOOK_URL = os.environ.get(
+    'PAGUELOFACIL_WEBHOOK_URL',
+    f'{FRONTEND_URL.rstrip("/")}/api/payments/paguelofacil/webhook/'
+)
+# HMAC-SHA256 del body con este secret debe matchear el header X-Paguelofacil-Signature.
+# Si está vacío y estamos en sandbox: aceptamos sin validar. En prod: warning.
+# Cuando soporte de PFL active el webhook, pedirles el secret y configurarlo acá.
+PAGUELOFACIL_WEBHOOK_SECRET = os.environ.get('PAGUELOFACIL_WEBHOOK_SECRET', '')
 
 # ── Production hardening ──
 # Cuando DEBUG=False (prod) activamos SSL, HSTS, cookies seguras y proxy headers.
