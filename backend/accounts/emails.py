@@ -3,23 +3,50 @@ Pulsar — Email notifications utility.
 
 In dev mode (console backend), emails are printed to the terminal.
 In production, set environment variables for SMTP delivery.
+
+IMPORTANTE: el envío corre en un thread daemon para NO bloquear el request.
+Un SMTP colgado (Gmail lento/caído) antes provocaba 504: el worker de gunicorn
+quedaba bloqueado en socket.connect hasta el timeout y la request moría.
+Ahora el request responde al instante y el email se manda en segundo plano.
 """
+
+import logging
+import threading
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 
+logger = logging.getLogger('pulsar.emails')
+
+
+def _deliver(subject, message_text, recipient_list, html_message):
+    """Envío real — corre dentro de un thread. Nunca propaga excepciones."""
+    try:
+        send_mail(
+            subject=f'Pulsar - {subject}',
+            message=message_text,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list if isinstance(recipient_list, list) else [recipient_list],
+            html_message=html_message,
+            fail_silently=True,
+        )
+    except Exception:
+        logger.exception('Fallo enviando email en background (subject=%s)', subject)
+
 
 def send_pulsar_email(subject, message_text, recipient_list, html_message=None):
-    """Send a branded email. Falls back to text if no HTML."""
-    send_mail(
-        subject=f'Pulsar - {subject}',
-        message=message_text,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=recipient_list if isinstance(recipient_list, list) else [recipient_list],
-        html_message=html_message,
-        fail_silently=True,
-    )
+    """
+    Encola un email para envío en segundo plano (no bloquea el request).
+
+    El backend de consola (dev) es instantáneo, así que igual se manda en thread
+    sin costo. En prod, un SMTP lento ya no puede colgar la request.
+    """
+    threading.Thread(
+        target=_deliver,
+        args=(subject, message_text, recipient_list, html_message),
+        daemon=True,
+    ).start()
 
 
 # Keep legacy alias for backward compatibility

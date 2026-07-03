@@ -202,6 +202,9 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+# Timeout corto: si Gmail no responde en 10s, falla rápido en vez de colgar el worker.
+# Combinado con el envío en thread (accounts/emails.py), un SMTP caído nunca produce 504.
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 10))
 
 # Si el admin define un EMAIL_BACKEND explícito, respetarlo.
 # Si no, usar SMTP cuando hay credenciales (EMAIL_HOST_USER + EMAIL_HOST_PASSWORD),
