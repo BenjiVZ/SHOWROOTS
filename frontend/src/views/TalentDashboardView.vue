@@ -102,7 +102,7 @@
       </Teleport>
 
       <!-- Stats Cards -->
-      <div class="stats-grid">
+      <div class="stats-grid" data-tour="stats">
         <div class="stat-card" v-for="s in statsCards" :key="s.label">
           <div class="stat-icon" :style="{ background: s.bg }">
             <span v-html="s.icon"></span>
@@ -116,7 +116,7 @@
       </div>
 
       <!-- Tab Navigation -->
-      <nav class="dash-tabs">
+      <nav class="dash-tabs" data-tour="tabs">
         <button v-for="t in tabs" :key="t.key" :class="['tab-btn', { active: activeTab === t.key, 'tab-locked': t.locked }]" @click="activeTab = t.key">
           <span v-html="t.icon"></span>
           {{ t.label }}
@@ -322,28 +322,50 @@
 
         <!-- ═══ Calendario ═══ -->
         <section v-if="activeTab === 'calendar'" class="tab-panel animate-fade-in" id="calendar-section" :class="{ 'section-flash': highlightedAnchor === 'calendar-section' }">
+          <!-- Banner instructivo -->
+          <div class="cal-howto">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div>
+              <strong>¿Cómo funciona?</strong> Por defecto estás <b>disponible todos los días</b>.
+              Hacé <b>click en un día</b> para marcar que <b>no</b> estás disponible (bloquearlo).
+              Volvé a hacer click para liberarlo. Los días con reserva confirmada se marcan solos y no se pueden editar.
+            </div>
+          </div>
+
           <div class="calendar-container glass">
             <div class="calendar-header">
-              <button class="btn btn-ghost btn-sm" @click="changeMonth(-1)">← Anterior</button>
-              <h3>{{ monthNames[calMonth] }} {{ calYear }}</h3>
-              <button class="btn btn-ghost btn-sm" @click="changeMonth(1)">Siguiente →</button>
+              <button class="btn btn-ghost btn-sm" @click="changeMonth(-1)" aria-label="Mes anterior">←</button>
+              <div class="cal-header-center">
+                <h3>{{ monthNames[calMonth] }} {{ calYear }}</h3>
+                <button v-if="!isCurrentMonth" class="cal-today-btn" @click="goToday">Hoy</button>
+              </div>
+              <button class="btn btn-ghost btn-sm" @click="changeMonth(1)" aria-label="Mes siguiente">→</button>
             </div>
             <div class="calendar-weekdays">
               <span v-for="d in ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']" :key="d">{{ d }}</span>
             </div>
             <div class="calendar-grid">
               <div v-for="(day, i) in calendarDays" :key="i"
-                :class="['cal-day', { 'other-month': !day.current, booked: day.status === 'booked', blocked: day.status === 'blocked', available: day.status === 'available', today: day.isToday }]"
-                @click="day.current && toggleAvailability(day)">
+                :class="['cal-day', {
+                  'other-month': !day.current,
+                  'is-past': day.isPast,
+                  booked: day.status === 'booked',
+                  blocked: day.status === 'blocked',
+                  available: day.current && !day.isPast && day.status !== 'booked' && day.status !== 'blocked',
+                  today: day.isToday
+                }]"
+                :title="dayTooltip(day)"
+                @click="onDayClick(day)">
                 <span class="day-num">{{ day.day }}</span>
-                <span v-if="day.status === 'booked'" class="day-tag">Reservado</span>
-                <span v-else-if="day.status === 'blocked'" class="day-tag">Bloqueado</span>
+                <span v-if="day.status === 'booked'" class="day-tag">🎉 Reservado</span>
+                <span v-else-if="day.status === 'blocked'" class="day-tag">🚫 No disp.</span>
+                <span v-else-if="day.isToday" class="day-tag day-tag-today">Hoy</span>
               </div>
             </div>
             <div class="calendar-legend">
-              <span class="legend-item"><span class="legend-dot" style="background: var(--color-primary)"></span> Disponible</span>
-              <span class="legend-item"><span class="legend-dot" style="background: var(--color-accent)"></span> Reservado</span>
-              <span class="legend-item"><span class="legend-dot" style="background: var(--color-text-muted)"></span> Bloqueado</span>
+              <span class="legend-item"><span class="legend-box box-available"></span> Disponible <small>(por defecto)</small></span>
+              <span class="legend-item"><span class="legend-box box-blocked"></span> No disponible <small>(vos lo bloqueaste)</small></span>
+              <span class="legend-item"><span class="legend-box box-booked"></span> Reservado <small>(evento confirmado)</small></span>
             </div>
           </div>
         </section>
@@ -1023,6 +1045,14 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Manual de uso / tour guiado (primera vez + botón de ayuda siempre) -->
+    <OnboardingTour
+      ref="tourRef"
+      tour-key="talent-dash-v1"
+      :steps="tourSteps"
+      @navigate="(tab) => { activeTab = tab }"
+    />
   </div>
 </template>
 
@@ -1031,9 +1061,51 @@ import { ref, computed, onMounted, reactive, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import ImageCropper from '@/components/common/ImageCropper.vue'
+import OnboardingTour from '@/components/common/OnboardingTour.vue'
 
 const auth = useAuthStore()
 const activeTab = ref('requests')
+const tourRef = ref(null)
+
+// ── Manual de uso: pasos del tour guiado del dashboard de talento ──
+const tourSteps = [
+  {
+    title: '¡Bienvenido a tu Panel de Talento! 🎧',
+    body: 'Este es tu centro de control en Pulsar. En 30 segundos te muestro lo esencial para conseguir tus primeras reservas.',
+  },
+  {
+    target: '[data-tour="stats"]',
+    title: 'Tus números de un vistazo',
+    body: 'Acá ves tus <strong>solicitudes pendientes</strong>, <strong>reservas activas</strong>, eventos completados y tu <strong>calificación</strong>.',
+  },
+  {
+    target: '[data-tour="tabs"]',
+    title: 'Todo se organiza en pestañas',
+    body: 'Desde acá manejás <strong>Solicitudes</strong>, <strong>Reservas</strong>, <strong>Ingresos</strong>, <strong>Calendario</strong>, <strong>Galería</strong>, <strong>Tarifas</strong> y tu <strong>Perfil</strong>.',
+  },
+  {
+    tab: 'requests',
+    target: '[data-tour="tabs"]',
+    title: 'Solicitudes: respondé rápido',
+    body: 'Cuando un cliente te quiere contratar, la solicitud aparece acá. <strong>Aceptá, rechazá o ajustá el precio</strong>. Responder rápido mejora tu posición en las búsquedas.',
+  },
+  {
+    tab: 'calendar',
+    target: '#calendar-section',
+    title: 'Tu calendario de disponibilidad',
+    body: 'Marcá los días en que <strong>NO</strong> estás disponible. Hacé click en un día para <strong>bloquearlo</strong>; volvé a hacer click para <strong>liberarlo</strong>. Los días con reserva confirmada se marcan solos.',
+  },
+  {
+    tab: 'profile',
+    target: '[data-tour="tabs"]',
+    title: 'Completá tu perfil',
+    body: 'Mientras más completo tu perfil (foto, bio, géneros, tarifas), <strong>más reservas conseguís</strong>. Un perfil completo puede recibir hasta 3× más solicitudes.',
+  },
+  {
+    title: '¿Necesitás repasar? 💡',
+    body: 'Podés reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡Éxitos con tus eventos! 🎉',
+  },
+]
 const bookings = ref([])
 const profile = ref(null)
 const availability = ref([])
@@ -2085,21 +2157,49 @@ const calendarDays = computed(() => {
   const days = []
   const prevMonth = new Date(calYear.value, calMonth.value, 0)
   for (let i = startWeekday - 1; i > 0; i--) {
-    days.push({ day: prevMonth.getDate() - i + 1, current: false, status: null, isToday: false, dateStr: '' })
+    days.push({ day: prevMonth.getDate() - i + 1, current: false, status: null, isToday: false, isPast: false, dateStr: '' })
   }
   const today = new Date()
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const dateStr = `${calYear.value}-${String(calMonth.value + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
     const avail = availability.value.find(a => a.date === dateStr)
     const isToday = today.getFullYear() === calYear.value && today.getMonth() === calMonth.value && today.getDate() === d
-    days.push({ day: d, current: true, status: avail?.status || null, isToday, dateStr })
+    const isPast = new Date(calYear.value, calMonth.value, d) < todayMidnight
+    days.push({ day: d, current: true, status: avail?.status || null, isToday, isPast, dateStr })
   }
   const remaining = 42 - days.length
   for (let i = 1; i <= remaining; i++) {
-    days.push({ day: i, current: false, status: null, isToday: false, dateStr: '' })
+    days.push({ day: i, current: false, status: null, isToday: false, isPast: false, dateStr: '' })
   }
   return days
 })
+
+const isCurrentMonth = computed(() => {
+  const now = new Date()
+  return calMonth.value === now.getMonth() && calYear.value === now.getFullYear()
+})
+
+function goToday() {
+  const now = new Date()
+  calMonth.value = now.getMonth()
+  calYear.value = now.getFullYear()
+  fetchAvailability()
+}
+
+function dayTooltip(day) {
+  if (!day.current) return ''
+  if (day.status === 'booked') return 'Tenés un evento confirmado este día'
+  if (day.isPast) return 'Fecha pasada'
+  if (day.status === 'blocked') return 'Click para marcar que SÍ estás disponible'
+  return 'Click para marcar que NO estás disponible'
+}
+
+function onDayClick(day) {
+  if (!day.current || day.isPast) return
+  if (day.status === 'booked') return  // no editar días con reserva
+  toggleAvailability(day)
+}
 
 function changeMonth(delta) {
   calMonth.value += delta
@@ -2701,23 +2801,42 @@ onMounted(async () => {
 .earnings-sub { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 
 /* Calendar */
+/* Banner instructivo del calendario */
+.cal-howto { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--color-primary-ultra-light, rgba(198,255,0,0.08)); border: 1px solid rgba(198,255,0,0.25); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm); line-height: 1.5; color: var(--color-text-secondary, #c3c8d0); }
+.cal-howto svg { color: var(--color-primary); flex-shrink: 0; margin-top: 2px; }
+.cal-howto strong { color: var(--color-text-primary); }
+.cal-howto b { color: var(--color-primary); font-weight: 600; }
+
 .calendar-container { padding: var(--space-6); border-radius: var(--radius-xl); }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+.cal-header-center { display: flex; align-items: center; gap: var(--space-3); }
 .calendar-header h3 { font-family: var(--font-heading); font-size: var(--font-size-xl); }
+.cal-today-btn { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--color-primary); background: transparent; color: var(--color-primary); font-size: var(--font-size-xs); font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
+.cal-today-btn:hover { background: var(--color-primary); color: #0a0a0a; }
 .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: 600; margin-bottom: var(--space-2); }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); font-size: var(--font-size-sm); cursor: pointer; transition: all var(--transition-fast); border: 1px solid transparent; position: relative; }
-.cal-day:hover { background: rgba(255,255,255,0.05); }
-.cal-day.other-month { opacity: 0.2; pointer-events: none; }
-.cal-day.today { border-color: var(--color-primary); }
-.cal-day.booked { background: var(--color-accent-light); border-color: var(--color-accent); }
-.cal-day.blocked { background: rgba(255,255,255,0.05); border-color: var(--color-text-muted); }
-.cal-day.available { background: var(--color-primary-ultra-light); }
-.day-num { font-weight: 500; }
-.day-tag { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-.calendar-legend { display: flex; gap: var(--space-6); justify-content: center; margin-top: var(--space-4); }
-.legend-item { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-muted); }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radius-md); font-size: var(--font-size-sm); cursor: pointer; transition: all var(--transition-fast); border: 1.5px solid transparent; position: relative; }
+/* Disponible por defecto: verde suave, con hover que invita a bloquear */
+.cal-day.available { background: rgba(198,255,0,0.06); border-color: rgba(198,255,0,0.18); }
+.cal-day.available:hover { background: rgba(255,80,80,0.12); border-color: rgba(255,80,80,0.5); }
+.cal-day.available:hover::after { content: '🚫'; position: absolute; bottom: 3px; font-size: 9px; opacity: 0.7; }
+.cal-day.other-month { opacity: 0.15; pointer-events: none; }
+.cal-day.is-past { opacity: 0.3; pointer-events: none; cursor: default; }
+.cal-day.today { border-color: var(--color-primary); border-width: 2px; }
+.cal-day.booked { background: rgba(198,255,0,0.18); border-color: var(--color-primary); cursor: not-allowed; }
+.cal-day.blocked { background: rgba(255,80,80,0.12); border-color: rgba(255,80,80,0.55); }
+.cal-day.blocked:hover { background: rgba(198,255,0,0.10); border-color: rgba(198,255,0,0.4); }
+.cal-day.blocked:hover::after { content: '✓'; position: absolute; bottom: 3px; font-size: 9px; color: var(--color-primary); }
+.day-num { font-weight: 600; }
+.day-tag { font-size: 8.5px; font-weight: 700; letter-spacing: 0.02em; text-align: center; line-height: 1.1; }
+.day-tag-today { color: var(--color-primary); text-transform: uppercase; }
+.calendar-legend { display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: center; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.legend-item { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-secondary, #c3c8d0); }
+.legend-item small { color: var(--color-text-muted); }
+.legend-box { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid; flex-shrink: 0; }
+.box-available { background: rgba(198,255,0,0.06); border-color: rgba(198,255,0,0.18); }
+.box-blocked { background: rgba(255,80,80,0.12); border-color: rgba(255,80,80,0.55); }
+.box-booked { background: rgba(198,255,0,0.18); border-color: var(--color-primary); }
 
 /* Profile Form */
 .profile-form { max-width: 800px; }

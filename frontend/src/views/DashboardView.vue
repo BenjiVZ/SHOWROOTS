@@ -39,7 +39,7 @@
       </div>
 
       <!-- Quick Stats — KPIs del cliente -->
-      <div class="stats-grid animate-fade-in-up" style="animation-delay:0.1s">
+      <div class="stats-grid animate-fade-in-up" style="animation-delay:0.1s" data-tour="stats">
         <div class="stat-card glass">
           <div class="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -111,7 +111,7 @@
       </div>
 
       <!-- Filter Tabs -->
-      <div class="tabs animate-fade-in-up" style="animation-delay:0.15s">
+      <div class="tabs animate-fade-in-up" style="animation-delay:0.15s" data-tour="tabs">
         <button v-for="tab in tabs" :key="tab.value" class="tab-btn" :class="{ active: activeTab === tab.value }" @click="activeTab = tab.value">
           {{ tab.label }}
           <span v-if="tab.count" class="tab-count">{{ tab.count }}</span>
@@ -119,7 +119,7 @@
       </div>
 
       <!-- Bookings List -->
-      <div class="bookings-section animate-fade-in-up" style="animation-delay:0.2s">
+      <div class="bookings-section animate-fade-in-up" style="animation-delay:0.2s" data-tour="bookings">
         <div v-if="loading" class="loading-state">
           <div v-for="i in 3" :key="i" class="skeleton" style="height:80px;margin-bottom:var(--space-3);border-radius:var(--radius-lg);"></div>
         </div>
@@ -157,6 +157,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Manual de uso / tour guiado (primera vez + botón de ayuda siempre) -->
+    <OnboardingTour tour-key="client-dash-v1" :steps="tourSteps" />
   </div>
 </template>
 
@@ -165,9 +168,37 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import OnboardingTour from '@/components/common/OnboardingTour.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+
+// ── Manual de uso: pasos del tour del dashboard de cliente ──
+const tourSteps = [
+  {
+    title: '¡Bienvenido a Pulsar! 🎉',
+    body: 'Este es tu panel. Desde acá seguís tus reservas de DJs, músicos y bandas para tus eventos. Te muestro lo básico en 20 segundos.',
+  },
+  {
+    target: '[data-tour="stats"]',
+    title: 'Tu resumen',
+    body: 'Acá ves tus <strong>próximos eventos</strong>, el dinero <strong>en custodia</strong> (protegido hasta que se realice el evento) y tus eventos completados.',
+  },
+  {
+    target: '[data-tour="tabs"]',
+    title: 'Filtrá tus reservas',
+    body: 'Usá estas pestañas para filtrar por estado: <strong>todas, activas, completadas o canceladas</strong>.',
+  },
+  {
+    target: '[data-tour="bookings"]',
+    title: 'Tus reservas',
+    body: 'Cada reserva se abre con un click para ver el detalle, chatear con el talento y <strong>pagar de forma segura</strong>. El dinero queda protegido hasta el día del evento.',
+  },
+  {
+    title: '¿Necesitás repasar? 💡',
+    body: 'Podés reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡A disfrutar tu evento! 🎶',
+  },
+]
 const bookings = ref([])
 const notifications = ref([])
 const unreadCount = ref(0)
