@@ -43,8 +43,16 @@ INSTALLED_APPS = [
     'talents',
     'bookings',
     'venues',
-    'payments',
 ]
+
+# 'payments' se carga sólo si el paquete está presente y no está deshabilitado.
+# Así un deploy sin la carpeta payments/ (o con PAYMENTS_ENABLED=false) arranca
+# igual, en vez de tumbar gunicorn con "No module named 'payments'".
+import importlib.util  # noqa: E402
+_payments_present = importlib.util.find_spec('payments') is not None
+_payments_enabled = os.environ.get('PAYMENTS_ENABLED', 'True').lower() in ('true', '1', 'yes')
+if _payments_present and _payments_enabled:
+    INSTALLED_APPS.append('payments')
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

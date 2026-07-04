@@ -22,7 +22,6 @@ urlpatterns = [
     path('api/', include('talents.urls')),
     path('api/', include('bookings.urls')),
     path('api/', include('venues.urls')),
-    path('api/', include('payments.urls')),
     # Admin API
     path('api/admin/talents/', AdminTalentListView.as_view(), name='admin-talents'),
     path('api/admin/talents/<int:pk>/', AdminTalentUpdateView.as_view(), name='admin-talent-update'),
@@ -30,6 +29,10 @@ urlpatterns = [
     path('api/admin/users/', AdminUserListView.as_view(), name='admin-users'),
     path('api/admin/payments/', AdminPaymentListView.as_view(), name='admin-payments'),
 ]
+
+# Las rutas de 'payments' se montan sólo si la app está instalada (ver settings).
+if 'payments' in settings.INSTALLED_APPS:
+    urlpatterns.insert(5, path('api/', include('payments.urls')))
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
