@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import generics, permissions, status, parsers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +15,7 @@ from .serializers import (
 )
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -340,10 +343,25 @@ class GoogleAuthView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Verify Google token
-        from google.oauth2 import id_token
-        from google.auth.transport import requests as google_requests
         from django.conf import settings
+
+        if not settings.GOOGLE_CLIENT_ID:
+            logger.error('GoogleAuthView: GOOGLE_CLIENT_ID no está configurado en el entorno.')
+            return Response(
+                {'error': 'El inicio de sesión con Google no está configurado en el servidor.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+        # Verify Google token
+        try:
+            from google.oauth2 import id_token
+            from google.auth.transport import requests as google_requests
+        except ImportError:
+            logger.exception('GoogleAuthView: falta la librería google-auth en el servidor.')
+            return Response(
+                {'error': 'El inicio de sesión con Google no está disponible en el servidor.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
 
         try:
             idinfo = id_token.verify_oauth2_token(
