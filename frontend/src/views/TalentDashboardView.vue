@@ -1058,12 +1058,14 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import ImageCropper from '@/components/common/ImageCropper.vue'
 import OnboardingTour from '@/components/common/OnboardingTour.vue'
 
 const auth = useAuthStore()
+const router = useRouter()
 const activeTab = ref('requests')
 const tourRef = ref(null)
 
@@ -2326,7 +2328,15 @@ async function fetchProfile() {
     ;['mood_tags', 'event_types', 'languages', 'equipment_brings', 'equipment_not_included', 'service_zones'].forEach(k => {
       if (!Array.isArray(profileForm[k])) profileForm[k] = []
     })
-  } catch { /* silent */ }
+  } catch (err) {
+    // Talento sin perfil todavía (recién registrado o entró por Google) →
+    // llevarlo al onboarding a completar su información en vez de mostrar un dashboard roto.
+    if (err.response?.status === 404) {
+      router.replace('/talent-onboarding')
+      return
+    }
+    /* otros errores: silent */
+  }
 }
 
 async function fetchAvailability() {

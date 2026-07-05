@@ -771,7 +771,7 @@ async function fetchBundles() {
 
 onMounted(async () => {
   try {
-    const { data } = await api.get('/api/partner/dashboard/')
+    const { data } = await api.get('/partner/dashboard/')
     stats.value = data.stats
     recentBookings.value = data.recent_bookings
   } catch (err) {
