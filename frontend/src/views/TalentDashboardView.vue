@@ -130,7 +130,7 @@
       <div class="tab-content">
 
         <!-- ═══ Solicitudes Pendientes ═══ -->
-        <section v-if="activeTab === 'requests'" class="tab-panel animate-fade-in">
+        <section v-if="activeTab === 'requests'" class="tab-panel animate-fade-in" data-tour="requests">
           <div v-if="pendingRequests.length === 0" class="empty-state-rich">
             <div class="empty-celebration-icon">🎉</div>
             <h3 class="empty-title">{{ profile ? 'Tu perfil está publicado' : '¡Bienvenido a Pulsar!' }}</h3>
@@ -701,7 +701,7 @@
         </section>
 
         <!-- ═══ Editar Perfil ═══ -->
-        <section v-if="activeTab === 'profile'" class="tab-panel animate-fade-in">
+        <section v-if="activeTab === 'profile'" class="tab-panel animate-fade-in" data-tour="profile">
           <!-- Profile status overview (FIX #1) -->
           <div class="profile-status-header">
             <div>
@@ -1087,7 +1087,7 @@ const tourSteps = [
   },
   {
     tab: 'requests',
-    target: '[data-tour="tabs"]',
+    target: '[data-tour="requests"]',
     title: 'Solicitudes: respondé rápido',
     body: 'Cuando un cliente te quiere contratar, la solicitud aparece acá. <strong>Aceptá, rechazá o ajustá el precio</strong>. Responder rápido mejora tu posición en las búsquedas.',
   },
@@ -1099,7 +1099,7 @@ const tourSteps = [
   },
   {
     tab: 'profile',
-    target: '[data-tour="tabs"]',
+    target: '[data-tour="profile"]',
     title: 'Completá tu perfil',
     body: 'Mientras más completo tu perfil (foto, bio, géneros, tarifas), <strong>más reservas conseguís</strong>. Un perfil completo puede recibir hasta 3× más solicitudes.',
   },
