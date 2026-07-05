@@ -712,7 +712,7 @@
 
           <div class="profile-status-grid">
             <div v-for="f in profileFields" :key="f.id" class="profile-status-card" :class="{ locked: f.locked }">
-              <div class="psc-icon" :class="`psc-icon-${f.state}`">{{ f.iconChar }}</div>
+              <div class="psc-icon" :class="`psc-icon-${f.state}`" v-html="f.iconChar"></div>
               <div class="psc-info">
                 <div class="psc-title">{{ f.title }}</div>
                 <div class="psc-desc" :class="{ 'psc-desc-cyan': f.locked }">{{ f.desc }}</div>
@@ -723,7 +723,7 @@
 
           <!-- Tip motivacional -->
           <div class="profile-tip">
-            <span class="profile-tip-emoji">💡</span>
+            <span class="profile-tip-emoji"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0012 2z"/></svg></span>
             <span>
               <strong>Tip:</strong> Los DJs con bio escrita y al menos 1 mix subido reciben
               <strong class="profile-tip-highlight">3× más solicitudes</strong>.
@@ -751,8 +751,9 @@
                 @cropped="onCoverCropped"
                 @cancel="pendingCover = null"
               />
-              <button v-if="coverFile" type="button" class="btn btn-primary btn-sm" style="margin-top: var(--space-3)" @click="uploadCover" :disabled="uploadingCover">
-                {{ uploadingCover ? 'Subiendo...' : '📷 Subir Foto de Portada' }}
+              <button v-if="coverFile" type="button" class="btn btn-primary btn-sm btn-icon-text" style="margin-top: var(--space-3)" @click="uploadCover" :disabled="uploadingCover">
+                <svg v-if="!uploadingCover" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                {{ uploadingCover ? 'Subiendo...' : 'Subir Foto de Portada' }}
               </button>
             </div>
 
@@ -874,7 +875,8 @@
                 <div class="mood-input-wrap">
                   <div v-if="profileForm.equipment_brings && profileForm.equipment_brings.length" class="mood-tag-list">
                     <span v-for="(item, idx) in profileForm.equipment_brings" :key="idx" class="equip-chip equip-chip-yes">
-                      ✓ {{ item }}
+                      <svg class="chip-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {{ item }}
                       <button type="button" class="mood-tag-x" @click="removeEquipBring(idx)" aria-label="Quitar">×</button>
                     </span>
                   </div>
@@ -887,7 +889,8 @@
                 <div class="mood-input-wrap">
                   <div v-if="profileForm.equipment_not_included && profileForm.equipment_not_included.length" class="mood-tag-list">
                     <span v-for="(item, idx) in profileForm.equipment_not_included" :key="idx" class="equip-chip equip-chip-no">
-                      ✕ {{ item }}
+                      <svg class="chip-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      {{ item }}
                       <button type="button" class="mood-tag-x" @click="removeEquipNo(idx)" aria-label="Quitar">×</button>
                     </span>
                   </div>
@@ -901,7 +904,8 @@
                 <div class="mood-input-wrap">
                   <div v-if="profileForm.service_zones && profileForm.service_zones.length" class="mood-tag-list">
                     <span v-for="(zone, idx) in profileForm.service_zones" :key="idx" class="lang-chip">
-                      📍 {{ zone }}
+                      <svg class="chip-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      {{ zone }}
                       <button type="button" class="mood-tag-x" @click="removeZone(idx)" aria-label="Quitar">×</button>
                     </span>
                   </div>
@@ -922,13 +926,13 @@
               <button type="submit" class="btn btn-primary" :disabled="saving">
                 {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
               </button>
-              <span v-if="saveSuccess" class="save-msg">✓ Perfil actualizado</span>
+              <span v-if="saveSuccess" class="save-msg"><svg class="chip-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Perfil actualizado</span>
             </div>
           </form>
 
           <!-- Aliados recomendados (Fase 10) -->
           <div class="recommended-section">
-            <h3>⭐ Aliados de producción recomendados</h3>
+            <h3 class="h3-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Aliados de producción recomendados</h3>
             <p class="form-hint">
               Marcá los Aliados de producción con los que trabajás siempre. Aparecerán primero
               cuando tus clientes agreguen packs a sus reservas.
@@ -949,7 +953,7 @@
               >
                 <div class="recommended-name">{{ vp.full_name }}</div>
                 <div class="recommended-meta">{{ vp.city || '—' }} · {{ (vp.categories || []).length }} categorías</div>
-                <span v-if="recommendedIds.includes(vp.user_id)" class="recommended-check">✓ Recomendado</span>
+                <span v-if="recommendedIds.includes(vp.user_id)" class="recommended-check"><svg class="chip-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Recomendado</span>
               </button>
             </div>
 
@@ -957,7 +961,7 @@
               <button type="button" class="btn btn-outline btn-sm" :disabled="savingRecommended" @click="saveRecommended">
                 {{ savingRecommended ? 'Guardando…' : 'Guardar recomendados' }}
               </button>
-              <span v-if="recommendedSaved" class="save-msg">✓ Guardado</span>
+              <span v-if="recommendedSaved" class="save-msg"><svg class="chip-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Guardado</span>
             </div>
           </div>
         </section>
@@ -979,7 +983,7 @@
             <div class="preview-cover">
               <img :src="profile?.cover_photo || previewPlaceholderCover" alt="Cover" />
               <div class="preview-cover-overlay"></div>
-              <span class="preview-label">👁 Vista previa — Así te ven los clientes</span>
+              <span class="preview-label"><svg class="chip-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Vista previa — Así te ven los clientes</span>
             </div>
 
             <!-- Body -->
@@ -993,7 +997,10 @@
                   <h2>{{ profile?.stage_name || auth.user?.first_name || 'Tu nombre' }}</h2>
                   <div class="preview-badges">
                     <span class="badge">{{ previewTypeLabel }}</span>
-                    <span v-if="profile?.talent_level" class="badge" :class="profile.talent_level === 'premium' ? 'badge-accent' : ''">{{ profile.talent_level === 'premium' ? '⭐ Premium' : 'Standard' }}</span>
+                    <span v-if="profile?.talent_level" class="badge" :class="profile.talent_level === 'premium' ? 'badge-accent' : ''">
+                      <svg v-if="profile.talent_level === 'premium'" class="chip-ico" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      {{ profile.talent_level === 'premium' ? 'Premium' : 'Standard' }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1070,42 +1077,62 @@ const activeTab = ref('requests')
 const tourRef = ref(null)
 
 // ── Manual de uso: pasos del tour guiado del dashboard de talento ──
+const ICON = {
+  headphones: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>',
+  activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  layout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
+  inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  bulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0012 2z"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="9"/></svg>',
+}
+
 const tourSteps = [
   {
-    title: '¡Bienvenido a tu Panel de Talento! 🎧',
+    icon: ICON.headphones,
+    title: 'Bienvenido a tu Panel de Talento',
     body: 'Este es tu centro de control en Pulsar. En 30 segundos te muestro lo esencial para conseguir tus primeras reservas.',
   },
   {
+    icon: ICON.activity,
     target: '[data-tour="stats"]',
     title: 'Tus números de un vistazo',
     body: 'Acá ves tus <strong>solicitudes pendientes</strong>, <strong>reservas activas</strong>, eventos completados y tu <strong>calificación</strong>.',
   },
   {
+    icon: ICON.layout,
     target: '[data-tour="tabs"]',
     title: 'Todo se organiza en pestañas',
     body: 'Desde acá manejás <strong>Solicitudes</strong>, <strong>Reservas</strong>, <strong>Ingresos</strong>, <strong>Calendario</strong>, <strong>Galería</strong>, <strong>Tarifas</strong> y tu <strong>Perfil</strong>.',
   },
   {
+    icon: ICON.inbox,
     tab: 'requests',
     target: '[data-tour="requests"]',
     title: 'Solicitudes: respondé rápido',
     body: 'Cuando un cliente te quiere contratar, la solicitud aparece acá. <strong>Aceptá, rechazá o ajustá el precio</strong>. Responder rápido mejora tu posición en las búsquedas.',
   },
   {
+    icon: ICON.calendar,
     tab: 'calendar',
     target: '#calendar-section',
     title: 'Tu calendario de disponibilidad',
     body: 'Marcá los días en que <strong>NO</strong> estás disponible. Hacé click en un día para <strong>bloquearlo</strong>; volvé a hacer click para <strong>liberarlo</strong>. Los días con reserva confirmada se marcan solos.',
   },
   {
+    icon: ICON.user,
     tab: 'profile',
     target: '[data-tour="profile"]',
     title: 'Completá tu perfil',
     body: 'Mientras más completo tu perfil (foto, bio, géneros, tarifas), <strong>más reservas conseguís</strong>. Un perfil completo puede recibir hasta 3× más solicitudes.',
   },
   {
-    title: '¿Necesitás repasar? 💡',
-    body: 'Podés reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡Éxitos con tus eventos! 🎉',
+    icon: ICON.bulb,
+    title: '¿Necesitás repasar?',
+    body: 'Podés reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡Éxitos con tus eventos!',
   },
 ]
 const bookings = ref([])
@@ -1391,7 +1418,7 @@ const profileFields = computed(() => {
   return fields.map(f => ({
     ...f,
     state: f.locked ? 'locked' : f.done ? 'done' : 'pending',
-    iconChar: f.locked ? '🔒' : f.done ? '✓' : '!',
+    iconChar: f.locked ? ICON.lock : f.done ? ICON.check : ICON.alert,
   }))
 })
 
@@ -2442,9 +2469,17 @@ onMounted(async () => {
   font-size: 0.95rem;
   font-weight: 800;
 }
+.psc-icon :deep(svg), .psc-icon svg { width: 18px; height: 18px; }
 .psc-icon-done { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .psc-icon-pending { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
 .psc-icon-locked { background: rgba(193, 216, 47, 0.15); color: #C1D82F; }
+
+/* Iconos SVG inline alineados con texto (reemplazo de emojis) */
+.chip-ico { vertical-align: -2px; margin-right: 3px; flex-shrink: 0; }
+.h3-icon { display: inline-flex; align-items: center; gap: 8px; }
+.h3-icon svg { color: var(--color-primary); }
+.btn-icon-text { display: inline-flex; align-items: center; gap: 7px; }
+.profile-tip-emoji { display: inline-flex; align-items: center; color: var(--color-primary); }
 .psc-info { flex: 1; min-width: 0; }
 .psc-title {
   color: var(--color-text-primary);

@@ -33,8 +33,11 @@
       <div class="tour-card" :style="cardStyle" role="dialog" aria-modal="true">
         <div class="tour-card-head">
           <span class="tour-step-count">Paso {{ index + 1 }} de {{ steps.length }}</span>
-          <button class="tour-close" @click="skip" aria-label="Cerrar">✕</button>
+          <button class="tour-close" @click="skip" aria-label="Cerrar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
+        <div v-if="current.icon" class="tour-icon" v-html="current.icon"></div>
         <h3 class="tour-title">{{ current.title }}</h3>
         <p class="tour-body" v-html="current.body"></p>
         <div class="tour-progress">
@@ -276,6 +279,18 @@ defineExpose({ start })
   border-radius: 6px;
 }
 .tour-close:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.tour-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(198, 255, 0, 0.12);
+  color: var(--color-primary, #c6ff00);
+  margin-bottom: 12px;
+}
+.tour-icon :deep(svg) { width: 24px; height: 24px; }
 .tour-title {
   margin: 0 0 8px;
   font-size: 1.15rem;
