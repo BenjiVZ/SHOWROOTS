@@ -8,6 +8,7 @@ python-decouple>=3.8
 python-dotenv>=1.0
 apscheduler>=3.10
 google-auth>=2.47
+requests>=2.31
 
 # Production
 gunicorn>=22.0
