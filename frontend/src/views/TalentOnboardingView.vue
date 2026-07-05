@@ -212,7 +212,8 @@
               </div>
               <div class="form-group">
                 <label>País</label>
-                <input v-model="form.country" type="text" class="onboard-input" placeholder="Panamá" />
+                <input :value="form.country" type="text" class="onboard-input onboard-input--locked" readonly disabled aria-readonly="true" />
+                <span class="field-hint">🔒 Pulsar opera únicamente en Panamá.</span>
               </div>
             </div>
 
@@ -808,6 +809,8 @@ const mobileStepSubtitle = computed(() => stepSubtitles[currentStep.value] || ''
 .onboard-input { padding: 14px 16px; background: var(--color-bg-card); border: 1.5px solid var(--color-border); border-radius: 12px; color: var(--color-text-primary); font-size: 0.95rem; font-family: inherit; transition: all 0.25s; outline: none; width: 100%; }
 .onboard-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(193,216,47,0.08); }
 .onboard-input::placeholder { color: var(--color-text-muted); }
+.onboard-input--locked { opacity: 0.75; cursor: not-allowed; background: var(--color-bg); border-style: dashed; }
+.field-hint { display: block; margin-top: 6px; font-size: 0.8rem; color: var(--color-text-muted); }
 
 select.onboard-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.5)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; cursor: pointer; }
 select.onboard-input option { background: #1a1a1a; color: #fff; padding: 12px; }
