@@ -2349,7 +2349,12 @@ async function fetchAvailability() {
 
 onMounted(async () => {
   loading.value = true
-  await Promise.all([fetchBookings(), fetchProfile(), fetchGenres()])
+  // 1) Cargar el perfil PRIMERO. Si el talento no tiene perfil, fetchProfile
+  //    redirige al onboarding y cortamos acá (evita 404 en cascada).
+  await fetchProfile()
+  if (!profile.value) { loading.value = false; return }
+  // 2) Ya hay perfil → cargar el resto del dashboard.
+  await Promise.all([fetchBookings(), fetchGenres()])
   await Promise.all([
     fetchAvailability(), fetchMedia(), fetchPacks(), fetchFaqs(),
     fetchPremiumInvitation(), fetchTierLimits(), fetchPayout(),
