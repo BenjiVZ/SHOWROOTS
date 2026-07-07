@@ -22,8 +22,10 @@ start "ShowRoots-Frontend" cmd /c "cd /d %~dp0frontend && npm run dev -- --port 
 timeout /t 2 /nobreak > nul
 
 :: ---- Scheduler: Tareas periodicas ----
-echo [3/3] Iniciando Scheduler de tareas periodicas...
-start "ShowRoots-Scheduler" cmd /c "cd /d %~dp0backend && python manage.py run_scheduler"
+:: DESACTIVADO en local — solo corre en produccion (droplet).
+:: Si querés reactivarlo en tu PC, descomenta las 2 lineas de abajo.
+:: echo [3/3] Iniciando Scheduler de tareas periodicas...
+:: start "ShowRoots-Scheduler" cmd /c "cd /d %~dp0backend && python manage.py run_scheduler"
 
 echo.
 echo ============================================
@@ -32,7 +34,7 @@ echo   Frontend:  http://localhost:3001
 echo   Dominios:
 echo     backend.aplicacionesdamasco.com -> :3000
 echo     frontend.aplicacionesdamasco.com -> :3001
-echo   Scheduler: Activo (expiracion + recordatorios)
+echo   Scheduler: DESACTIVADO en local (solo prod)
 echo ============================================
 echo.
 echo Tres servicios iniciados en ventanas separadas.

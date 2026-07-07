@@ -16,7 +16,7 @@ class User(AbstractUser):
     avatar = models.ImageField('Foto de perfil', upload_to='avatars/', blank=True, null=True)
     phone = models.CharField('Teléfono', max_length=20, blank=True)
     city = models.CharField('Ciudad', max_length=100, blank=True)
-    country = models.CharField('País', max_length=50, default='Venezuela')
+    country = models.CharField('País', max_length=50, default='Panamá')
     bio = models.TextField('Biografía', blank=True)
     is_verified = models.BooleanField('Verificado', default=False)
     # ── Roles secundarios (multi-rol simultáneo) ──

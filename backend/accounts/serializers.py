@@ -55,6 +55,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
+        # País fijo: Pulsar opera en Panamá. No es editable en el registro.
+        validated_data['country'] = 'Panamá'
         user = User(**validated_data)
         user.set_password(password)
         user.save()
