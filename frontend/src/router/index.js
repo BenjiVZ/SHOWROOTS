@@ -22,6 +22,24 @@ const routes = [
     component: () => import('@/views/BookingRequestView.vue'),
   },
   {
+    path: '/open-gig/new',
+    name: 'open-gig-new',
+    component: () => import('@/views/NewOpenGigView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/dashboard/open-gigs',
+    name: 'my-open-gigs',
+    component: () => import('@/views/MyOpenGigsView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/dashboard/open-gigs/:id',
+    name: 'open-gig-detail',
+    component: () => import('@/views/OpenGigDetailView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/venues',
     name: 'venues',
     component: () => import('@/views/VenuesView.vue'),

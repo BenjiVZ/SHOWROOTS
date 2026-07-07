@@ -110,6 +110,23 @@
         </div>
       </div>
 
+      <!-- Solicitudes abiertas (solo clientes / partners) -->
+      <div v-if="!auth.isTalent" class="open-gigs-banner animate-fade-in-up" style="animation-delay:0.14s">
+        <div class="ogb-left">
+          <div class="ogb-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div>
+            <strong>Solicitudes abiertas</strong>
+            <p>Publicá lo que necesitás y los DJs te envían ofertas — Premium primero, después Pro y Standard.</p>
+          </div>
+        </div>
+        <div class="ogb-actions">
+          <router-link to="/dashboard/open-gigs" class="btn btn-ghost btn-sm">Mis solicitudes</router-link>
+          <router-link to="/open-gig/new" class="btn btn-primary btn-sm">Publicar</router-link>
+        </div>
+      </div>
+
       <!-- Filter Tabs -->
       <div class="tabs animate-fade-in-up" style="animation-delay:0.15s" data-tour="tabs">
         <button v-for="tab in tabs" :key="tab.value" class="tab-btn" :class="{ active: activeTab === tab.value }" @click="activeTab = tab.value">
@@ -625,5 +642,27 @@ onMounted(async () => {
   .booking-item { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
   .booking-meta { width: 100%; justify-content: space-between; }
   .tabs { overflow-x: auto; }
+}
+
+/* Banner solicitudes abiertas */
+.open-gigs-banner {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 16px 20px; margin-bottom: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(193, 216, 47, 0.13), rgba(193, 216, 47, 0.03));
+  border: 1px solid rgba(193, 216, 47, 0.32);
+}
+.ogb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.ogb-icon {
+  flex-shrink: 0; width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(193, 216, 47, 0.18); border-radius: 50%; color: var(--color-primary);
+}
+.ogb-left strong { color: var(--color-text-primary); font-size: 0.98rem; }
+.ogb-left p { margin: 3px 0 0; color: var(--color-text-muted); font-size: 0.85rem; line-height: 1.4; }
+.ogb-actions { display: flex; gap: 8px; flex-shrink: 0; }
+@media (max-width: 600px) {
+  .open-gigs-banner { flex-direction: column; align-items: stretch; }
+  .ogb-actions { justify-content: flex-end; }
 }
 </style>

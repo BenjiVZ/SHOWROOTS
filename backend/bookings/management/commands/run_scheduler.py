@@ -190,6 +190,8 @@ class Command(BaseCommand):
     help = 'Inicia el scheduler de tareas periódicas de Pulsar'
 
     def handle(self, *args, **options):
+        from bookings.management.commands.escalate_open_gigs import escalate_open_gigs_job
+
         scheduler = BlockingScheduler()
 
         # Expirar reservas sin respuesta — cada hora
@@ -219,6 +221,15 @@ class Command(BaseCommand):
             replace_existing=True,
         )
 
+        # Escalation de solicitudes abiertas ("Uber para DJs") — cada minuto
+        scheduler.add_job(
+            escalate_open_gigs_job,
+            trigger=IntervalTrigger(minutes=1),
+            id='escalate_open_gigs',
+            name='Escalar visibilidad de solicitudes abiertas por tier',
+            replace_existing=True,
+        )
+
         self.stdout.write(self.style.SUCCESS(
             '\n'
             '============================================\n'
@@ -227,6 +238,7 @@ class Command(BaseCommand):
             '   expire_bookings    -> cada 1 hora        \n'
             '   send_reminders     -> cada 6 horas       \n'
             '   auto_complete      -> cada 12 horas      \n'
+            '   escalate_open_gigs -> cada 1 minuto      \n'
             '============================================\n'
         ))
         self.stdout.write('Scheduler ejecutandose... (Ctrl+C para detener)\n')
@@ -236,6 +248,7 @@ class Command(BaseCommand):
         expire_bookings_job()
         send_reminders_job()
         auto_complete_bookings_job()
+        escalate_open_gigs_job()
         self.stdout.write(self.style.SUCCESS('Tareas iniciales completadas\n'))
 
         try:

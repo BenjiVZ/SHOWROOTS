@@ -143,6 +143,23 @@
 
         <p class="results-count" v-if="!loading">{{ totalCount }} resultados encontrados</p>
 
+        <!-- Banner: publicar solicitud abierta -->
+        <router-link to="/open-gig/new" class="open-gig-banner">
+          <div class="ogb-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <div class="ogb-text">
+            <strong>¿No sabés a quién elegir?</strong>
+            <span>Publicá tu solicitud y los DJs te enviarán ofertas — Premium primero, después Pro y Standard.</span>
+          </div>
+          <span class="ogb-cta">
+            Publicar
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </router-link>
+
         <!-- Loading skeleton -->
         <div v-if="loading" class="talents-grid">
           <div v-for="i in 6" :key="i" class="skeleton-card">
@@ -594,5 +611,45 @@ onMounted(async () => {
   .filters-sidebar {
     position: static;
   }
+}
+
+/* Banner de solicitud abierta */
+.open-gig-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin: 16px 0 24px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(193, 216, 47, 0.14), rgba(193, 216, 47, 0.04));
+  border: 1px solid rgba(193, 216, 47, 0.35);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.open-gig-banner:hover {
+  transform: translateY(-1px);
+  border-color: rgba(193, 216, 47, 0.6);
+}
+.ogb-icon {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(193, 216, 47, 0.18);
+  border-radius: 50%;
+  color: #C1D82F;
+}
+.ogb-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ogb-text strong { color: var(--color-text, #fff); font-size: 0.98rem; }
+.ogb-text span { color: var(--color-text-muted, #cfcfcf); font-size: 0.85rem; line-height: 1.4; }
+.ogb-cta {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #C1D82F; color: #0d0d0d;
+  padding: 8px 14px; border-radius: 999px;
+  font-weight: 700; font-size: 0.85rem;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .open-gig-banner { flex-direction: column; text-align: center; }
 }
 </style>

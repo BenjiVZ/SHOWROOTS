@@ -219,6 +219,50 @@
           </div>
         </section>
 
+        <!-- ═══ Solicitudes abiertas ("Uber para DJs") ═══ -->
+        <section v-if="activeTab === 'open_gigs'" class="tab-panel animate-fade-in">
+          <div class="og-hero">
+            <div class="og-hero-icon">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div>
+              <h3 style="margin:0;color:#fff">Solicitudes abiertas</h3>
+              <p style="margin:4px 0 0;color:var(--color-text-muted);font-size:0.9rem;">
+                Publicaciones de clientes que buscan un DJ. Los <strong>Premium</strong> las ven al instante,
+                los <strong>Pro</strong> a los 3 min y los <strong>Standard</strong> a los 6 min. Enviá tu oferta rápido.
+              </p>
+            </div>
+          </div>
+
+          <div v-if="!openGigs.length" class="empty-state" style="padding:40px 20px;text-align:center;color:var(--color-text-muted)">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <p style="margin-top:8px">No hay solicitudes abiertas disponibles para vos ahora mismo.</p>
+            <p style="font-size:0.85rem">Volvé más tarde — te avisamos por email cuando llegue una nueva.</p>
+          </div>
+
+          <div v-else class="og-list">
+            <router-link v-for="g in openGigs" :key="g.id"
+              :to="{ name: 'open-gig-detail', params: { id: g.id } }"
+              class="og-card">
+              <div class="og-card-head">
+                <h4 style="margin:0;color:#fff">{{ g.event_name || g.event_type_display }}</h4>
+                <span v-if="g.my_offer_id" class="og-mine-badge">Ya ofertaste</span>
+              </div>
+              <div class="og-meta">
+                <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg> {{ g.event_date }}</span>
+                <span>🕐 {{ g.event_time_start }} · {{ g.event_duration_hours }}h</span>
+                <span>📍 {{ g.event_city || 'Panamá' }}</span>
+                <span v-if="g.guest_count">👥 {{ g.guest_count }} invitados</span>
+                <span v-if="g.budget">💰 USD {{ g.budget }}</span>
+              </div>
+              <div class="og-footer">
+                <span class="og-offers">{{ g.offers_count }} oferta{{ g.offers_count === 1 ? '' : 's' }}</span>
+                <span class="og-cta">{{ g.my_offer_id ? 'Ver mi oferta' : 'Ofertar' }} ›</span>
+              </div>
+            </router-link>
+          </div>
+        </section>
+
         <!-- ═══ Mis Reservas ═══ -->
         <section v-if="activeTab === 'bookings'" class="tab-panel animate-fade-in">
           <div v-if="allBookings.length === 0" class="empty-state">
@@ -1136,6 +1180,14 @@ const tourSteps = [
   },
 ]
 const bookings = ref([])
+const openGigs = ref([])
+
+async function fetchOpenGigs() {
+  try {
+    const { data } = await api.get('/open-gigs/available/')
+    openGigs.value = Array.isArray(data) ? data : (data.results || [])
+  } catch { openGigs.value = [] }
+}
 const profile = ref(null)
 const availability = ref([])
 const loading = ref(true)
@@ -2126,6 +2178,7 @@ const pendingEarnings = computed(() => bookings.value.filter(b => ['confirmada',
 
 const tabs = computed(() => [
   { key: 'requests', label: 'Solicitudes', badge: pendingRequests.value.length || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' },
+  { key: 'open_gigs', label: 'Solicitudes abiertas', badge: openGigs.value.length || null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
   { key: 'bookings', label: 'Reservas', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>' },
   { key: 'earnings', label: 'Ingresos', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' },
   { key: 'calendar', label: 'Calendario', badge: null, icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
@@ -2385,7 +2438,7 @@ onMounted(async () => {
   await Promise.all([
     fetchAvailability(), fetchMedia(), fetchPacks(), fetchFaqs(),
     fetchPremiumInvitation(), fetchTierLimits(), fetchPayout(),
-    fetchVerifiedPartners(), fetchMyRecommended(),
+    fetchVerifiedPartners(), fetchMyRecommended(), fetchOpenGigs(),
   ])
   loading.value = false
 })
@@ -3902,4 +3955,47 @@ onMounted(async () => {
   .preview-avatar { width: 64px; height: 64px; }
   .preview-stats { flex-direction: column; }
 }
+
+/* Solicitudes abiertas ("Uber para DJs") */
+.og-hero {
+  display: flex; gap: 16px; align-items: center;
+  background: linear-gradient(135deg, rgba(193, 216, 47, 0.13), rgba(193, 216, 47, 0.04));
+  border: 1px solid rgba(193, 216, 47, 0.32);
+  border-radius: var(--radius-xl); padding: 18px 20px; margin-bottom: 18px;
+}
+.og-hero-icon {
+  flex-shrink: 0; width: 54px; height: 54px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(193, 216, 47, 0.18); color: #C1D82F;
+}
+.og-list { display: grid; gap: 12px; }
+.og-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--color-bg-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl); padding: 16px 20px;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.og-card:hover { transform: translateY(-1px); border-color: var(--color-border-hover); }
+.og-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+.og-mine-badge {
+  font-size: 0.72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(193, 216, 47, 0.16); color: #C1D82F;
+}
+.og-meta {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  color: var(--color-text-muted); font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+.og-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.og-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 10px; border-top: 1px solid var(--color-border);
+}
+.og-offers {
+  font-size: 0.82rem; color: var(--color-text-muted);
+  padding: 4px 12px; border-radius: 999px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--color-border);
+}
+.og-cta { color: #C1D82F; font-weight: 600; font-size: 0.9rem; }
 </style>

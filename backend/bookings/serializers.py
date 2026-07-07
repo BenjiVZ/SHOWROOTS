@@ -6,6 +6,7 @@ from .models import (
     PremiumInvitation, ClientCredit,
     PartnerProductionProfile, PartnerProductionPhoto,
     ProductionPack, BookingPack, PackBundle,
+    OpenGigRequest, GigOffer,
 )
 
 
@@ -500,3 +501,251 @@ class PackBundlePublicSerializer(serializers.ModelSerializer):
             'name': u.get_full_name() or u.username,
             'city': obj.partner.main_city,
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Solicitudes abiertas ("Uber para DJs")
+# ─────────────────────────────────────────────────────────────────────────────
+
+class GigOfferSerializer(serializers.ModelSerializer):
+    # Datos del proveedor (DJ o partner)
+    provider_name = serializers.SerializerMethodField()
+    provider_avatar = serializers.SerializerMethodField()
+    provider_city = serializers.SerializerMethodField()
+    provider_user_id = serializers.SerializerMethodField()
+
+    # DJ-only
+    talent_level = serializers.CharField(source='talent.talent_level', read_only=True)
+    talent_rating = serializers.DecimalField(
+        source='talent.rating_avg', max_digits=3, decimal_places=2, read_only=True
+    )
+    talent_reviews = serializers.IntegerField(source='talent.total_reviews', read_only=True)
+
+    # Pack-only
+    pack_name = serializers.CharField(source='pack.name', read_only=True)
+    pack_id = serializers.IntegerField(source='pack.id', read_only=True)
+
+    # Aliases legacy para no romper el frontend viejo
+    talent_name = serializers.SerializerMethodField()
+    talent_avatar = serializers.SerializerMethodField()
+    talent_city = serializers.SerializerMethodField()
+    talent_user_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GigOffer
+        fields = [
+            'id', 'request', 'offer_kind', 'covers_item',
+            'talent', 'partner', 'pack', 'pack_id', 'pack_name',
+            'provider_name', 'provider_avatar', 'provider_city', 'provider_user_id',
+            'talent_level', 'talent_rating', 'talent_reviews',
+            'talent_name', 'talent_avatar', 'talent_city', 'talent_user_id',
+            'quoted_price', 'message', 'status',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'id', 'request', 'offer_kind', 'talent', 'partner', 'pack',
+            'status', 'created_at', 'updated_at',
+        ]
+
+    def _provider_user(self, obj):
+        if obj.talent_id:
+            return obj.talent.user
+        return obj.partner
+
+    def get_provider_name(self, obj):
+        if obj.talent_id:
+            return obj.talent.stage_name
+        if obj.partner_id:
+            u = obj.partner
+            return u.get_full_name() or u.username
+        return ''
+
+    def get_provider_avatar(self, obj):
+        u = self._provider_user(obj)
+        if u and getattr(u, 'avatar', None):
+            try:
+                return u.avatar.url
+            except Exception:
+                return None
+        return None
+
+    def get_provider_city(self, obj):
+        if obj.talent_id:
+            return obj.talent.city
+        return ''
+
+    def get_provider_user_id(self, obj):
+        u = self._provider_user(obj)
+        return u.id if u else None
+
+    # Aliases legacy
+    def get_talent_name(self, obj): return self.get_provider_name(obj)
+    def get_talent_avatar(self, obj): return self.get_provider_avatar(obj)
+    def get_talent_city(self, obj): return self.get_provider_city(obj)
+    def get_talent_user_id(self, obj): return self.get_provider_user_id(obj)
+
+
+class GigOfferCreateSerializer(serializers.ModelSerializer):
+    """
+    Para DJs: envían { quoted_price, message }.
+    Para aliados: envían { quoted_price, message, pack_id (opcional), covers_item }.
+    """
+    pack_id = serializers.IntegerField(required=False, allow_null=True)
+
+    class Meta:
+        model = GigOffer
+        fields = ['quoted_price', 'message', 'pack_id', 'covers_item']
+
+    def validate_quoted_price(self, value):
+        if value is None or value <= 0:
+            raise serializers.ValidationError('El precio debe ser mayor a 0.')
+        return value
+
+    def validate_covers_item(self, value):
+        if not value:
+            return value
+        allowed = {k for k, _ in OpenGigRequest.REQUESTED_ITEM_CHOICES}
+        if value not in allowed:
+            raise serializers.ValidationError(f'Categoría inválida. Debe ser una de: {sorted(allowed)}')
+        return value
+
+
+class OpenGigRequestListSerializer(serializers.ModelSerializer):
+    """Vista compacta — para el feed del DJ/aliado y la lista del cliente."""
+    client_name = serializers.SerializerMethodField()
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+    requested_items_display = serializers.ReadOnlyField()
+    offers_count = serializers.SerializerMethodField()
+    my_offer_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OpenGigRequest
+        fields = [
+            'id', 'client', 'client_name',
+            'event_type', 'event_type_display', 'event_name',
+            'event_date', 'event_time_start', 'event_time_end',
+            'event_duration_hours', 'event_location', 'event_city',
+            'event_indoor', 'guest_count', 'genre_preference',
+            'requested_items', 'requested_items_display',
+            'budget', 'status', 'visible_to_tier',
+            'expires_at', 'created_at',
+            'offers_count', 'my_offer_id',
+        ]
+
+    def get_client_name(self, obj):
+        return obj.client.get_full_name() or obj.client.username
+
+    def get_offers_count(self, obj):
+        return obj.offers.filter(status='pending').count()
+
+    def get_my_offer_id(self, obj):
+        """Devuelve el offer_id del usuario autenticado si ya ofertó."""
+        req = self.context.get('request')
+        if not req or not req.user.is_authenticated:
+            return None
+        talent = getattr(req.user, 'talent_profile', None)
+        if talent:
+            offer = obj.offers.filter(talent=talent).first()
+            if offer:
+                return offer.id
+        # Partner: cualquiera de sus ofertas
+        offer = obj.offers.filter(partner=req.user).first()
+        return offer.id if offer else None
+
+
+class OpenGigRequestDetailSerializer(serializers.ModelSerializer):
+    client_name = serializers.SerializerMethodField()
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+    requested_items_display = serializers.ReadOnlyField()
+    offers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OpenGigRequest
+        fields = [
+            'id', 'client', 'client_name',
+            'event_type', 'event_type_display', 'event_name',
+            'event_date', 'event_time_start', 'event_time_end',
+            'event_duration_hours', 'event_location', 'event_city',
+            'event_indoor', 'guest_count', 'description', 'genre_preference',
+            'requested_items', 'requested_items_display',
+            'additional_services', 'additional_services_notes',
+            'budget', 'status', 'visible_to_tier',
+            'expires_at', 'assigned_booking',
+            'created_at', 'updated_at',
+            'offers',
+        ]
+
+    def get_client_name(self, obj):
+        return obj.client.get_full_name() or obj.client.username
+
+    def get_offers(self, obj):
+        """
+        El cliente ve todas las ofertas de su request.
+        Un DJ solo ve su propia oferta.
+        Un aliado ve sus propias ofertas.
+        """
+        req = self.context.get('request')
+        if not req or not req.user.is_authenticated:
+            return []
+        qs = obj.offers.all().select_related('talent', 'talent__user', 'partner', 'pack')
+        if req.user.id == obj.client_id:
+            return GigOfferSerializer(qs, many=True, context=self.context).data
+        talent = getattr(req.user, 'talent_profile', None)
+        if talent:
+            qs = qs.filter(talent=talent)
+            return GigOfferSerializer(qs, many=True, context=self.context).data
+        # Partner
+        qs = qs.filter(partner=req.user)
+        return GigOfferSerializer(qs, many=True, context=self.context).data
+
+
+class OpenGigRequestCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpenGigRequest
+        fields = [
+            'event_type', 'event_name', 'event_date',
+            'event_time_start', 'event_time_end', 'event_duration_hours',
+            'event_location', 'event_city', 'event_indoor',
+            'guest_count', 'description', 'genre_preference',
+            'requested_items',
+            'additional_services', 'additional_services_notes',
+            'budget',
+        ]
+
+    def validate_requested_items(self, value):
+        if not value:
+            raise serializers.ValidationError('Elegí al menos un ítem (DJ, sonido, luces, etc.).')
+        allowed = {k for k, _ in OpenGigRequest.REQUESTED_ITEM_CHOICES}
+        invalid = [v for v in value if v not in allowed]
+        if invalid:
+            raise serializers.ValidationError(f'Items inválidos: {invalid}. Permitidos: {sorted(allowed)}')
+        # de-duplicar preservando orden
+        seen, out = set(), []
+        for v in value:
+            if v not in seen:
+                seen.add(v)
+                out.append(v)
+        return out
+
+    def create(self, validated_data):
+        from django.utils import timezone
+        from datetime import timedelta
+        from .models import PlatformConfig
+
+        user = self.context['request'].user
+        validated_data['client'] = user
+
+        cfg = PlatformConfig.get_config()
+        pro_delay = getattr(cfg, 'open_gig_pro_delay_minutes', 3) or 3
+        std_delay = getattr(cfg, 'open_gig_standard_delay_minutes', 6) or 6
+        expiry_hours = getattr(cfg, 'open_gig_expiry_hours', 24) or 24
+
+        now = timezone.now()
+        # Si NO se pide DJ, no hay tier staging (los aliados no tienen tiers)
+        needs_dj = 'dj' in (validated_data.get('requested_items') or [])
+        validated_data['visible_to_tier'] = 'premium' if needs_dj else 'all'
+        validated_data['notify_pro_at'] = now + timedelta(minutes=pro_delay) if needs_dj else None
+        validated_data['notify_standard_at'] = now + timedelta(minutes=std_delay) if needs_dj else None
+        validated_data['expires_at'] = now + timedelta(hours=expiry_hours)
+
+        return OpenGigRequest.objects.create(**validated_data)

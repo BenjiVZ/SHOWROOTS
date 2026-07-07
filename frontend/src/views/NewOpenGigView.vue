@@ -1,0 +1,401 @@
+<template>
+  <div class="open-gig-page">
+    <div class="container">
+      <router-link to="/search" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Volver al buscador
+      </router-link>
+
+      <div class="hero-banner">
+        <div class="hero-icon">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Publicá tu solicitud</h1>
+          <p class="hero-sub">
+            Contanos qué necesitás y recibí ofertas de DJs y Aliados de producción.
+            Podés pedir solo un DJ, solo un pack de sonido, un combo completo… lo que quieras.
+          </p>
+        </div>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="form-card">
+        <h2 class="section-title">¿Qué necesitás?</h2>
+        <p class="section-hint">
+          Elegí uno o varios. Recibirás ofertas separadas por cada categoría — podés aceptar
+          un DJ + un pack de luces + uno de sonido, por ejemplo.
+        </p>
+        <div class="form-group">
+          <div class="need-tiles">
+            <button v-for="n in needs" :key="n.value" type="button"
+              class="need-tile" :class="{ selected: form.requested_items.includes(n.value) }"
+              @click="toggleNeed(n.value)">
+              <span class="need-check">
+                <svg v-if="form.requested_items.includes(n.value)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="need-icon" v-html="n.icon"></span>
+              <span class="need-label">{{ n.label }}</span>
+              <span class="need-desc">{{ n.desc }}</span>
+            </button>
+          </div>
+          <p v-if="needsError" class="need-error">Elegí al menos una opción.</p>
+        </div>
+
+        <h2 class="section-title" style="margin-top:24px">Detalles del evento</h2>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de evento *</label>
+          <div class="event-tiles">
+            <button v-for="t in eventTypeTiles" :key="t.value" type="button"
+              class="event-tile" :class="{ selected: form.event_type === t.value }"
+              @click="form.event_type = t.value">
+              <span class="event-tile-icon" v-html="t.icon"></span>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nombre del evento <span class="optional">(opcional)</span></label>
+          <input v-model="form.event_name" type="text" class="form-input" placeholder="Ej: Boda de María y Pedro">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fecha *</label>
+            <input v-model="form.event_date" type="date" class="form-input" :min="minDate" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora inicio *</label>
+            <input v-model="form.event_time_start" type="time" class="form-input" required @change="syncEnd">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duración *</label>
+            <select v-model.number="form.event_duration_hours" class="form-input" @change="syncEnd" required>
+              <option v-for="h in [2,3,4,5,6,8]" :key="h" :value="h">{{ h }} horas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Ubicación *</label>
+            <input v-model="form.event_location" type="text" class="form-input" placeholder="Dirección del evento" required>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Ciudad *</label>
+            <input v-model="form.event_city" type="text" class="form-input" placeholder="Panamá" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Invitados aprox.</label>
+            <input v-model.number="form.guest_count" type="number" class="form-input" placeholder="150" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Espacio</label>
+            <div class="toggle-row">
+              <button type="button" class="toggle-btn" :class="{ active: form.event_indoor }" @click="form.event_indoor = true">Interior</button>
+              <button type="button" class="toggle-btn" :class="{ active: !form.event_indoor }" @click="form.event_indoor = false">Exterior</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Presupuesto <span class="optional">(USD, opcional)</span></label>
+            <input v-model.number="form.budget" type="number" class="form-input" placeholder="500" min="0" step="10">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Género / ambiente</label>
+          <div class="chip-row">
+            <button type="button" v-for="g in genres" :key="g"
+              class="chip" :class="{ active: form.genre_preference === g }"
+              @click="form.genre_preference = g">{{ g }}</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Descripción / requerimientos</label>
+          <textarea v-model="form.description" class="form-input" rows="4"
+            placeholder="Detalles del ambiente que buscás, canciones especiales, requerimientos técnicos…"></textarea>
+        </div>
+
+        <div v-if="error" class="error-msg">{{ error }}</div>
+
+        <div class="cta-row">
+          <button type="button" class="btn btn-ghost" @click="$router.back()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" :disabled="submitting || !isValid">
+            <span v-if="submitting">Publicando…</span>
+            <span v-else>Publicar solicitud</span>
+          </button>
+        </div>
+
+        <p class="fine-print">
+          Si pedís DJ, los Premium reciben la notificación al instante, los Pro a los 3 min y los Standard a los 6.
+          Los Aliados aprobados reciben la notificación al instante. La solicitud expira a las 24 horas.
+        </p>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/api'
+
+const router = useRouter()
+
+const form = reactive({
+  requested_items: ['dj'],   // por defecto solo DJ (comportamiento previo)
+  event_type: '',
+  event_name: '',
+  event_date: '',
+  event_time_start: '',
+  event_time_end: '',
+  event_duration_hours: 4,
+  event_location: '',
+  event_city: 'Panamá',
+  event_indoor: true,
+  guest_count: null,
+  budget: null,
+  description: '',
+  genre_preference: '',
+  additional_services: [],
+})
+
+const submitting = ref(false)
+const error = ref('')
+const needsError = ref(false)
+
+const needs = [
+  { value: 'dj',      label: 'DJ',        desc: 'Un DJ para el evento', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>' },
+  { value: 'sound',   label: 'Sonido',    desc: 'Parlantes, mixer, cableado', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>' },
+  { value: 'lights',  label: 'Luces',     desc: 'Iluminación, láser, moving heads', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' },
+  { value: 'booth',   label: 'DJ Booth',  desc: 'Cabina profesional para el DJ', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>' },
+  { value: 'screens', label: 'Pantallas', desc: 'LED, proyectores, video', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
+  { value: 'other',   label: 'Otro',      desc: 'Micrófonos, FX, otras cosas', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+]
+
+function toggleNeed(v) {
+  const i = form.requested_items.indexOf(v)
+  if (i === -1) form.requested_items.push(v)
+  else form.requested_items.splice(i, 1)
+  needsError.value = false
+}
+
+const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+const genres = ['House', 'Open Format', 'Reggaetón', 'Lounge', 'Afro House', 'Comercial', 'Latin', 'Tech House', 'Otro']
+
+const eventTypeTiles = [
+  { value: 'wedding',    label: 'Boda',        icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="15" r="5"/><circle cx="16" cy="15" r="5"/><path d="M7 9l2-5h6l2 5"/></svg>' },
+  { value: 'corporate',  label: 'Corporativo', icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="12" y1="6" x2="12" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/></svg>' },
+  { value: 'birthday',   label: 'Cumpleaños',  icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8"/><path d="M4 16s1.5-2 4-2 3.5 2 4 2 1.5-2 4-2 4 2 4 2"/><line x1="2" y1="21" x2="22" y2="21"/><line x1="12" y1="4" x2="12" y2="11"/></svg>' },
+  { value: 'private',    label: 'Privado',     icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 11v11"/><path d="M19 3l-7 8-7-8"/><path d="M5 3h14"/></svg>' },
+  { value: 'festival',   label: 'Festival',    icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M12 3L4 20"/><path d="M12 3l8 17"/></svg>' },
+  { value: 'club',       label: 'Club',        icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>' },
+  { value: 'graduation', label: 'Graduación',  icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>' },
+  { value: 'other',      label: 'Otro',        icon: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+]
+
+function syncEnd() {
+  if (!form.event_time_start || !form.event_duration_hours) return
+  const [h, m] = form.event_time_start.split(':').map(Number)
+  const totalMin = h * 60 + m + form.event_duration_hours * 60
+  const eh = Math.floor(totalMin / 60) % 24
+  const em = totalMin % 60
+  form.event_time_end = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`
+}
+
+const isValid = computed(() =>
+  form.requested_items.length > 0 &&
+  form.event_type && form.event_date && form.event_time_start &&
+  form.event_duration_hours && form.event_location && form.event_city
+)
+
+async function handleSubmit() {
+  if (!form.requested_items.length) {
+    needsError.value = true
+    error.value = 'Elegí al menos qué necesitás (DJ, sonido, luces, etc.).'
+    return
+  }
+  if (!isValid.value) {
+    error.value = 'Completá los campos obligatorios.'
+    return
+  }
+  error.value = ''
+  submitting.value = true
+  syncEnd()
+  try {
+    const payload = { ...form }
+    // limpiar nulls
+    if (!payload.budget) delete payload.budget
+    if (!payload.guest_count) delete payload.guest_count
+    const { data } = await api.post('/open-gigs/', payload)
+    router.push({ name: 'open-gig-detail', params: { id: data.id } })
+  } catch (e) {
+    error.value = e?.response?.data?.detail || e?.response?.data?.error || 'No se pudo publicar la solicitud.'
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<style scoped>
+.open-gig-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0a, #0d0d0d);
+  padding: 24px 0 60px;
+  color: #f5f5f5;
+}
+.container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #C1D82F; text-decoration: none; font-weight: 500;
+  margin-bottom: 20px;
+}
+.back-link:hover { text-decoration: underline; }
+
+.hero-banner {
+  display: flex; gap: 20px; align-items: center;
+  background: linear-gradient(135deg, rgba(193, 216, 47, 0.12), rgba(193, 216, 47, 0.04));
+  border: 1px solid rgba(193, 216, 47, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.hero-icon {
+  flex-shrink: 0; width: 72px; height: 72px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(193, 216, 47, 0.15);
+  color: #C1D82F;
+}
+.hero-banner h1 { margin: 0; font-size: 1.7rem; color: #fff; }
+.hero-sub { margin: 6px 0 0; color: #cfcfcf; font-size: 0.95rem; line-height: 1.5; }
+.hero-sub strong { color: #C1D82F; }
+
+.form-card {
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 16px;
+  padding: 28px;
+}
+.section-title { font-size: 1.15rem; margin: 0 0 8px; color: #fff; }
+.section-hint { margin: 0 0 16px; color: #a0a0a0; font-size: 0.88rem; }
+
+.need-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.need-tile {
+  position: relative;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  background: #0d0d0d; border: 1px solid #2a2a2a;
+  border-radius: 12px; padding: 14px 14px 12px;
+  color: #cfcfcf; cursor: pointer; text-align: left;
+  transition: all 0.15s;
+}
+.need-tile:hover { border-color: #4a4a4a; }
+.need-tile.selected { border-color: #C1D82F; background: rgba(193, 216, 47, 0.08); color: #fff; }
+.need-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 1.5px solid #3a3a3a;
+  display: flex; align-items: center; justify-content: center;
+  color: #0d0d0d; background: transparent;
+}
+.need-tile.selected .need-check { background: #C1D82F; border-color: #C1D82F; }
+.need-icon { color: #C1D82F; }
+.need-label { font-weight: 600; font-size: 0.98rem; }
+.need-desc { color: #a0a0a0; font-size: 0.8rem; line-height: 1.3; }
+.need-error { color: #ff8a8a; font-size: 0.85rem; margin: 8px 0 0; }
+
+.form-group { margin-bottom: 18px; }
+.form-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;
+  margin-bottom: 6px;
+}
+.form-label { display: block; font-size: 0.85rem; font-weight: 500; color: #cfcfcf; margin-bottom: 6px; }
+.optional { color: #7a7a7a; font-weight: 400; font-size: 0.8rem; }
+.form-input {
+  width: 100%; box-sizing: border-box;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  color: #f5f5f5;
+  padding: 10px 12px; border-radius: 8px;
+  font-size: 0.92rem;
+  transition: border-color 0.15s;
+}
+.form-input:focus { outline: none; border-color: #C1D82F; }
+textarea.form-input { font-family: inherit; resize: vertical; }
+
+.event-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+.event-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: #0d0d0d; border: 1px solid #2a2a2a;
+  border-radius: 12px; padding: 14px 8px;
+  color: #cfcfcf; font-size: 0.85rem; cursor: pointer;
+  transition: all 0.15s;
+}
+.event-tile:hover { border-color: #4a4a4a; }
+.event-tile.selected { border-color: #C1D82F; background: rgba(193, 216, 47, 0.08); color: #fff; }
+.event-tile-icon { color: #C1D82F; }
+
+.toggle-row { display: flex; gap: 8px; }
+.toggle-btn {
+  flex: 1; background: #0d0d0d; border: 1px solid #2a2a2a;
+  color: #cfcfcf; padding: 10px; border-radius: 8px; cursor: pointer;
+  transition: all 0.15s;
+}
+.toggle-btn.active { border-color: #C1D82F; background: rgba(193, 216, 47, 0.1); color: #fff; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: #0d0d0d; border: 1px solid #2a2a2a; color: #cfcfcf;
+  padding: 7px 14px; border-radius: 999px; font-size: 0.85rem; cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover { border-color: #4a4a4a; }
+.chip.active { border-color: #C1D82F; background: rgba(193, 216, 47, 0.12); color: #C1D82F; }
+
+.error-msg {
+  background: rgba(220, 60, 60, 0.15); border: 1px solid rgba(220, 60, 60, 0.4);
+  color: #ff8a8a; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.cta-row {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 24px; padding-top: 20px; border-top: 1px solid #242424;
+}
+.btn {
+  padding: 11px 22px; border-radius: 999px; font-weight: 600; cursor: pointer;
+  border: 1px solid transparent; font-size: 0.92rem;
+}
+.btn-primary { background: #C1D82F; color: #0d0d0d; }
+.btn-primary:hover:not(:disabled) { background: #d5ef47; }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-ghost { background: transparent; border-color: #2a2a2a; color: #cfcfcf; }
+.btn-ghost:hover { border-color: #4a4a4a; color: #fff; }
+
+.fine-print {
+  margin-top: 14px;
+  color: #7a7a7a; font-size: 0.78rem; text-align: center;
+}
+
+@media (max-width: 600px) {
+  .hero-banner { flex-direction: column; text-align: center; }
+  .form-card { padding: 20px; }
+}
+</style>

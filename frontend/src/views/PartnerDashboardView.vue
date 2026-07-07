@@ -90,8 +90,46 @@
           Tienes <strong>${{ formatMoney(stats.pending_commission) }}</strong> en comisiones pendientes de pago
         </div>
 
+        <!-- ── Solicitudes abiertas (Uber para DJs / packs) ── -->
+        <div v-if="productionProfile?.status === 'verified'" class="section-header" style="margin-top: var(--space-6)">
+          <h2>
+            <svg class="h2-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Solicitudes abiertas
+          </h2>
+          <span v-if="openGigs.length" class="badge">{{ openGigs.length }}</span>
+        </div>
+        <div v-if="productionProfile?.status === 'verified'" class="og-panel">
+          <p v-if="!openGigs.length" class="og-empty">
+            No hay solicitudes abiertas que matcheen tus categorías ahora mismo. Te avisamos por email cuando llegue una.
+          </p>
+          <div v-else class="og-list">
+            <router-link v-for="g in openGigs" :key="g.id"
+              :to="{ name: 'open-gig-detail', params: { id: g.id } }"
+              class="og-card">
+              <div class="og-card-head">
+                <strong>{{ g.event_name || g.event_type_display }}</strong>
+                <span v-if="g.my_offer_id" class="og-mine-badge">Ya ofertaste</span>
+              </div>
+              <div class="og-chips">
+                <span v-for="it in (g.requested_items_display || [])" :key="it.key"
+                  class="og-chip" :class="'need-' + it.key">{{ it.label }}</span>
+              </div>
+              <div class="og-meta">
+                <span>📅 {{ g.event_date }}</span>
+                <span>🕐 {{ g.event_time_start }} · {{ g.event_duration_hours }}h</span>
+                <span>📍 {{ g.event_city || 'Panamá' }}</span>
+                <span v-if="g.budget">💰 USD {{ g.budget }}</span>
+              </div>
+              <div class="og-footer">
+                <span class="og-offers">{{ g.offers_count }} oferta{{ g.offers_count === 1 ? '' : 's' }}</span>
+                <span class="og-cta">{{ g.my_offer_id ? 'Ver' : 'Ofertar' }} ›</span>
+              </div>
+            </router-link>
+          </div>
+        </div>
+
         <!-- ── Packs de Producción ── -->
-        <div class="section-header">
+        <div class="section-header" style="margin-top: var(--space-8)">
           <h2>
             <svg class="h2-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             Mis Packs de Producción
@@ -464,6 +502,14 @@ const recentBookings = ref([])
 const productionProfile = ref(null) // null | {status, categories, ...}
 const packs = ref([])
 const newEquipItem = ref('')
+const openGigs = ref([])
+
+async function fetchOpenGigs() {
+  try {
+    const { data } = await api.get('/open-gigs/available-for-partner/')
+    openGigs.value = Array.isArray(data) ? data : (data.results || [])
+  } catch { openGigs.value = [] }
+}
 
 const SVG_O = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
 const ICON_PACK = `${SVG_O}<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`
@@ -779,7 +825,7 @@ onMounted(async () => {
   }
   await fetchProductionProfile()
   if (productionProfile.value?.status === 'verified') {
-    await Promise.all([fetchPacks(), fetchBundles()])
+    await Promise.all([fetchPacks(), fetchBundles(), fetchOpenGigs()])
   }
   loading.value = false
 })
@@ -1051,6 +1097,7 @@ function goToBooking(id) {
 
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
+  .og-list { grid-template-columns: 1fr !important; }
   .dashboard-header { flex-direction: column; align-items: flex-start; }
 }
 
@@ -1313,6 +1360,48 @@ function goToBooking(id) {
 
 .modal-actions { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-5); }
 .form-error { color: #ef4444; font-size: 0.85rem; margin-top: var(--space-3); }
+
+/* ── Solicitudes abiertas (partner) ── */
+.og-panel { margin-bottom: var(--space-6); }
+.og-empty { color: var(--color-text-muted); font-size: 0.9rem; padding: 14px 18px; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.og-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.og-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--color-bg-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.og-card:hover { transform: translateY(-1px); border-color: var(--color-border-hover); }
+.og-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+.og-card-head strong { color: var(--color-text-primary); font-size: 0.95rem; }
+.og-mine-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 2px 9px;
+  border-radius: 999px; background: rgba(193, 216, 47, 0.16); color: #C1D82F;
+}
+.og-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.og-chip {
+  display: inline-flex; padding: 2px 9px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 600;
+  background: rgba(193, 216, 47, 0.13); color: #C1D82F;
+  border: 1px solid rgba(193, 216, 47, 0.3);
+}
+.og-chip.need-sound   { background: rgba(90, 160, 255, 0.13); color: #a5c6ff; border-color: rgba(165, 198, 255, 0.28); }
+.og-chip.need-lights  { background: rgba(255, 180, 60, 0.15); color: #f5c85c; border-color: rgba(245, 200, 92, 0.28); }
+.og-chip.need-booth   { background: rgba(200, 100, 220, 0.15); color: #d4a5ff; border-color: rgba(212, 165, 255, 0.28); }
+.og-chip.need-screens { background: rgba(90, 220, 190, 0.13); color: #7fddc0; border-color: rgba(127, 221, 192, 0.28); }
+.og-chip.need-other   { background: rgba(180, 180, 180, 0.13); color: #cfcfcf; border-color: rgba(200, 200, 200, 0.2); }
+
+.og-meta {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  color: var(--color-text-muted); font-size: 0.82rem; margin-bottom: 10px;
+}
+.og-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 8px; border-top: 1px solid var(--color-border);
+  font-size: 0.82rem;
+}
+.og-offers { color: var(--color-text-muted); }
+.og-cta { color: #C1D82F; font-weight: 600; }
 
 @media (max-width: 720px) {
   .form-grid { grid-template-columns: 1fr; }

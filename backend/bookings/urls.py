@@ -91,4 +91,16 @@ urlpatterns = [
 
     # Admin Config
     path('admin/config/', views.PlatformConfigView.as_view(), name='platform-config'),
+
+    # Solicitudes abiertas ("Uber para DJs")
+    path('open-gigs/',                            views.OpenGigRequestListCreateView.as_view(), name='open-gigs-list-create'),
+    path('open-gigs/available/',                  views.OpenGigFeedView.as_view(),              name='open-gigs-available'),
+    path('open-gigs/available-for-partner/',      views.OpenGigPartnerFeedView.as_view(),       name='open-gigs-available-partner'),
+    path('open-gigs/<int:pk>/',                   views.OpenGigRequestDetailView.as_view(),     name='open-gigs-detail'),
+    path('open-gigs/<int:pk>/cancel/',            views.OpenGigCancelView.as_view(),            name='open-gigs-cancel'),
+    path('open-gigs/<int:pk>/offers/',            views.GigOfferCreateView.as_view(),           name='open-gigs-offer-create'),
+    path('open-gigs/<int:gig_pk>/offers/<int:offer_pk>/accept/',
+         views.GigOfferAcceptView.as_view(), name='open-gigs-offer-accept'),
+    path('open-gigs/<int:gig_pk>/offers/<int:offer_pk>/reject/',
+         views.GigOfferRejectView.as_view(), name='open-gigs-offer-reject'),
 ]

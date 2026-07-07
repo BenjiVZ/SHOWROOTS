@@ -515,6 +515,12 @@ class Notification(models.Model):
         ('tier_upgrade', 'Subida de Tier'),
         ('premium_invitation', 'Invitación Premium'),
         ('flagged_warning', 'Advertencia de Mensaje'),
+        # Solicitudes abiertas ("Uber para DJs")
+        ('open_gig_available', 'Solicitud Abierta Disponible'),
+        ('open_gig_offer_received', 'Nueva Oferta Recibida'),
+        ('open_gig_offer_accepted', 'Oferta Aceptada'),
+        ('open_gig_offer_rejected', 'Oferta Rechazada'),
+        ('open_gig_expired', 'Solicitud Expirada'),
     ]
 
     user = models.ForeignKey(
@@ -522,7 +528,7 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
         related_name='notifications'
     )
-    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    notification_type = models.CharField(max_length=32, choices=TYPE_CHOICES)
     title = models.CharField(max_length=200)
     message = models.TextField()
     link = models.CharField(max_length=300, blank=True, help_text='URL interna')
@@ -1205,3 +1211,224 @@ class PackBundle(models.Model):
     def discounted_price(self):
         """Precio final con descuento aplicado."""
         return (self.base_price * (Decimal('100') - self.discount_percentage) / Decimal('100')).quantize(Decimal('0.01'))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Solicitudes abiertas ("Uber para DJs")
+# ─────────────────────────────────────────────────────────────────────────────
+
+class OpenGigRequest(models.Model):
+    """
+    Solicitud abierta publicada por un cliente. Los DJs elegibles reciben la
+    notificación de forma escalonada por tier (Premium → Pro → Standard).
+    Cuando el cliente acepta una oferta, se crea un Booking normal y esta
+    request queda en estado 'assigned'.
+    """
+
+    STATUS_CHOICES = [
+        ('open', 'Abierta'),
+        ('assigned', 'Asignada'),
+        ('expired', 'Expirada'),
+        ('cancelled', 'Cancelada'),
+    ]
+
+    VISIBLE_TIER_CHOICES = [
+        ('premium', 'Solo Premium'),
+        ('pro', 'Premium + Pro'),
+        ('all', 'Todos'),
+    ]
+
+    # Catálogo cerrado de "qué necesito"
+    REQUESTED_ITEM_CHOICES = [
+        ('dj',      'DJ'),
+        ('sound',   'Sonido'),
+        ('lights',  'Luces'),
+        ('booth',   'DJ Booth'),
+        ('screens', 'Pantallas'),
+        ('other',   'Otro'),
+    ]
+    PACK_ITEMS = {'sound', 'lights', 'booth', 'screens', 'other'}
+
+    # Autor
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='open_gig_requests'
+    )
+
+    # Qué necesita el cliente (lista de slugs de REQUESTED_ITEM_CHOICES)
+    requested_items = models.JSONField(
+        default=list, blank=True,
+        help_text='Lista de items solicitados: dj, sound, lights, booth, screens, other'
+    )
+
+    # Detalles del evento (espejo de Booking)
+    event_type = models.CharField(max_length=20, choices=Booking.EVENT_TYPE_CHOICES)
+    event_name = models.CharField(max_length=200, blank=True)
+    event_date = models.DateField()
+    event_time_start = models.TimeField()
+    event_time_end = models.TimeField()
+    event_duration_hours = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    event_location = models.CharField(max_length=300)
+    event_city = models.CharField(max_length=100, blank=True)
+    event_indoor = models.BooleanField(default=True)
+    guest_count = models.PositiveIntegerField(default=0)
+    description = models.TextField(blank=True)
+    genre_preference = models.CharField(max_length=100, blank=True)
+
+    # Servicios adicionales (mismo shape que Booking)
+    additional_services = models.JSONField(default=list, blank=True)
+    additional_services_notes = models.TextField(blank=True)
+
+    # Presupuesto (opcional, referencia para los DJs)
+    budget = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+
+    # Escalonamiento
+    visible_to_tier = models.CharField(
+        max_length=10, choices=VISIBLE_TIER_CHOICES, default='premium',
+        help_text='Hasta qué tier ven la solicitud actualmente'
+    )
+    notify_pro_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Momento en que se debe notificar a los Pro'
+    )
+    notify_standard_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Momento en que se debe notificar a los Standard'
+    )
+    pro_notified_at = models.DateTimeField(null=True, blank=True)
+    standard_notified_at = models.DateTimeField(null=True, blank=True)
+
+    # Ciclo de vida
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='open')
+    expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Expiración automática si no se acepta oferta'
+    )
+    assigned_booking = models.ForeignKey(
+        Booking, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='open_gig_source',
+        help_text='Booking creado cuando se aceptó una oferta'
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'open_gig_requests'
+        ordering = ['-created_at']
+        verbose_name = 'Solicitud abierta'
+        verbose_name_plural = 'Solicitudes abiertas'
+        indexes = [
+            models.Index(fields=['status', 'visible_to_tier']),
+            models.Index(fields=['status', 'expires_at']),
+        ]
+
+    def __str__(self):
+        return f"OpenGig #{self.id} — {self.client} ({self.get_status_display()})"
+
+    @property
+    def is_expired(self):
+        if self.status == 'open' and self.expires_at:
+            return timezone.now() > self.expires_at
+        return False
+
+    def tier_visible(self, tier: str) -> bool:
+        """¿Un talento con este tier puede ver la solicitud ahora?"""
+        if self.status != 'open':
+            return False
+        if self.visible_to_tier == 'premium':
+            return tier == 'premium'
+        if self.visible_to_tier == 'pro':
+            return tier in ('premium', 'pro')
+        return True  # 'all'
+
+    @property
+    def needs_dj(self) -> bool:
+        return 'dj' in (self.requested_items or [])
+
+    @property
+    def needs_packs(self) -> bool:
+        return bool(self.PACK_ITEMS & set(self.requested_items or []))
+
+    @property
+    def requested_items_display(self) -> list:
+        """Etiquetas legibles para UI: [{'key': 'dj', 'label': 'DJ'}, ...]"""
+        m = dict(self.REQUESTED_ITEM_CHOICES)
+        return [{'key': k, 'label': m.get(k, k)} for k in (self.requested_items or [])]
+
+
+class GigOffer(models.Model):
+    """
+    Oferta sobre una OpenGigRequest.
+
+    Puede venir de:
+      - Un DJ (talent seteado, offer_kind='dj')
+      - Un Aliado de producción (partner seteado, offer_kind='pack', puede incluir pack FK)
+    """
+
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('accepted', 'Aceptada'),
+        ('rejected', 'Rechazada'),
+        ('withdrawn', 'Retirada'),
+    ]
+
+    KIND_CHOICES = [
+        ('dj',   'DJ'),
+        ('pack', 'Pack de producción'),
+    ]
+
+    request = models.ForeignKey(
+        OpenGigRequest, on_delete=models.CASCADE, related_name='offers'
+    )
+    offer_kind = models.CharField(max_length=6, choices=KIND_CHOICES, default='dj')
+
+    # Uno de los dos debe estar seteado
+    talent = models.ForeignKey(
+        'talents.TalentProfile', on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='gig_offers'
+    )
+    partner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='partner_gig_offers',
+        help_text='Usuario Aliado que oferta un pack'
+    )
+    pack = models.ForeignKey(
+        ProductionPack, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+',
+        help_text='Pack ofrecido por el aliado (opcional)'
+    )
+    # Qué categoría de item cubre la oferta (para ofertas 'pack').
+    # Debe ser uno de OpenGigRequest.REQUESTED_ITEM_CHOICES (sound/lights/booth/screens/other).
+    covers_item = models.CharField(max_length=10, blank=True, default='')
+
+    quoted_price = models.DecimalField(max_digits=10, decimal_places=2)
+    message = models.TextField(blank=True, help_text='Mensaje para el cliente')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'gig_offers'
+        ordering = ['-created_at']
+        verbose_name = 'Oferta'
+        verbose_name_plural = 'Ofertas'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['request', 'talent'], name='unique_offer_per_talent',
+                condition=models.Q(talent__isnull=False),
+            ),
+        ]
+
+    def __str__(self):
+        provider = self.talent or self.partner
+        return f"Oferta #{self.id} ({self.offer_kind}) — {provider} → OpenGig #{self.request_id}"

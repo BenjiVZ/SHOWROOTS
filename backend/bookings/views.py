@@ -6,6 +6,7 @@ from .models import Booking, Payment, Message, Notification, Review, PlatformCon
 from .models import PremiumInvitation, Dispute, AuditLog
 from .models import PartnerProductionProfile, PartnerProductionPhoto
 from .models import ProductionPack, BookingPack, PackBundle
+from .models import OpenGigRequest, GigOffer
 from .serializers import (
     BookingListSerializer, BookingDetailSerializer,
     BookingCreateSerializer, ReviewSerializer,
@@ -17,6 +18,8 @@ from .serializers import (
     PartnerProductionProfileSerializer, PartnerProductionPhotoSerializer,
     ProductionPackSerializer, ProductionPackPublicSerializer, BookingPackSerializer,
     PackBundleSerializer, PackBundlePublicSerializer,
+    OpenGigRequestListSerializer, OpenGigRequestDetailSerializer,
+    OpenGigRequestCreateSerializer, GigOfferSerializer, GigOfferCreateSerializer,
 )
 from django.db.models import Sum, Q, Count
 from decimal import Decimal
@@ -1803,3 +1806,604 @@ class AddBundleToBookingView(APIView):
             'detail': f'Bundle agregado: {len(created)} pack(s) nuevos.',
             'added': BookingPackSerializer(created, many=True, context={'request': request}).data,
         }, status=status.HTTP_201_CREATED)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Solicitudes abiertas ("Uber para DJs")
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Mapeo: item de solicitud → categoría de pack de partner (para matching)
+REQUEST_ITEM_TO_PACK_CATEGORY = {
+    'sound':   ['sound'],
+    'lights':  ['lights'],
+    'booth':   ['dj_booth'],
+    'screens': ['screens'],
+    'other':   ['mics', 'fx', 'sound', 'lights', 'screens', 'dj_booth'],  # any
+}
+
+
+def _notify_talents_for_open_gig(open_gig, tier: str):
+    """
+    Notifica in-app + email a todos los DJs elegibles de un tier específico.
+    No hace nada si la solicitud no pide DJ.
+    """
+    if not open_gig.needs_dj:
+        return
+
+    from talents.models import TalentProfile, Availability
+    from accounts.emails import send_pulsar_email
+    from django.conf import settings
+
+    qs = TalentProfile.objects.filter(
+        talent_level=tier,
+        is_approved=True,
+        is_available=True,
+        user__is_active=True,
+    )
+    if open_gig.event_city:
+        qs = qs.filter(city__iexact=open_gig.event_city)
+
+    # Excluir DJs con booking confirmado o disponibilidad bloqueada en la fecha
+    busy_ids = set(Booking.objects.filter(
+        event_date=open_gig.event_date,
+        status__in=['aceptada', 'pendiente_pago', 'confirmada'],
+    ).values_list('talent_id', flat=True))
+    blocked_ids = set(Availability.objects.filter(
+        date=open_gig.event_date,
+        status__in=['blocked', 'booked'],
+    ).values_list('talent_id', flat=True))
+    qs = qs.exclude(id__in=busy_ids | blocked_ids)
+
+    frontend = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+    link = f'/dashboard/open-gigs/{open_gig.id}'
+
+    for talent in qs.select_related('user'):
+        Notification.objects.create(
+            user=talent.user,
+            notification_type='open_gig_available',
+            title='Nueva solicitud abierta',
+            message=(
+                f'Un cliente publicó una solicitud para {open_gig.get_event_type_display()} '
+                f'el {open_gig.event_date} en {open_gig.event_city or "Panamá"}. '
+                f'Hacé tu oferta antes que otros DJs.'
+            ),
+            link=link,
+        )
+        try:
+            html = (
+                f'<p>Hola {talent.user.first_name or talent.user.username},</p>'
+                f'<p>Un cliente publicó una solicitud para '
+                f'<strong>{open_gig.get_event_type_display()}</strong> el '
+                f'<strong>{open_gig.event_date}</strong> '
+                f'{"en " + open_gig.event_city if open_gig.event_city else ""}.</p>'
+                f'<p><a href="{frontend}{link}" '
+                f'style="background:#C1D82F;color:#0d0d0d;padding:10px 20px;'
+                f'border-radius:6px;text-decoration:none;font-weight:700;">'
+                f'Ver solicitud y ofertar</a></p>'
+                f'<p style="color:#666;font-size:12px;">'
+                f'Recibís esta notificación porque sos DJ {tier.title()} en Pulsar.</p>'
+            )
+            send_pulsar_email(
+                'Nueva solicitud abierta en Pulsar',
+                f'Nueva solicitud de {open_gig.get_event_type_display()} el {open_gig.event_date}. '
+                f'Entrá a {frontend}{link} para ofertar.',
+                [talent.user.email],
+                html_message=html,
+            )
+        except Exception:
+            pass  # no romper si el mail falla
+
+
+def _notify_partners_for_open_gig(open_gig):
+    """
+    Notifica in-app + email a todos los Aliados aprobados que ofrezcan al menos
+    una de las categorías solicitadas. Sin escalonamiento por tier.
+    """
+    if not open_gig.needs_packs:
+        return
+
+    from accounts.emails import send_pulsar_email
+    from django.conf import settings
+
+    # Traducir requested_items a categorías de pack
+    wanted_categories = set()
+    for item in open_gig.requested_items:
+        for cat in REQUEST_ITEM_TO_PACK_CATEGORY.get(item, []):
+            wanted_categories.add(cat)
+    if not wanted_categories:
+        return
+
+    partners_qs = PartnerProductionProfile.objects.filter(
+        status='verified',
+        user__is_active=True,
+    )
+    # Filtro por categorías: JSONField, así que iteramos y matcheamos en memoria.
+    matched = [
+        p for p in partners_qs.select_related('user')
+        if wanted_categories & set(p.categories or [])
+    ]
+
+    frontend = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+    link = f'/dashboard/open-gigs/{open_gig.id}'
+    items_txt = ', '.join(dict(OpenGigRequest.REQUESTED_ITEM_CHOICES).get(i, i) for i in open_gig.requested_items)
+
+    for partner_profile in matched:
+        u = partner_profile.user
+        Notification.objects.create(
+            user=u,
+            notification_type='open_gig_available',
+            title='Nueva solicitud abierta',
+            message=(
+                f'Un cliente busca: {items_txt}. Evento {open_gig.get_event_type_display()} '
+                f'el {open_gig.event_date} en {open_gig.event_city or "Panamá"}.'
+            ),
+            link=link,
+        )
+        try:
+            html = (
+                f'<p>Hola {u.first_name or u.username},</p>'
+                f'<p>Un cliente publicó una solicitud que incluye: <strong>{items_txt}</strong>.</p>'
+                f'<p>Evento: <strong>{open_gig.get_event_type_display()}</strong> el '
+                f'<strong>{open_gig.event_date}</strong> '
+                f'{"en " + open_gig.event_city if open_gig.event_city else ""}.</p>'
+                f'<p><a href="{frontend}{link}" '
+                f'style="background:#C1D82F;color:#0d0d0d;padding:10px 20px;'
+                f'border-radius:6px;text-decoration:none;font-weight:700;">'
+                f'Ver solicitud y ofertar</a></p>'
+            )
+            send_pulsar_email(
+                'Nueva solicitud abierta en Pulsar',
+                f'Solicitud de {items_txt} el {open_gig.event_date}. Entrá a {frontend}{link}.',
+                [u.email],
+                html_message=html,
+            )
+        except Exception:
+            pass
+
+
+class OpenGigRequestListCreateView(generics.ListCreateAPIView):
+    """
+    GET  → lista las solicitudes del cliente autenticado.
+    POST → crea una nueva solicitud abierta (cliente).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        return (
+            OpenGigRequestCreateSerializer if self.request.method == 'POST'
+            else OpenGigRequestListSerializer
+        )
+
+    def get_queryset(self):
+        return OpenGigRequest.objects.filter(client=self.request.user)
+
+    def perform_create(self, serializer):
+        open_gig = serializer.save()
+        # Notificar Premium al instante si se pide DJ, y a todos los aliados si se piden packs
+        if open_gig.needs_dj:
+            _notify_talents_for_open_gig(open_gig, tier='premium')
+        _notify_partners_for_open_gig(open_gig)
+
+
+class OpenGigFeedView(generics.ListAPIView):
+    """Feed para un DJ: solicitudes visibles según su tier actual y que piden DJ."""
+    serializer_class = OpenGigRequestListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        talent = getattr(self.request.user, 'talent_profile', None)
+        if not talent:
+            return OpenGigRequest.objects.none()
+        tier = talent.talent_level
+        visible = ['all']
+        if tier in ('pro', 'premium'):
+            visible.append('pro')
+        if tier == 'premium':
+            visible.append('premium')
+        qs = OpenGigRequest.objects.filter(
+            status='open', visible_to_tier__in=visible,
+        )
+        # Solo las que piden DJ (en Postgres JSONField hay contains lookup)
+        qs = qs.filter(requested_items__contains=['dj'])
+        if talent.city:
+            qs = qs.filter(Q(event_city__iexact=talent.city) | Q(event_city=''))
+        busy = Booking.objects.filter(
+            talent=talent,
+            status__in=['aceptada', 'pendiente_pago', 'confirmada'],
+        ).values_list('event_date', flat=True)
+        qs = qs.exclude(event_date__in=list(busy))
+        return qs.order_by('-created_at')
+
+
+class OpenGigPartnerFeedView(generics.ListAPIView):
+    """
+    Feed para un Aliado: solicitudes abiertas que piden al menos una categoría
+    que el aliado cubre en su producción.
+    """
+    serializer_class = OpenGigRequestListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            profile = PartnerProductionProfile.objects.get(user=user)
+        except PartnerProductionProfile.DoesNotExist:
+            return OpenGigRequest.objects.none()
+        if profile.status != 'verified':
+            return OpenGigRequest.objects.none()
+
+        # Categorías que el aliado ofrece → items de request que puede cubrir
+        my_cats = set(profile.categories or [])
+        my_items = set()
+        for item, cats in REQUEST_ITEM_TO_PACK_CATEGORY.items():
+            if my_cats & set(cats):
+                my_items.add(item)
+        if not my_items:
+            return OpenGigRequest.objects.none()
+
+        qs = OpenGigRequest.objects.filter(status='open')
+        if profile.main_city:
+            qs = qs.filter(Q(event_city__iexact=profile.main_city) | Q(event_city=''))
+
+        # Filtrar en Python: matchear intersección con requested_items
+        ids = [g.id for g in qs if my_items & set(g.requested_items or [])]
+        return OpenGigRequest.objects.filter(id__in=ids).order_by('-created_at')
+
+
+class OpenGigRequestDetailView(generics.RetrieveAPIView):
+    """Detalle de la solicitud + ofertas (filtradas por rol)."""
+    serializer_class = OpenGigRequestDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return OpenGigRequest.objects.select_related('client', 'assigned_booking')
+
+
+class OpenGigCancelView(APIView):
+    """POST /api/open-gigs/<id>/cancel/ — el cliente cancela su solicitud."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            gig = OpenGigRequest.objects.get(pk=pk, client=request.user)
+        except OpenGigRequest.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada.'}, status=404)
+        if gig.status != 'open':
+            return Response({'error': 'Solo se pueden cancelar solicitudes abiertas.'}, status=400)
+        gig.status = 'cancelled'
+        gig.save(update_fields=['status', 'updated_at'])
+        # Rechazar automáticamente ofertas pendientes
+        gig.offers.filter(status='pending').update(status='rejected')
+        return Response({'ok': True, 'status': gig.status})
+
+
+class GigOfferCreateView(APIView):
+    """
+    POST /api/open-gigs/<pk>/offers/
+
+    Un DJ (talent_profile) manda oferta de DJ.
+    Un Aliado (production_profile verificado) manda oferta de pack.
+    El sistema detecta el rol del usuario y crea la oferta correcta.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            gig = OpenGigRequest.objects.get(pk=pk)
+        except OpenGigRequest.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada.'}, status=404)
+
+        if gig.status != 'open':
+            return Response({'error': 'Esta solicitud ya no acepta ofertas.'}, status=400)
+
+        ser = GigOfferCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+
+        talent = getattr(request.user, 'talent_profile', None)
+        partner_profile = None
+        try:
+            partner_profile = PartnerProductionProfile.objects.get(user=request.user)
+        except PartnerProductionProfile.DoesNotExist:
+            pass
+
+        # ── Rama DJ ──
+        if talent:
+            if not gig.needs_dj:
+                return Response({'error': 'Esta solicitud no pide DJ.'}, status=400)
+            if not talent.is_approved:
+                return Response({'error': 'Tu perfil aún no fue aprobado.'}, status=403)
+            if not gig.tier_visible(talent.talent_level):
+                return Response({'error': 'Todavía no podés ver esta solicitud.'}, status=403)
+            if GigOffer.objects.filter(request=gig, talent=talent).exists():
+                return Response({'error': 'Ya enviaste una oferta a esta solicitud.'}, status=400)
+
+            offer = GigOffer.objects.create(
+                request=gig, talent=talent, offer_kind='dj',
+                covers_item='dj',
+                quoted_price=data['quoted_price'],
+                message=data.get('message', ''),
+            )
+            provider_name = talent.stage_name
+
+        # ── Rama Partner ──
+        elif partner_profile:
+            if not gig.needs_packs:
+                return Response({'error': 'Esta solicitud no pide packs.'}, status=400)
+            if partner_profile.status != 'verified':
+                return Response({'error': 'Tu perfil de producción aún no está verificado.'}, status=403)
+
+            covers = data.get('covers_item', '')
+            if not covers or covers not in OpenGigRequest.PACK_ITEMS:
+                return Response({'error': 'Indicá qué categoría cubre tu oferta (sound, lights, booth, screens, other).'}, status=400)
+            if covers not in gig.requested_items:
+                return Response({'error': f'La solicitud no pide "{covers}".'}, status=400)
+
+            pack_id = data.get('pack_id')
+            pack_obj = None
+            if pack_id:
+                try:
+                    pack_obj = ProductionPack.objects.get(
+                        id=pack_id, partner=partner_profile
+                    )
+                except ProductionPack.DoesNotExist:
+                    return Response({'error': 'Pack no encontrado o no te pertenece.'}, status=400)
+
+            # No permitir 2 ofertas del mismo aliado cubriendo la misma categoría
+            if GigOffer.objects.filter(
+                request=gig, partner=request.user, covers_item=covers
+            ).exists():
+                return Response({'error': f'Ya ofertaste para "{covers}" en esta solicitud.'}, status=400)
+
+            offer = GigOffer.objects.create(
+                request=gig, partner=request.user, offer_kind='pack',
+                pack=pack_obj, covers_item=covers,
+                quoted_price=data['quoted_price'],
+                message=data.get('message', ''),
+            )
+            provider_name = request.user.get_full_name() or request.user.username
+
+        else:
+            return Response(
+                {'error': 'Solo talentos o aliados verificados pueden ofertar.'},
+                status=403,
+            )
+
+        # Notificar al cliente
+        Notification.objects.create(
+            user=gig.client,
+            notification_type='open_gig_offer_received',
+            title='Nueva oferta recibida',
+            message=(
+                f'{provider_name} te envió una oferta de '
+                f'USD {offer.quoted_price} para tu solicitud del {gig.event_date}.'
+            ),
+            link=f'/dashboard/open-gigs/{gig.id}',
+        )
+        try:
+            from accounts.emails import send_pulsar_email
+            from django.conf import settings
+            frontend = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+            html = (
+                f'<p>Hola {gig.client.first_name or gig.client.username},</p>'
+                f'<p><strong>{provider_name}</strong> te envió una oferta de '
+                f'<strong>USD {offer.quoted_price}</strong> para tu evento del '
+                f'{gig.event_date}.</p>'
+                f'<p><a href="{frontend}/dashboard/open-gigs/{gig.id}" '
+                f'style="background:#C1D82F;color:#0d0d0d;padding:10px 20px;'
+                f'border-radius:6px;text-decoration:none;font-weight:700;">Ver oferta</a></p>'
+            )
+            send_pulsar_email(
+                'Nueva oferta en tu solicitud abierta',
+                f'{provider_name} te envió una oferta de USD {offer.quoted_price} '
+                f'para tu evento del {gig.event_date}. Entrá a {frontend}/dashboard/open-gigs/{gig.id} para verla.',
+                [gig.client.email],
+                html_message=html,
+            )
+        except Exception:
+            pass
+
+        return Response(
+            GigOfferSerializer(offer, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class GigOfferAcceptView(APIView):
+    """
+    POST /api/open-gigs/<gig_pk>/offers/<offer_pk>/accept/
+
+    Comportamiento por tipo de oferta:
+      • DJ    → crea Booking real (o reusa el existente si ya fue creado por otra aceptación).
+      • Pack  → si ya hay Booking, adjunta el pack como BookingPack. Si no, marca la oferta
+               como aceptada; cuando después se acepte un DJ, se adjuntan automáticamente
+               los packs ya aceptados.
+
+    Se permite máximo 1 oferta aceptada por categoría (dj/sound/lights/booth/screens/other).
+    La request pasa a 'assigned' solo cuando TODAS las categorías solicitadas están cubiertas.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, gig_pk, offer_pk):
+        from django.db import transaction
+        from django.utils import timezone
+        from datetime import timedelta
+        from decimal import Decimal
+
+        try:
+            gig = OpenGigRequest.objects.select_related('assigned_booking').get(
+                pk=gig_pk, client=request.user
+            )
+        except OpenGigRequest.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada.'}, status=404)
+        if gig.status not in ('open', 'assigned'):
+            return Response({'error': 'Esta solicitud ya no acepta cambios.'}, status=400)
+
+        try:
+            offer = gig.offers.select_related(
+                'talent', 'talent__user', 'partner', 'pack'
+            ).get(pk=offer_pk)
+        except GigOffer.DoesNotExist:
+            return Response({'error': 'Oferta no encontrada.'}, status=404)
+        if offer.status != 'pending':
+            return Response({'error': 'Esta oferta ya no está pendiente.'}, status=400)
+
+        category = offer.covers_item or ('dj' if offer.offer_kind == 'dj' else '')
+        if not category:
+            return Response({'error': 'La oferta no tiene categoría definida.'}, status=400)
+
+        # Ya hay una oferta aceptada para esta categoría?
+        already = gig.offers.filter(status='accepted', covers_item=category).exists()
+        if already:
+            return Response({'error': f'Ya aceptaste una oferta para "{category}".'}, status=400)
+
+        booking = gig.assigned_booking
+
+        with transaction.atomic():
+            if offer.offer_kind == 'dj':
+                # Crear Booking real
+                booking = Booking.objects.create(
+                    client=gig.client,
+                    talent=offer.talent,
+                    event_type=gig.event_type,
+                    event_name=gig.event_name,
+                    event_date=gig.event_date,
+                    event_time_start=gig.event_time_start,
+                    event_time_end=gig.event_time_end,
+                    event_duration_hours=gig.event_duration_hours,
+                    event_location=gig.event_location,
+                    event_city=gig.event_city,
+                    event_indoor=gig.event_indoor,
+                    guest_count=gig.guest_count,
+                    description=gig.description,
+                    genre_preference=gig.genre_preference,
+                    additional_services=gig.additional_services,
+                    additional_services_notes=gig.additional_services_notes,
+                    budget=gig.budget,
+                    quoted_price=offer.quoted_price,
+                    talent_notes=offer.message,
+                    status='aceptada',
+                    expires_at=timezone.now() + timedelta(hours=48),
+                )
+                booking.calculate_estimated_price()
+                booking.calculate_service_fee()
+                booking.save()
+
+                gig.assigned_booking = booking
+                gig.save(update_fields=['assigned_booking', 'updated_at'])
+
+                # Adjuntar packs ya aceptados previamente que no tengan BookingPack
+                already_accepted_packs = gig.offers.filter(
+                    status='accepted', offer_kind='pack'
+                ).select_related('pack')
+                for po in already_accepted_packs:
+                    if po.pack:
+                        BookingPack.objects.get_or_create(
+                            booking=booking, pack=po.pack,
+                            defaults={
+                                'price_at_booking': Decimal(str(po.quoted_price)),
+                                'quantity': 1,
+                                'notes': po.message[:200] if po.message else '',
+                            },
+                        )
+
+            else:  # 'pack'
+                if booking and offer.pack:
+                    BookingPack.objects.get_or_create(
+                        booking=booking, pack=offer.pack,
+                        defaults={
+                            'price_at_booking': Decimal(str(offer.quoted_price)),
+                            'quantity': 1,
+                            'notes': offer.message[:200] if offer.message else '',
+                        },
+                    )
+
+            # Marcar la oferta como aceptada
+            offer.status = 'accepted'
+            offer.save(update_fields=['status', 'updated_at'])
+
+            # Rechazar otras ofertas pendientes que cubran la misma categoría
+            gig.offers.exclude(pk=offer.pk).filter(
+                status='pending', covers_item=category
+            ).update(status='rejected')
+
+            # Si todas las categorías solicitadas ya tienen oferta aceptada, cerrar request
+            accepted_cats = set(
+                gig.offers.filter(status='accepted').values_list('covers_item', flat=True)
+            )
+            if set(gig.requested_items or []).issubset(accepted_cats):
+                gig.status = 'assigned'
+                gig.save(update_fields=['status', 'updated_at'])
+                # Y rechazar TODAS las demás pendientes
+                gig.offers.filter(status='pending').update(status='rejected')
+
+        # ── Notificaciones ──
+        provider_user = offer.talent.user if offer.offer_kind == 'dj' else offer.partner
+        Notification.objects.create(
+            user=provider_user,
+            notification_type='open_gig_offer_accepted',
+            title='¡Aceptaron tu oferta!',
+            message=(
+                f'{gig.client.get_full_name() or gig.client.username} aceptó tu oferta. '
+                + (f'Ya se creó la reserva #{booking.booking_code}.' if booking else 'Coordinen el servicio por chat.')
+            ),
+            link=f'/dashboard/bookings/{booking.id}' if booking else f'/dashboard/open-gigs/{gig.id}',
+        )
+        # Notificar a los rechazados por la misma categoría
+        for other in gig.offers.filter(status='rejected', covers_item=category).exclude(pk=offer.pk):
+            other_user = other.talent.user if other.offer_kind == 'dj' else other.partner
+            if not other_user:
+                continue
+            Notification.objects.create(
+                user=other_user,
+                notification_type='open_gig_offer_rejected',
+                title='Otra oferta fue elegida',
+                message=(
+                    f'La solicitud del {gig.event_date} eligió a otro proveedor. ¡Sigue en la búsqueda!'
+                ),
+                link=f'/dashboard/open-gigs/{gig.id}',
+            )
+        try:
+            from accounts.emails import send_booking_notification_email
+            send_booking_notification_email(
+                provider_user,
+                '¡Aceptaron tu oferta!',
+                f'El cliente aceptó tu oferta. Ingresá a tu panel para coordinar el evento.',
+                booking=booking,
+            )
+        except Exception:
+            pass
+
+        return Response({
+            'ok': True,
+            'booking_id': booking.id if booking else None,
+            'booking_code': booking.booking_code if booking else None,
+            'gig_status': gig.status,
+        }, status=201)
+
+
+class GigOfferRejectView(APIView):
+    """POST /api/open-gigs/<gig_pk>/offers/<offer_pk>/reject/ — cliente rechaza una oferta específica sin cerrar la request."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, gig_pk, offer_pk):
+        try:
+            gig = OpenGigRequest.objects.get(pk=gig_pk, client=request.user)
+        except OpenGigRequest.DoesNotExist:
+            return Response({'error': 'Solicitud no encontrada.'}, status=404)
+        try:
+            offer = gig.offers.get(pk=offer_pk)
+        except GigOffer.DoesNotExist:
+            return Response({'error': 'Oferta no encontrada.'}, status=404)
+        if offer.status != 'pending':
+            return Response({'error': 'Esta oferta ya no está pendiente.'}, status=400)
+        offer.status = 'rejected'
+        offer.save(update_fields=['status', 'updated_at'])
+        Notification.objects.create(
+            user=offer.talent.user,
+            notification_type='open_gig_offer_rejected',
+            title='Tu oferta no fue seleccionada',
+            message=f'El cliente descartó tu oferta para la solicitud del {gig.event_date}.',
+            link=f'/dashboard/open-gigs/{gig.id}',
+        )
+        return Response({'ok': True})
