@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paguelofacil · Panel de pruebas</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0d0d;
+      color: #e5e5e5;
+      margin: 0;
+      padding: 32px 24px 80px;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; padding-bottom: 20px;
+      border-bottom: 1px solid #262626;
+      flex-wrap: wrap; gap: 12px;
+    }
+    h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    h1 span.tag {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 4px 10px;
+      background: #C1D82F;
+      color: #0d0d0d;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      vertical-align: middle;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #C1D82F;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .env-pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .env-pill.sandbox { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.4); }
+    .env-pill.production { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: #171717;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-full { grid-column: 1 / -1; }
+    dl.kv { margin: 0; }
+    dl.kv > div {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px dashed #262626;
+      font-size: 13px;
+    }
+    dl.kv > div:last-child { border-bottom: none; }
+    dl.kv dt { color: #999; }
+    dl.kv dd { margin: 0; color: #e5e5e5; font-family: 'SF Mono', Consolas, monospace; text-align: right; word-break: break-all; }
+    .status-line {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; margin-bottom: 16px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .status-line.ok { background: rgba(16,185,129,0.10); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .status-line.err { background: rgba(239,68,68,0.10); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    label { display: block; font-size: 12px; color: #999; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+    input, textarea, button, select {
+      font-family: inherit; font-size: 14px;
+      background: #0d0d0d;
+      border: 1px solid #333;
+      color: #e5e5e5;
+      padding: 9px 12px;
+      border-radius: 8px;
+      width: 100%;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #C1D82F; }
+    textarea { min-height: 120px; font-family: 'SF Mono', Consolas, monospace; font-size: 12px; }
+    button {
+      cursor: pointer; font-weight: 600;
+      background: #C1D82F; color: #0d0d0d;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      width: auto;
+      padding: 10px 20px;
+    }
+    button:hover { background: #a9bf26; }
+    button:disabled { background: #333; color: #666; cursor: not-allowed; }
+    button.ghost { background: transparent; color: #999; border: 1px solid #333; }
+    button.ghost:hover { color: #e5e5e5; border-color: #666; }
+    button.danger { background: #ef4444; color: white; }
+    button.danger:hover { background: #dc2626; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .form-row-full { grid-template-columns: 1fr; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    pre.result {
+      background: #0d0d0d;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 12px;
+      color: #C1D82F;
+      max-height: 400px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 12px 0 0;
+    }
+    pre.result.err { color: #ef4444; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #262626; }
+    th { color: #999; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.4px; }
+    td.mono { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .badge.approved { background: rgba(16,185,129,0.15); color: #10b981; }
+    .badge.declined, .badge.error { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .badge.initiated, .badge.processing { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge.refunded, .badge.cancelled { background: rgba(148,148,148,0.15); color: #999; }
+    .hint { font-size: 12px; color: #999; margin-top: 6px; }
+    .hint code { background: #262626; padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', Consolas, monospace; color: #C1D82F; }
+    #pfl-widget-mount { min-height: 100px; background: #0d0d0d; border-radius: 8px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>
+        Paguelofacil <span class="tag">TEST</span>
+      </h1>
+      <span class="env-pill {{ env }}">{{ env|upper }}</span>
+    </header>
+
+    {% if not config_ok %}
+      <div class="status-line err">
+        ⚠ Faltan credenciales: revisá <code>PAGUELOFACIL_CCLW</code> y <code>PAGUELOFACIL_ACCESS_TOKEN</code> en el <code>.env</code>.
+      </div>
+    {% else %}
+      <div class="status-line ok">
+        ✓ Credenciales configuradas — modo <strong>{{ env }}</strong>
+      </div>
+    {% endif %}
+
+    <div class="grid">
+      <!-- Config -->
+      <section class="card">
+        <h2>Configuración actual</h2>
+        <dl class="kv">
+          <div><dt>Entorno</dt><dd>{{ env }}</dd></div>
+          <div><dt>Host checkout</dt><dd>{{ host }}</dd></div>
+          <div><dt>Host API S2S</dt><dd>{{ api_host }}</dd></div>
+          <div><dt>Host Management</dt><dd>{{ management_host }}</dd></div>
+          <div><dt>SDK script</dt><dd>{{ sdk_script_url }}</dd></div>
+          <div><dt>CCLW</dt><dd>{{ cclw_masked }}</dd></div>
+          <div><dt>Access token</dt><dd>{{ access_token_masked }}</dd></div>
+          <div><dt>Return URL</dt><dd>{{ return_url }}</dd></div>
+          <div><dt>Webhook URL</dt><dd>{{ webhook_url }}</dd></div>
+          <div><dt>From email</dt><dd>{{ default_from_email }}</dd></div>
+        </dl>
+      </section>
+
+      <!-- Init test -->
+      <section class="card">
+        <h2>1. Generar SDKConfig (sandbox)</h2>
+        <p class="hint">Devuelve el objeto que el frontend usaría para inicializar PFScript.js. <strong>No crea transacción en la DB.</strong></p>
+        <div class="form-row">
+          <div>
+            <label>Monto (USD)</label>
+            <input id="init-amount" type="number" value="1.00" min="1" step="0.01">
+          </div>
+          <div>
+            <label>Email cliente</label>
+            <input id="init-email" type="email" value="test@pulsar.pa">
+          </div>
+        </div>
+        <div class="form-row form-row-full">
+          <div>
+            <label>Descripción</label>
+            <input id="init-desc" type="text" value="Prueba PFL Pulsar">
+          </div>
+        </div>
+        <div class="actions">
+          <button onclick="doInit()">Generar config</button>
+          <button class="ghost" onclick="doInit(true)">Generar + abrir SDK</button>
+        </div>
+        <pre id="init-result" class="result" style="display:none"></pre>
+        <div id="pfl-widget-mount"></div>
+      </section>
+
+      <!-- Query -->
+      <section class="card">
+        <h2>2. Consultar transacción (codOper)</h2>
+        <p class="hint">Consulta el estado de una transacción por su codOper vía la API de PFL.</p>
+        <div class="form-row form-row-full">
+          <div>
+            <label>codOper</label>
+            <input id="q-cod" type="text" placeholder="Ej: 20241125-093012-A2F4">
+          </div>
+        </div>
+        <div class="actions">
+          <button onclick="doQuery()">Consultar</button>
+        </div>
+        <pre id="q-result" class="result" style="display:none"></pre>
+      </section>
+
+      <!-- Sim webhook -->
+      <section class="card">
+        <h2>3. Simular parseo de webhook</h2>
+        <p class="hint">Parsea un payload de webhook sin ejecutar la lógica de post-procesado. Sirve para verificar que <code>parse_webhook()</code> extrae bien los campos.</p>
+        <div class="form-row form-row-full">
+          <div>
+            <label>Payload JSON</label>
+            <textarea id="wh-payload">{
+  "codOper": "20241125-093012-A2F4",
+  "status": 1,
+  "authStatus": "00",
+  "totalPay": "50.00",
+  "description": "Pulsar | Reserva PUL-2026-06-A8F3 | DJ Test | ref=PLS-1234ABCD5678EF90"
+}</textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button onclick="doSimWebhook()">Parsear</button>
+        </div>
+        <pre id="wh-result" class="result" style="display:none"></pre>
+      </section>
+
+      <!-- Recent tx -->
+      <section class="card card-full">
+        <h2>Últimas 20 transacciones</h2>
+        {% if recent_tx %}
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>internal_reference</th>
+                  <th>Booking</th>
+                  <th>Cliente</th>
+                  <th style="text-align:right">Monto</th>
+                  <th>Estado</th>
+                  <th>codOper</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tx in recent_tx %}
+                <tr>
+                  <td>{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+                  <td class="mono">{{ tx.internal_reference }}</td>
+                  <td>#{{ tx.booking_id }}{% if tx.booking.booking_code %} · {{ tx.booking.booking_code }}{% endif %}</td>
+                  <td>{{ tx.client.email }}</td>
+                  <td style="text-align:right">${{ tx.amount }}</td>
+                  <td><span class="badge {{ tx.status }}">{{ tx.get_status_display }}</span></td>
+                  <td class="mono">{{ tx.paguelofacil_id|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="hint">Todavía no hay transacciones registradas.</p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+
+  <!-- Placeholder para el script del SDK — se inyecta dinámicamente al pulsar el botón -->
+  <script>
+    const INIT_URL = "{{ init_url }}";
+    const QUERY_URL = "{{ query_url }}";
+    const SIM_URL = "{{ sim_webhook_url }}";
+
+    function show(elId, text, isErr) {
+      const el = document.getElementById(elId);
+      el.style.display = 'block';
+      el.className = 'result' + (isErr ? ' err' : '');
+      el.textContent = text;
+    }
+
+    async function doInit(openSDK) {
+      const body = {
+        amount: document.getElementById('init-amount').value,
+        client_email: document.getElementById('init-email').value,
+        description: document.getElementById('init-desc').value,
+      };
+      try {
+        const r = await fetch(INIT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await r.json();
+        show('init-result', JSON.stringify(data, null, 2), !r.ok);
+        if (r.ok && openSDK && data.sdk_config) {
+          loadPflScriptAndOpen(data.sdk_config);
+        }
+      } catch (e) {
+        show('init-result', 'Error: ' + e.message, true);
+      }
+    }
+
+    function loadPflScriptAndOpen(cfg) {
+      // Ya tenemos el script cargado? sí no, lo inyectamos.
+      if (window.__pflScriptLoaded) {
+        openWidget(cfg);
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = cfg.script_url;
+      s.async = true;
+      s.onload = () => {
+        window.__pflScriptLoaded = true;
+        openWidget(cfg);
+      };
+      s.onerror = () => {
+        show('init-result', 'No se pudo cargar el script del SDK: ' + cfg.script_url, true);
+      };
+      document.body.appendChild(s);
+    }
+
+    function openWidget(cfg) {
+      // El SDK expone una global; el nombre exacto depende de la versión.
+      // Intentamos las conocidas: PagueloFacil, PFApp, PFPago.
+      const opener = window.PagueloFacil || window.PFApp || window.PFPago;
+      if (!opener) {
+        show('init-result', 'El script cargó pero no expone la global esperada (PagueloFacil / PFApp). Revisá el mount o intentá con el flujo normal del frontend.', true);
+        return;
+      }
+      try {
+        opener({
+          apiKey: cfg.api_key,
+          CCLW: cfg.cclw,
+          amount: cfg.amount,
+          description: cfg.description,
+          returnUrl: cfg.return_url,
+          sandbox: cfg.use_sandbox,
+          onSuccess: (r) => show('init-result', 'onSuccess:\n' + JSON.stringify(r, null, 2)),
+          onError: (r) => show('init-result', 'onError:\n' + JSON.stringify(r, null, 2), true),
+        });
+      } catch (e) {
+        show('init-result', 'Error abriendo widget: ' + e.message, true);
+      }
+    }
+
+    async function doQuery() {
+      const cod = document.getElementById('q-cod').value.trim();
+      if (!cod) return;
+      try {
+        const r = await fetch(QUERY_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cod_oper: cod }),
+        });
+        const data = await r.json();
+        show('q-result', JSON.stringify(data, null, 2), !data.ok);
+      } catch (e) {
+        show('q-result', 'Error: ' + e.message, true);
+      }
+    }
+
+    async function doSimWebhook() {
+      let payload;
+      try {
+        payload = JSON.parse(document.getElementById('wh-payload').value);
+      } catch (e) {
+        show('wh-result', 'El payload no es JSON válido: ' + e.message, true);
+        return;
+      }
+      try {
+        const r = await fetch(SIM_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload }),
+        });
+        const data = await r.json();
+        show('wh-result', JSON.stringify(data, null, 2), !data.ok);
+      } catch (e) {
+        show('wh-result', 'Error: ' + e.message, true);
+      }
+    }
+  </script>
+</body>
+</html>

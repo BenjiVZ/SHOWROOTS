@@ -1,5 +1,11 @@
 from django.urls import path
 
+from .test_views import (
+    PflTestInitView,
+    PflTestPageView,
+    PflTestQueryView,
+    PflTestSimWebhookView,
+)
 from .views import (
     ConfirmCheckoutView,
     InitCheckoutView,
@@ -23,4 +29,10 @@ urlpatterns = [
     path('payments/admin/payouts/', PayoutListView.as_view(), name='pfl-payouts'),
     path('payments/admin/payouts/<int:pk>/pay/', PayoutMarkPaidView.as_view(), name='pfl-payout-pay'),
     path('payments/admin/refund/<int:tx_id>/', RefundView.as_view(), name='pfl-refund'),
+
+    # Página de pruebas (solo admin)
+    path('payments/pfl-test/',              PflTestPageView.as_view(),       name='pfl-test'),
+    path('payments/pfl-test/init/',         PflTestInitView.as_view(),       name='pfl-test-init'),
+    path('payments/pfl-test/query/',        PflTestQueryView.as_view(),      name='pfl-test-query'),
+    path('payments/pfl-test/sim-webhook/',  PflTestSimWebhookView.as_view(), name='pfl-test-sim-webhook'),
 ]
