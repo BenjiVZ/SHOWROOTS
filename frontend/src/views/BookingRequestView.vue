@@ -103,14 +103,28 @@
                   </div>
                 </div>
 
+                <div class="form-group">
+                  <label class="form-label">Ciudad del Evento</label>
+                  <select v-model="form.event_city" class="form-input">
+                    <option value="" disabled>Elegí la ciudad</option>
+                    <option v-for="c in panamaCities" :key="c" :value="c">{{ c }}</option>
+                  </select>
+                  <CoverageMap
+                    v-if="form.event_city"
+                    :city="form.event_city"
+                    :show-circle="false"
+                    :hint-text="`${form.event_city}, Panamá`"
+                  />
+                </div>
+
                 <div class="form-row">
                   <div class="form-group" style="flex:2">
-                    <label class="form-label">Ubicación</label>
-                    <input v-model="form.event_location" type="text" class="form-input" placeholder="Dirección del evento" required>
+                    <label class="form-label">Ubicación específica</label>
+                    <input v-model="form.event_location" type="text" class="form-input" placeholder="Ej: Hotel Riu, Salón Bella Vista, Calle 50" required>
                   </div>
                   <div class="form-group" style="flex:1">
-                    <label class="form-label">Ciudad</label>
-                    <input v-model="form.event_city" type="text" class="form-input" placeholder="Ciudad">
+                    <label class="form-label">País</label>
+                    <input value="Panamá" type="text" class="form-input input-locked" readonly disabled aria-readonly="true">
                   </div>
                 </div>
 
@@ -520,7 +534,14 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import CoverageMap from '@/components/common/CoverageMap.vue'
 import { scan as antiScan, violationsMessage } from '@/utils/antiDisinter'
+
+// Ciudades de Panamá (mismas del onboarding / CoverageMap)
+const panamaCities = [
+  'Ciudad de Panamá', 'San Miguelito', 'David', 'Colón', 'Santiago', 'Chitré',
+  'Penonomé', 'Aguadulce', 'La Chorrera', 'Arraiján', 'Bocas del Toro', 'Las Tablas',
+]
 
 const route = useRoute()
 const router = useRouter()
@@ -585,7 +606,7 @@ const form = ref({
   event_time_start: '',
   event_time_end: '',
   event_location: '',
-  event_city: '',
+  event_city: 'Ciudad de Panamá',
   event_indoor: true,
   guest_count: null,
   genre_preference: '',
@@ -1058,6 +1079,7 @@ select.form-input { cursor: pointer; }
 .chip:disabled:hover { border-color: var(--color-border); color: var(--color-text-muted); }
 .duration-hint { margin: var(--space-2) 0 0; font-size: var(--font-size-xs); color: var(--color-text-muted); }
 select.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.input-locked { opacity: 0.7; cursor: not-allowed; border-style: dashed; }
 
 /* ── Toggle Row ── */
 .toggle-row { display: flex; gap: var(--space-2); }

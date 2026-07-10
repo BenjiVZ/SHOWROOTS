@@ -2,7 +2,7 @@
   <div class="coverage-map-wrapper">
     <div class="coverage-map-hint">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      {{ city || '—' }} · {{ radius }} km de cobertura
+      {{ hintText || `${city || '—'} · ${radius} km de cobertura` }}
     </div>
     <div ref="mapContainer" class="coverage-map"></div>
   </div>
@@ -17,12 +17,17 @@ import { useThemeStore } from '@/stores/theme'
 const props = defineProps({
   city: { type: String, default: '' },
   radius: { type: Number, default: 50 },
+  // Texto del hint flotante; si no se pasa, muestra "ciudad · radio km de cobertura"
+  hintText: { type: String, default: '' },
+  // Ocultar el círculo de cobertura (ej: en la reserva solo interesa la ciudad)
+  showCircle: { type: Boolean, default: true },
 })
 
 const themeStore = useThemeStore()
 const mapContainer = ref(null)
 let mapInstance = null
 let coverageCircle = null
+let cityMarker = null
 let tileLayer = null
 let resizeObserver = null
 
@@ -71,7 +76,7 @@ function buildMap() {
   tileLayer = L.tileLayer(currentTileUrl(), { maxZoom: 19 }).addTo(mapInstance)
 
   // Marker en la ciudad
-  L.marker([lat, lng], {
+  cityMarker = L.marker([lat, lng], {
     icon: L.divIcon({
       className: 'coverage-marker',
       html: '<div class="coverage-marker-dot"></div>',
@@ -80,15 +85,17 @@ function buildMap() {
     }),
   }).addTo(mapInstance)
 
-  // Círculo de cobertura
-  coverageCircle = L.circle([lat, lng], {
-    radius: (props.radius || 50) * 1000,
-    color: '#C1D82F',
-    fillColor: '#C1D82F',
-    fillOpacity: 0.12,
-    weight: 2,
-    dashArray: '6 4',
-  }).addTo(mapInstance)
+  // Círculo de cobertura (opcional)
+  if (props.showCircle) {
+    coverageCircle = L.circle([lat, lng], {
+      radius: (props.radius || 50) * 1000,
+      color: '#C1D82F',
+      fillColor: '#C1D82F',
+      fillOpacity: 0.12,
+      weight: 2,
+      dashArray: '6 4',
+    }).addTo(mapInstance)
+  }
 
   // Encuadrar para que el círculo se vea entero
   fitBoundsToCoverage()
@@ -100,15 +107,21 @@ function buildMap() {
 }
 
 function fitBoundsToCoverage() {
-  if (!mapInstance || !coverageCircle) return
-  const bounds = coverageCircle.getBounds()
-  mapInstance.fitBounds(bounds, { padding: [20, 20], maxZoom: 10 })
+  if (!mapInstance) return
+  if (coverageCircle) {
+    const bounds = coverageCircle.getBounds()
+    mapInstance.fitBounds(bounds, { padding: [20, 20], maxZoom: 10 })
+  } else {
+    // Sin círculo: centrar en la ciudad con zoom cercano
+    mapInstance.setView(getCoords(), 11)
+  }
 }
 
 function destroyMap() {
   if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null }
   if (mapInstance) { mapInstance.remove(); mapInstance = null }
   coverageCircle = null
+  cityMarker = null
   tileLayer = null
 }
 
@@ -117,6 +130,7 @@ watch(() => props.city, () => {
   if (!mapInstance) return
   const [lat, lng] = getCoords()
   mapInstance.setView([lat, lng])
+  cityMarker?.setLatLng([lat, lng])
   coverageCircle?.setLatLng([lat, lng])
   fitBoundsToCoverage()
 })
