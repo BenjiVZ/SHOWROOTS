@@ -60,31 +60,46 @@
                   </div>
                   <div class="form-group">
                     <label class="form-label">Hora de Inicio</label>
-                    <input
+                    <select
                       v-model="form.event_time_start"
-                      type="time"
                       class="form-input"
                       required
                       @change="onTimeStartChange"
-                      @input="onTimeStartChange"
                     >
+                      <option value="" disabled>Elegí una hora</option>
+                      <option v-for="t in timeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
+                    </select>
                   </div>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Duración del Servicio</label>
-                  <div class="duration-chips">
-                    <button type="button" v-for="h in [2,3,4,5,6]" :key="h"
-                      class="chip" :class="{ active: selectedDuration === h }"
-                      @click="selectDuration(h)"
-                    >{{ h }} horas</button>
-                    <button type="button" class="chip" :class="{ active: selectedDuration === 0 }"
-                      @click="selectDuration(0)">Personalizado</button>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Hora Final</label>
+                    <select
+                      v-model="form.event_time_end"
+                      class="form-input"
+                      :disabled="!form.event_time_start"
+                      @change="onTimeEndChange"
+                    >
+                      <option value="" disabled>
+                        {{ form.event_time_start ? 'Elegí la hora de fin' : 'Primero elegí la hora de inicio' }}
+                      </option>
+                      <option v-for="t in timeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
+                    </select>
                   </div>
-                  <div v-if="selectedDuration === 0" class="form-row" style="margin-top: 12px">
-                    <div class="form-group">
-                      <input v-model="form.event_time_end" type="time" class="form-input" placeholder="Hora de fin">
+                  <div class="form-group">
+                    <label class="form-label">Duración rápida</label>
+                    <div class="duration-chips">
+                      <button type="button" v-for="h in [2,3,4,5,6]" :key="h"
+                        class="chip" :class="{ active: selectedDuration === h }"
+                        :disabled="!form.event_time_start"
+                        @click="selectDuration(h)"
+                      >{{ h }} h</button>
+                      <button type="button" class="chip" :class="{ active: selectedDuration === 0 && !!form.event_time_end }"
+                        :disabled="!form.event_time_start"
+                        @click="selectDuration(0)">Personalizado</button>
                     </div>
+                    <p v-if="!form.event_time_start" class="duration-hint">Elegí la hora de inicio para habilitar la duración.</p>
                   </div>
                 </div>
 
@@ -189,7 +204,10 @@
                 <div v-if="selectedServices.length > 0" class="dynamic-questions">
                   <!-- SOUND -->
                   <div v-if="isServiceSelected('sound')" class="svc-detail glass">
-                    <h4>🔊 Detalles de Sonido</h4>
+                    <h4>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                      Detalles de Sonido
+                    </h4>
                     <div class="form-group">
                       <label class="form-label">¿Para cuántas personas?</label>
                       <select v-model="serviceDetails.sound.capacity" class="form-input">
@@ -218,7 +236,10 @@
 
                   <!-- LIGHTS -->
                   <div v-if="isServiceSelected('lights')" class="svc-detail glass">
-                    <h4>💡 Detalles de Iluminación</h4>
+                    <h4>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.7.6 1 1.5 1 2.3v1h6v-1c0-.8.3-1.7 1-2.3A7 7 0 0012 2z"/></svg>
+                      Detalles de Iluminación
+                    </h4>
                     <div class="form-group">
                       <label class="form-label">Tipo de iluminación</label>
                       <div class="genre-chips">
@@ -239,7 +260,10 @@
 
                   <!-- DJ BOOTH -->
                   <div v-if="isServiceSelected('booth')" class="svc-detail glass">
-                    <h4>🎛️ Tipo de DJ Booth</h4>
+                    <h4>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                      Tipo de DJ Booth
+                    </h4>
                     <div class="genre-chips">
                       <button type="button" v-for="t in ['Estándar','Blanco','Con Branding','Con Pantalla']" :key="t"
                         class="chip sm" :class="{ active: serviceDetails.booth.type === t }"
@@ -250,7 +274,10 @@
 
                   <!-- SCREENS -->
                   <div v-if="isServiceSelected('screens')" class="svc-detail glass">
-                    <h4>🖥️ Pantallas / Visuales</h4>
+                    <h4>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      Pantallas / Visuales
+                    </h4>
                     <div class="form-group">
                       <label class="form-label">¿Tiene contenido propio?</label>
                       <div class="toggle-row">
@@ -262,7 +289,10 @@
 
                   <!-- TECHNICIAN -->
                   <div v-if="isServiceSelected('technician')" class="svc-detail glass">
-                    <h4>🔧 Soporte Técnico</h4>
+                    <h4>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                      Soporte Técnico
+                    </h4>
                     <div class="form-group">
                       <label class="form-label">¿Horario especial de montaje?</label>
                       <input v-model="serviceDetails.technician.schedule" type="text" class="form-input" placeholder="Ej: Montaje desde las 2pm">
@@ -575,16 +605,31 @@ const minDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
-function onTimeStartChange(e) {
-  // Ensure v-model captures the value from native time input
-  const val = e.target.value
-  if (val) {
-    form.value.event_time_start = val
-    // Recalculate end time if using preset duration
-    if (selectedDuration.value > 0) {
-      selectDuration(selectedDuration.value)
-    }
+// Opciones de hora cada 30 min (valor 24h para la lógica, etiqueta 12h AM/PM)
+const timeOptions = (() => {
+  const opts = []
+  for (let m = 0; m < 24 * 60; m += 30) {
+    const h = Math.floor(m / 60)
+    const mm = m % 60
+    const value = `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+    const h12 = h % 12 === 0 ? 12 : h % 12
+    const ampm = h < 12 ? 'AM' : 'PM'
+    const label = `${h12}:${String(mm).padStart(2, '0')} ${ampm}`
+    opts.push({ value, label })
   }
+  return opts
+})()
+
+function onTimeStartChange() {
+  // Si había una duración preset activa, recalcular la hora final desde el nuevo inicio.
+  if (form.value.event_time_start && selectedDuration.value > 0) {
+    selectDuration(selectedDuration.value)
+  }
+}
+
+function onTimeEndChange() {
+  // El usuario eligió la hora final a mano → pasa a duración personalizada.
+  selectedDuration.value = 0
 }
 
 function selectDuration(h) {
@@ -642,15 +687,13 @@ function validateStep(step) {
   if (step === 0) {
     if (!form.value.event_type) { error.value = 'Selecciona el tipo de evento.'; return false }
     if (!form.value.event_date) { error.value = 'Selecciona la fecha.'; return false }
-    // Also check the DOM input value as fallback for time inputs that don't sync v-model
     if (!form.value.event_time_start) {
-      const timeInput = document.querySelector('input[type="time"]')
-      if (timeInput && timeInput.value) {
-        form.value.event_time_start = timeInput.value
-      } else {
-        error.value = 'Selecciona la hora de inicio.'
-        return false
-      }
+      error.value = 'Selecciona la hora de inicio.'
+      return false
+    }
+    if (!form.value.event_time_end) {
+      error.value = 'Selecciona la hora final (o elegí una duración rápida).'
+      return false
     }
     if (!form.value.event_location) { error.value = 'Ingresa la ubicación.'; return false }
   }
@@ -1006,6 +1049,15 @@ select.form-input { cursor: pointer; }
   font-weight: 600;
 }
 .chip.sm { padding: var(--space-1) var(--space-3); font-size: var(--font-size-xs); }
+.chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+.chip:disabled:hover { border-color: var(--color-border); color: var(--color-text-muted); }
+.duration-hint { margin: var(--space-2) 0 0; font-size: var(--font-size-xs); color: var(--color-text-muted); }
+select.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Toggle Row ── */
 .toggle-row { display: flex; gap: var(--space-2); }
