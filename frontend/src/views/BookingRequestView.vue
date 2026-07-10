@@ -109,12 +109,7 @@
                     <option value="" disabled>Elegí la ciudad</option>
                     <option v-for="c in panamaCities" :key="c" :value="c">{{ c }}</option>
                   </select>
-                  <CoverageMap
-                    v-if="form.event_city"
-                    :city="form.event_city"
-                    :show-circle="false"
-                    :hint-text="`${form.event_city}, Panamá`"
-                  />
+                  <CityPickerMap v-model="form.event_city" />
                 </div>
 
                 <div class="form-row">
@@ -534,7 +529,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
-import CoverageMap from '@/components/common/CoverageMap.vue'
+import CityPickerMap from '@/components/common/CityPickerMap.vue'
 import { scan as antiScan, violationsMessage } from '@/utils/antiDisinter'
 
 // Ciudades de Panamá (mismas del onboarding / CoverageMap)
