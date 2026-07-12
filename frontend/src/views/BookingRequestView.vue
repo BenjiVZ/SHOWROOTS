@@ -235,7 +235,7 @@
                       </div>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">Tipo de refuerzo</label>
+                      <label class="form-label">Tipo de evento</label>
                       <div class="toggle-row">
                         <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.sound.level === 'basic' }" @click="serviceDetails.sound.level = 'basic'">Básico</button>
                         <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.sound.level === 'pro' }" @click="serviceDetails.sound.level = 'pro'">Profesional</button>
