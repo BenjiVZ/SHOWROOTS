@@ -195,6 +195,39 @@
                 </h2>
                 <p class="step-subtitle">Selecciona los servicios extra que necesites para tu evento</p>
 
+                <!-- Packs pre-armados del talento -->
+                <div v-if="talentPacks.length" class="talent-packs-section">
+                  <h4 class="packs-heading">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Packs de {{ talent?.stage_name || 'este talento' }}
+                  </h4>
+                  <p class="packs-sub">Elegí un pack pre-armado, o dejalo sin seleccionar y configurá la producción a tu medida abajo.</p>
+                  <div class="packs-grid">
+                    <button type="button" v-for="p in talentPacks" :key="p.id"
+                      class="pack-card" :class="{ active: selectedPackId === p.id }"
+                      @click="togglePack(p.id)"
+                    >
+                      <span v-if="p.is_featured" class="pack-popular">POPULAR</span>
+                      <div class="pack-name">{{ p.name }}</div>
+                      <div class="pack-price">
+                        {{ p.price ? `$${Number(p.price).toFixed(0)}` : (p.price_label || 'Cotizar') }}
+                        <span v-if="p.duration_hours" class="pack-duration">· {{ Number(p.duration_hours) }}h</span>
+                      </div>
+                      <ul v-if="(p.included_items || []).length" class="pack-items">
+                        <li v-for="(item, i) in p.included_items.slice(0, 4)" :key="i">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          {{ item }}
+                        </li>
+                        <li v-if="p.included_items.length > 4" class="pack-more">+{{ p.included_items.length - 4 }} más</li>
+                      </ul>
+                      <div class="pack-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </button>
+                  </div>
+                  <div class="packs-or"><span>o configurá tu producción</span></div>
+                </div>
+
                 <div class="services-grid">
                   <button type="button" v-for="svc in availableServices" :key="svc.id"
                     class="service-card"
@@ -386,6 +419,16 @@
                   </div>
                 </div>
 
+                <!-- Pack Summary -->
+                <div v-if="selectedPack" class="services-summary glass">
+                  <h4>Pack seleccionado</h4>
+                  <div class="svc-tags">
+                    <span class="svc-tag">
+                      {{ selectedPack.name }} — {{ selectedPack.price ? `$${Number(selectedPack.price).toFixed(0)}` : (selectedPack.price_label || 'Cotizar') }}<template v-if="selectedPack.duration_hours"> · {{ Number(selectedPack.duration_hours) }}h</template>
+                    </span>
+                  </div>
+                </div>
+
                 <!-- Services Summary -->
                 <div v-if="selectedServices.length > 0" class="services-summary glass">
                   <h4>Servicios Adicionales</h4>
@@ -449,7 +492,11 @@
             <div class="summary-divider"></div>
 
             <div class="price-breakdown">
-              <div class="price-row" v-if="talent?.hourly_rate">
+              <div class="price-row price-row-pack" v-if="selectedPack">
+                <span>Pack: {{ selectedPack.name }}</span>
+                <span>{{ selectedPack.price ? `$${Number(selectedPack.price).toFixed(2)}` : (selectedPack.price_label || 'Cotizar') }}</span>
+              </div>
+              <div class="price-row" v-if="!selectedPack && talent?.hourly_rate">
                 <span>Tarifa por hora</span>
                 <span>${{ talent.hourly_rate }}</span>
               </div>
@@ -595,6 +642,14 @@ const howItWorks = [
 ]
 
 const selectedServices = ref([])
+
+// ── Packs pre-armados del talento ──
+const talentPacks = ref([])
+const selectedPackId = ref(null)
+const selectedPack = computed(() => talentPacks.value.find(p => p.id === selectedPackId.value) || null)
+function togglePack(id) {
+  selectedPackId.value = selectedPackId.value === id ? null : id
+}
 const serviceDetails = reactive({
   sound: { capacity: '', microphone: false, level: 'basic' },
   lights: { type: '', purpose: 'decorative' },
@@ -692,6 +747,9 @@ const durationHours = computed(() => {
 })
 
 const estimatedPrice = computed(() => {
+  // Con un pack de precio fijo elegido, el estimado es el precio del pack
+  // (los packs son paquetes cerrados del talento).
+  if (selectedPack.value?.price) return parseFloat(selectedPack.value.price)
   if (!talent.value?.hourly_rate || durationHours.value <= 0) return 0
   return parseFloat(talent.value.hourly_rate) * durationHours.value
 })
@@ -780,6 +838,12 @@ onMounted(async () => {
     error.value = 'No se pudo cargar la información del talento.'
   }
 
+  // Packs pre-armados del talento (lectura pública; si falla, no bloquea el flujo)
+  try {
+    const { data } = await api.get(`/talents/${talentId}/packs/`)
+    talentPacks.value = data.results || data || []
+  } catch { /* sin packs */ }
+
   // Restaurar borrador si pertenece a este talento
   const restored = restoreDraftIfMatches()
   if (restored && auth.isLoggedIn) {
@@ -831,6 +895,22 @@ async function handleSubmit() {
       service: id,
       details: serviceDetails[id] || {}
     }))
+
+    // Pack pre-armado del talento elegido → va primero en additional_services
+    if (selectedPack.value) {
+      const p = selectedPack.value
+      services.unshift({
+        service: 'talent_pack',
+        details: {
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          price_label: p.price_label,
+          duration_hours: p.duration_hours,
+          included_items: p.included_items || [],
+        },
+      })
+    }
 
     // Compute end time if using preset duration
     let endTime = form.value.event_time_end
@@ -1085,6 +1165,66 @@ select.form-input { cursor: pointer; }
 select.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
 .input-locked { opacity: 0.7; cursor: not-allowed; border-style: dashed; }
 .label-hint { font-weight: 400; font-size: var(--font-size-xs); color: var(--color-text-muted); }
+
+/* ── Packs del talento ── */
+.talent-packs-section { margin-bottom: var(--space-6); }
+.packs-heading {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 0 0 4px; font-size: var(--font-size-base); color: var(--color-text-primary);
+}
+.packs-heading svg { color: var(--color-primary); }
+.packs-sub { margin: 0 0 var(--space-3); font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.packs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3);
+}
+.pack-card {
+  position: relative; text-align: left; cursor: pointer;
+  padding: var(--space-4); border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border); background: var(--color-bg-elevated);
+  transition: all var(--transition-fast); font-family: var(--font-body);
+}
+.pack-card:hover { border-color: var(--color-primary); }
+.pack-card.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-ultra-light, rgba(193,216,47,0.08));
+  box-shadow: 0 0 0 3px var(--color-primary-ultra-light, rgba(193,216,47,0.12));
+}
+.pack-popular {
+  position: absolute; top: -9px; right: 10px;
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--color-primary); color: var(--color-bg-primary);
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em;
+}
+.pack-name { font-weight: 700; color: var(--color-text-primary); margin-bottom: 2px; }
+.pack-price { font-size: var(--font-size-lg); font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-2); }
+.pack-duration { font-size: var(--font-size-sm); color: var(--color-text-muted); font-weight: 500; }
+.pack-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.pack-items li {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--font-size-xs); color: var(--color-text-secondary);
+}
+.pack-items li svg { color: var(--color-primary); flex-shrink: 0; }
+.pack-items .pack-more { color: var(--color-text-muted); font-style: italic; }
+.pack-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--color-border); color: transparent;
+  background: var(--color-bg-card); transition: all var(--transition-fast);
+}
+.pack-card.active .pack-check {
+  background: var(--color-primary); border-color: var(--color-primary);
+  color: var(--color-bg-primary);
+}
+.packs-or {
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-top: var(--space-5); color: var(--color-text-muted);
+  font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.packs-or::before, .packs-or::after {
+  content: ''; flex: 1; height: 1px; background: var(--color-border);
+}
+.price-row-pack span:first-child { color: var(--color-primary); font-weight: 600; }
 
 /* ── Toggle Row ── */
 .toggle-row { display: flex; gap: var(--space-2); }

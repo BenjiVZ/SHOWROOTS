@@ -35,7 +35,10 @@
                 <div class="cd-unit"><strong>{{ countdown.hours }}</strong><span>horas</span></div>
                 <div class="cd-unit"><strong>{{ countdown.minutes }}</strong><span>min</span></div>
               </div>
-              <span class="cd-escrow">🛡 ${{ Number(booking.amount_paid || 0).toFixed(2) }} en custodia</span>
+              <span class="cd-escrow">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                ${{ Number(booking.amount_paid || 0).toFixed(2) }} en custodia
+              </span>
             </div>
           </div>
 
@@ -65,7 +68,14 @@
               </div>
               <div v-if="booking.event_indoor !== null && booking.event_indoor !== undefined" class="info-item">
                 <span class="info-label">Espacio</span>
-                <span>{{ booking.event_indoor ? '🏠 Interior' : '🌤 Exterior' }}</span>
+                <span v-if="booking.event_indoor">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>
+                  Interior
+                </span>
+                <span v-else>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                  Exterior
+                </span>
               </div>
               <div v-if="booking.genre_preference" class="info-item">
                 <span class="info-label">Género / ambiente</span>
@@ -121,7 +131,7 @@
             <div class="services-grid">
               <div v-for="(item, idx) in normalizedServices" :key="idx" class="service-item">
                 <div class="service-header">
-                  <span class="service-icon" v-html="serviceIconsSvg[item.service] || '🎵'"></span>
+                  <span class="service-icon" v-html="serviceIconsSvg[item.service] || DEFAULT_SERVICE_SVG"></span>
                   <strong>{{ serviceLabels[item.service] || item.service }}</strong>
                 </div>
                 <div v-if="item.details && Object.keys(item.details).length" class="service-details">
@@ -154,7 +164,7 @@
             </div>
             <div v-else class="bp-list">
               <div v-for="bp in bookingPacks" :key="bp.id" class="bp-row">
-                <div class="bp-thumb">{{ prodCatIcon(bp.pack?.category) }}</div>
+                <div class="bp-thumb" v-html="prodCatIcon(bp.pack?.category)"></div>
                 <div class="bp-info">
                   <div class="bp-name">{{ bp.pack?.name }}</div>
                   <div class="bp-meta">{{ bp.pack?.vendor?.name }} · {{ bp.pack?.event_size_display }}</div>
@@ -185,7 +195,7 @@
                       :disabled="isPackAlreadyAdded(pk.id) || packPicker.adding === pk.id"
                       @click="addBookingPack(pk.id)"
                     >
-                      <span class="bp-thumb">{{ prodCatIcon(pk.category) }}</span>
+                      <span class="bp-thumb" v-html="prodCatIcon(pk.category)"></span>
                       <span class="bp-picker-info">
                         <strong>
                           <span v-if="pk.is_recommended" class="bp-rec-badge">★ RECOMENDADO POR {{ (booking.talent?.stage_name || 'TU DJ').toUpperCase() }}</span>
@@ -311,7 +321,10 @@
                 <div class="msg-bubble">
                   <span class="msg-sender">{{ msg.sender === auth.user?.id ? 'Tú' : msg.sender_name }}</span>
                   <p>{{ msg.content }}</p>
-                  <span v-if="msg.flagged" class="msg-flagged-tag">⚠ Mensaje filtrado por anti-desintermediación</span>
+                  <span v-if="msg.flagged" class="msg-flagged-tag">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Mensaje filtrado por anti-desintermediación
+                  </span>
                   <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
                 </div>
               </div>
@@ -383,7 +396,8 @@
                 <span class="payment-type">{{ p.payment_type === 'deposit' ? 'Depósito' : 'Total' }}</span>
               </div>
               <span class="payment-status" :class="p.payment_status === 'completed' ? 'text-success' : 'text-warning'">
-                {{ p.payment_status === 'completed' ? '✓' : '⏳' }}
+                <svg v-if="p.payment_status === 'completed'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </span>
             </div>
           </div>
@@ -439,7 +453,8 @@
               </div>
 
               <p class="cancel-warning">
-                ⚠ Esta acción no se puede deshacer. El talento será notificado y la fecha quedará disponible.
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Esta acción no se puede deshacer. El talento será notificado y la fecha quedará disponible.
               </p>
             </div>
 
@@ -477,7 +492,10 @@
                 <input v-model="modifyModal.event_time_end" type="time" class="form-input" />
               </div>
             </div>
-            <p class="modify-note">⚠ Al modificar, el booking vuelve a "pendiente de respuesta" y el talento debe re-confirmar.</p>
+            <p class="modify-note">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Al modificar, el booking vuelve a "pendiente de respuesta" y el talento debe re-confirmar.
+            </p>
             <p v-if="modifyModal.error" class="cancel-error">{{ modifyModal.error }}</p>
             <div class="cancel-actions">
               <button class="btn btn-ghost btn-sm" @click="modifyModal.open = false">Cancelar</button>
@@ -517,7 +535,8 @@
             </div>
 
             <p class="modify-note">
-              🛡 Al reportar, el pago queda retenido y nuestro equipo revisará en máximo 48h. Si tu reporte es válido, recibes reembolso 100%.
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Al reportar, el pago queda retenido y nuestro equipo revisará en máximo 48h. Si tu reporte es válido, recibes reembolso 100%.
             </p>
 
             <p v-if="reportModal.error" class="cancel-error">{{ reportModal.error }}</p>
@@ -724,6 +743,7 @@ async function submitReport() {
 }
 
 const serviceLabels = {
+  talent_pack: 'Pack del talento',
   sound: 'Sonido',
   sonido: 'Sonido',
   lights: 'Luces',
@@ -777,6 +797,11 @@ const detailKeyLabels = {
   purpose: 'Propósito',
   hasContent: 'Incluye Contenido',
   schedule: 'Horario',
+  name: 'Nombre',
+  price: 'Precio',
+  price_label: 'Precio',
+  duration_hours: 'Duración (h)',
+  included_items: 'Incluye',
 }
 
 function formatDetailKey(key) {
@@ -907,8 +932,18 @@ async function submitReview() {
 }
 
 // ── Production packs ──
-const PROD_CAT_ICONS = { sound: '🔊', lights: '💡', screens: '📺', mics: '🎤', dj_booth: '🎚', fx: '🪩' }
-function prodCatIcon(c) { return PROD_CAT_ICONS[c] || '📦' }
+const _svgOpen = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+const PROD_CAT_ICONS = {
+  sound:    `${_svgOpen}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>`,
+  lights:   `${_svgOpen}<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.7.6 1 1.5 1 2.3v1h6v-1c0-.8.3-1.7 1-2.3A7 7 0 0012 2z"/></svg>`,
+  screens:  `${_svgOpen}<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+  mics:     `${_svgOpen}<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`,
+  dj_booth: `${_svgOpen}<rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>`,
+  fx:       `${_svgOpen}<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/></svg>`,
+}
+const DEFAULT_PACK_SVG = `${_svgOpen}<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`
+const DEFAULT_SERVICE_SVG = `${_svgOpen}<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`
+function prodCatIcon(c) { return PROD_CAT_ICONS[c] || DEFAULT_PACK_SVG }
 
 const bookingPacks = ref([])
 const removingPackId = ref(null)
