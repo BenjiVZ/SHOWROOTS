@@ -152,11 +152,11 @@
                 </h2>
 
                 <div class="form-group">
-                  <label class="form-label">Género Musical / Ambiente</label>
+                  <label class="form-label">Género Musical / Ambiente <span class="label-hint">(podés elegir varios)</span></label>
                   <div class="genre-chips">
                     <button type="button" v-for="g in genres" :key="g"
-                      class="chip" :class="{ active: form.genre_preference === g }"
-                      @click="form.genre_preference = g"
+                      class="chip" :class="{ active: selectedGenres.includes(g) }"
+                      @click="toggleGenre(g)"
                     >{{ g }}</button>
                   </div>
                 </div>
@@ -561,6 +561,15 @@ const steps = [
 ]
 
 const genres = ['House', 'Open Format', 'Reggaetón', 'Lounge', 'Afro House', 'Comercial', 'Latin', 'Tech House', 'Otro']
+
+// Selección múltiple de géneros → se guarda unida por coma en form.genre_preference
+const selectedGenres = ref([])
+function toggleGenre(g) {
+  const i = selectedGenres.value.indexOf(g)
+  if (i >= 0) selectedGenres.value.splice(i, 1)
+  else selectedGenres.value.push(g)
+  form.value.genre_preference = selectedGenres.value.join(', ')
+}
 
 const availableServices = [
   { id: 'sound', name: 'Sonido', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>' },
@@ -1075,6 +1084,7 @@ select.form-input { cursor: pointer; }
 .duration-hint { margin: var(--space-2) 0 0; font-size: var(--font-size-xs); color: var(--color-text-muted); }
 select.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
 .input-locked { opacity: 0.7; cursor: not-allowed; border-style: dashed; }
+.label-hint { font-weight: 400; font-size: var(--font-size-xs); color: var(--color-text-muted); }
 
 /* ── Toggle Row ── */
 .toggle-row { display: flex; gap: var(--space-2); }
