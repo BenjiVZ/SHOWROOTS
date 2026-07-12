@@ -179,7 +179,7 @@
 
             <div class="how-to">
               <strong>¿Cómo lo contrato?</strong>
-              <p>Los packs de aliados se agregan a una reserva con un DJ — primero elegí al DJ y desde el booking sumás el equipo.</p>
+              <p>Los packs de aliados se agregan a una reserva con un DJ — primero elige al DJ y desde el booking sumas el equipo.</p>
               <router-link to="/search" class="btn btn-primary btn-full">Buscar DJ →</router-link>
             </div>
           </section>

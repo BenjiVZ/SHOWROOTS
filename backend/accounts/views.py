@@ -137,7 +137,7 @@ class PartnerRoleToggleView(APIView):
 
         if active and not offers:
             return Response(
-                {'detail': 'Activá al menos una sub-oferta del rol Aliado.'},
+                {'detail': 'Activa al menos una sub-oferta del rol Aliado.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

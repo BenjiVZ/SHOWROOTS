@@ -96,13 +96,13 @@
           <!-- Mis roles -->
           <section v-else-if="activeTab === 'roles'" class="account-section">
             <h2>Mis roles en Pulsar</h2>
-            <p class="section-sub">Activá las capas que correspondan a lo que ofrecés. Podés tener varios roles al mismo tiempo.</p>
+            <p class="section-sub">Activa las capas que correspondan a lo que ofreces. Puedes tener varios roles al mismo tiempo.</p>
 
             <!-- Rol primario: Talento o Cliente -->
             <div class="role-card role-card-on">
               <div class="role-card-icon role-card-icon-primary">
-                <span v-if="auth.user?.role === 'talent'">🎵</span>
-                <span v-else>👤</span>
+                <svg v-if="auth.user?.role === 'talent'" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <svg v-else width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
               <div class="role-card-info">
                 <div class="role-card-name">{{ primaryRoleLabel }}</div>
@@ -113,11 +113,13 @@
 
             <!-- Rol Aliado / Partner -->
             <div class="role-card" :class="{ 'role-card-on': partnerRole.active }">
-              <div class="role-card-icon" :class="{ 'role-card-icon-partner': partnerRole.active }">📦</div>
+              <div class="role-card-icon" :class="{ 'role-card-icon-partner': partnerRole.active }">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </div>
               <div class="role-card-info">
                 <div class="role-card-name">Aliado</div>
                 <div class="role-card-desc">
-                  Trae clientes a Pulsar y cobra comisión por cada reserva que gestionás. Próximamente: rentar packs de producción y ofrecer venues.
+                  Trae clientes a Pulsar y cobra comisión por cada reserva que gestionas. Próximamente: rentar packs de producción y ofrecer venues.
                 </div>
               </div>
               <span v-if="partnerRole.active" class="role-status on">✓ Activo</span>
@@ -138,7 +140,7 @@
                 <input type="checkbox" :checked="partnerRole.offers.includes('referral')" disabled />
                 <div>
                   <strong>Traer clientes (referral)</strong>
-                  <div class="suboption-desc">Gestionás reservas en nombre de tus clientes y cobrás comisión.</div>
+                  <div class="suboption-desc">Gestionas reservas en nombre de tus clientes y cobras comisión.</div>
                 </div>
               </label>
               <button
@@ -158,10 +160,10 @@
                   </strong>
                   <div class="suboption-desc">
                     <span v-if="productionStatus === 'pending'">Un admin revisará tu solicitud en máximo 48h.</span>
-                    <span v-else-if="productionStatus === 'verified'">Ya podés publicar packs de equipo.</span>
-                    <span v-else-if="productionStatus === 'rejected'">Tu solicitud fue rechazada. Tocá para revisar y reenviar.</span>
+                    <span v-else-if="productionStatus === 'verified'">Ya puedes publicar packs de equipo.</span>
+                    <span v-else-if="productionStatus === 'rejected'">Tu solicitud fue rechazada. Toca para revisar y reenviar.</span>
                     <span v-else-if="productionStatus === 'draft'">Continúa donde lo dejaste.</span>
-                    <span v-else>Renta de equipo (sonido, luces, DJ booth). Requiere verificación. Tocá para empezar →</span>
+                    <span v-else>Renta de equipo (sonido, luces, DJ booth). Requiere verificación. Toca para empezar →</span>
                   </div>
                 </div>
               </button>
@@ -169,7 +171,7 @@
                 <input type="checkbox" disabled />
                 <div>
                   <strong>Venue <span class="soon-tag">próximamente</span></strong>
-                  <div class="suboption-desc">Ofrecé tu espacio físico (terraza, salón, club) en Pulsar.</div>
+                  <div class="suboption-desc">Ofrece tu espacio físico (terraza, salón, club) en Pulsar.</div>
                 </div>
               </label>
 
@@ -345,8 +347,8 @@ const primaryRoleLabel = computed(() => {
   return map[auth.user?.role] || 'Usuario'
 })
 const primaryRoleDesc = computed(() => {
-  if (auth.user?.role === 'talent') return 'Ofrecés tu performance como DJ, músico o banda.'
-  if (auth.user?.role === 'client') return 'Reservás talentos para tus eventos.'
+  if (auth.user?.role === 'talent') return 'Ofreces tu performance como DJ, músico o banda.'
+  if (auth.user?.role === 'client') return 'Reservas talentos para tus eventos.'
   return 'Cuenta básica de Pulsar.'
 })
 

@@ -51,7 +51,7 @@ def send_payment_confirmed_to_client(tx: PaguelofacilTransaction) -> None:
             f'  • Talento: {talent_name}\n'
             f'  • Monto: {_money(tx.amount)} USD\n'
             f'  • Código de operación: {tx.paguelofacil_id or tx.internal_reference}\n\n'
-            f'Podés ver el detalle en: {_booking_url(booking.id)}\n\n'
+            f'Puedes ver el detalle en: {_booking_url(booking.id)}\n\n'
             f'¡Gracias por usar Pulsar!\n'
         )
         send_pulsar_email(subject, text, [client.email])

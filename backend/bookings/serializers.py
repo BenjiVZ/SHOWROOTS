@@ -714,7 +714,7 @@ class OpenGigRequestCreateSerializer(serializers.ModelSerializer):
 
     def validate_requested_items(self, value):
         if not value:
-            raise serializers.ValidationError('Elegí al menos un ítem (DJ, sonido, luces, etc.).')
+            raise serializers.ValidationError('Elige al menos un ítem (DJ, sonido, luces, etc.).')
         allowed = {k for k, _ in OpenGigRequest.REQUESTED_ITEM_CHOICES}
         invalid = [v for v in value if v not in allowed]
         if invalid:

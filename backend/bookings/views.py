@@ -1038,7 +1038,7 @@ def _ensure_partner_active(user):
     is_partner = user.role == 'partner' or getattr(user, 'is_partner_active', False)
     if not is_partner:
         return False, Response(
-            {'detail': 'Activá primero tu rol Aliado en Mi Cuenta.'},
+            {'detail': 'Activa primero tu rol Aliado en Mi Cuenta.'},
             status=status.HTTP_403_FORBIDDEN,
         )
     return True, None
@@ -1104,11 +1104,11 @@ class PartnerProductionSubmitView(APIView):
         # Validations
         errors = []
         if not profile.categories:
-            errors.append('Elegí al menos una categoría de equipo.')
+            errors.append('Elige al menos una categoría de equipo.')
         if not profile.main_city:
             errors.append('Falta tu ciudad principal.')
         if profile.photo_count < MIN_PHOTOS_REQUIRED:
-            errors.append(f'Necesitás al menos {MIN_PHOTOS_REQUIRED} fotos del equipo (tenés {profile.photo_count}).')
+            errors.append(f'Necesitas al menos {MIN_PHOTOS_REQUIRED} fotos del equipo (tienes {profile.photo_count}).')
         if errors:
             return Response({'detail': ' '.join(errors)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1177,7 +1177,7 @@ class PartnerProductionPhotoDeleteView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if photo.profile.status == 'verified':
             return Response(
-                {'detail': 'No podés borrar fotos de un perfil verificado.'},
+                {'detail': 'No puedes borrar fotos de un perfil verificado.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         photo.delete()
@@ -1232,8 +1232,8 @@ class AdminPartnerProductionActionView(APIView):
             Notification.objects.create(
                 user=profile.user,
                 notification_type='system',
-                title='✅ Aliado de Producción verificado',
-                message='Tu perfil de producción fue aprobado. Ya podés publicar packs.',
+                title='Aliado de Producción verificado',
+                message='Tu perfil de producción fue aprobado. Ya puedes publicar packs.',
                 link='/partner',
             )
         elif action == 'reject':
@@ -1279,7 +1279,7 @@ def _get_verified_partner_profile(user):
         profile = PartnerProductionProfile.objects.get(user=user)
     except PartnerProductionProfile.DoesNotExist:
         return None, Response(
-            {'detail': 'Completá primero el onboarding de Aliado de Producción.'},
+            {'detail': 'Completa primero el onboarding de Aliado de Producción.'},
             status=status.HTTP_404_NOT_FOUND,
         )
     if profile.status != 'verified':
@@ -1316,7 +1316,7 @@ class MyProductionPackListCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         if serializer.validated_data.get('category') not in (profile.categories or []):
             return Response(
-                {'detail': 'La categoría del pack no está entre las que ofrecés. Editá tu perfil de producción primero.'},
+                {'detail': 'La categoría del pack no está entre las que ofreces. Editá tu perfil de producción primero.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer.save(partner=profile)
@@ -1690,7 +1690,7 @@ class MyPackBundleListCreateView(APIView):
         bad = [p for p in packs if p.partner_id != profile.id]
         if bad:
             return Response(
-                {'detail': 'Solo podés agrupar packs propios en un bundle.'},
+                {'detail': 'Solo puedes agrupar packs propios en un bundle.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if len(packs) < 2:
@@ -1865,7 +1865,7 @@ def _notify_talents_for_open_gig(open_gig, tier: str):
             message=(
                 f'Un cliente publicó una solicitud para {open_gig.get_event_type_display()} '
                 f'el {open_gig.event_date} en {open_gig.event_city or "Panamá"}. '
-                f'Hacé tu oferta antes que otros DJs.'
+                f'Haz tu oferta antes que otros DJs.'
             ),
             link=link,
         )
@@ -1881,12 +1881,12 @@ def _notify_talents_for_open_gig(open_gig, tier: str):
                 f'border-radius:6px;text-decoration:none;font-weight:700;">'
                 f'Ver solicitud y ofertar</a></p>'
                 f'<p style="color:#666;font-size:12px;">'
-                f'Recibís esta notificación porque sos DJ {tier.title()} en Pulsar.</p>'
+                f'Recibes esta notificación porque eres DJ {tier.title()} en Pulsar.</p>'
             )
             send_pulsar_email(
                 'Nueva solicitud abierta en Pulsar',
                 f'Nueva solicitud de {open_gig.get_event_type_display()} el {open_gig.event_date}. '
-                f'Entrá a {frontend}{link} para ofertar.',
+                f'Entra a {frontend}{link} para ofertar.',
                 [talent.user.email],
                 html_message=html,
             )
@@ -1953,7 +1953,7 @@ def _notify_partners_for_open_gig(open_gig):
             )
             send_pulsar_email(
                 'Nueva solicitud abierta en Pulsar',
-                f'Solicitud de {items_txt} el {open_gig.event_date}. Entrá a {frontend}{link}.',
+                f'Solicitud de {items_txt} el {open_gig.event_date}. Entra a {frontend}{link}.',
                 [u.email],
                 html_message=html,
             )
@@ -2114,7 +2114,7 @@ class GigOfferCreateView(APIView):
             if not talent.is_approved:
                 return Response({'error': 'Tu perfil aún no fue aprobado.'}, status=403)
             if not gig.tier_visible(talent.talent_level):
-                return Response({'error': 'Todavía no podés ver esta solicitud.'}, status=403)
+                return Response({'error': 'Todavía no puedes ver esta solicitud.'}, status=403)
             if GigOffer.objects.filter(request=gig, talent=talent).exists():
                 return Response({'error': 'Ya enviaste una oferta a esta solicitud.'}, status=400)
 
@@ -2135,7 +2135,7 @@ class GigOfferCreateView(APIView):
 
             covers = data.get('covers_item', '')
             if not covers or covers not in OpenGigRequest.PACK_ITEMS:
-                return Response({'error': 'Indicá qué categoría cubre tu oferta (sound, lights, booth, screens, other).'}, status=400)
+                return Response({'error': 'Indica qué categoría cubre tu oferta (sound, lights, booth, screens, other).'}, status=400)
             if covers not in gig.requested_items:
                 return Response({'error': f'La solicitud no pide "{covers}".'}, status=400)
 
@@ -2196,7 +2196,7 @@ class GigOfferCreateView(APIView):
             send_pulsar_email(
                 'Nueva oferta en tu solicitud abierta',
                 f'{provider_name} te envió una oferta de USD {offer.quoted_price} '
-                f'para tu evento del {gig.event_date}. Entrá a {frontend}/dashboard/open-gigs/{gig.id} para verla.',
+                f'para tu evento del {gig.event_date}. Entra a {frontend}/dashboard/open-gigs/{gig.id} para verla.',
                 [gig.client.email],
                 html_message=html,
             )

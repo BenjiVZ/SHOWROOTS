@@ -115,10 +115,10 @@
                   class="og-chip" :class="'need-' + it.key">{{ it.label }}</span>
               </div>
               <div class="og-meta">
-                <span>📅 {{ g.event_date }}</span>
-                <span>🕐 {{ g.event_time_start }} · {{ g.event_duration_hours }}h</span>
-                <span>📍 {{ g.event_city || 'Panamá' }}</span>
-                <span v-if="g.budget">💰 USD {{ g.budget }}</span>
+                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg> {{ g.event_date }}</span>
+                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ g.event_time_start }} · {{ g.event_duration_hours }}h</span>
+                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ g.event_city || 'Panamá' }}</span>
+                <span v-if="g.budget"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> USD {{ g.budget }}</span>
               </div>
               <div class="og-footer">
                 <span class="og-offers">{{ g.offers_count }} oferta{{ g.offers_count === 1 ? '' : 's' }}</span>
@@ -162,7 +162,7 @@
         <!-- Verified: lista de packs -->
         <div v-else-if="productionProfile.status === 'verified'">
           <div v-if="packs.length === 0" class="empty-state">
-            <p>Aún no publicaste packs. Creá el primero — sonido, luces, DJ booth, etc.</p>
+            <p>Aún no publicaste packs. Crea el primero — sonido, luces, DJ booth, etc.</p>
             <button class="btn btn-primary" @click="openPackEditor()">+ Crear mi primer pack</button>
           </div>
           <div v-else class="packs-list">
@@ -284,7 +284,7 @@
                       <input v-model="packEditor.form.includes_dj" type="checkbox" />
                       <span class="dj-toggle-text">
                         <strong>Incluye DJ en este pack</strong>
-                        <small>Activálo si el pack es turnkey — el cliente reserva esto y no necesita buscar un DJ aparte.</small>
+                        <small>Actívalo si el pack es turnkey — el cliente reserva esto y no necesita buscar un DJ aparte.</small>
                       </span>
                     </label>
                     <div v-if="packEditor.form.includes_dj" class="dj-name-wrap">
@@ -293,7 +293,7 @@
                         v-model="packEditor.form.dj_name"
                         type="text"
                         class="input-field"
-                        placeholder="Ej: DJ ShowRoots — o dejá vacío si sos vos"
+                        placeholder="Ej: DJ ShowRoots — o deja vacío si eres vos"
                       />
                     </div>
                   </div>
@@ -329,8 +329,14 @@
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                           DJ incluido<span v-if="packEditor.form.dj_name">: {{ packEditor.form.dj_name }}</span>
                         </span>
-                        <span v-if="packEditor.form.includes_technician" class="preview-flag">⚡ Técnico incl.</span>
-                        <span v-if="packEditor.form.includes_setup" class="preview-flag">🛠 Setup incl.</span>
+                        <span v-if="packEditor.form.includes_technician" class="preview-flag">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                          Técnico incl.
+                        </span>
+                        <span v-if="packEditor.form.includes_setup" class="preview-flag">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                          Setup incl.
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -378,8 +384,12 @@
                 <button class="icon-btn" @click="toggleBundleStatus(b)" :title="b.status === 'published' ? 'Pausar' : 'Publicar'">
                   {{ b.status === 'published' ? '⏸' : '▶' }}
                 </button>
-                <button class="icon-btn" @click="openBundleEditor(b)" title="Editar">✏️</button>
-                <button class="icon-btn icon-btn-danger" @click="deleteBundle(b)" title="Eliminar">🗑</button>
+                <button class="icon-btn" @click="openBundleEditor(b)" title="Editar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </button>
+                <button class="icon-btn icon-btn-danger" @click="deleteBundle(b)" title="Eliminar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
+                </button>
               </div>
             </div>
           </div>

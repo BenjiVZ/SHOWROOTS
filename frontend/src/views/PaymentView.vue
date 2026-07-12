@@ -26,21 +26,27 @@
           <div class="escrow-timeline-card">
             <div class="escrow-stage">
               <div class="es-num">1</div>
-              <div class="es-icon">💳</div>
+              <div class="es-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
               <strong>Hoy</strong>
               <span>Pagas a <strong>Pulsar</strong>, no al talento.</span>
             </div>
             <div class="es-line"></div>
             <div class="escrow-stage active">
               <div class="es-num active">2</div>
-              <div class="es-icon">🛡</div>
+              <div class="es-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
               <strong>En custodia</strong>
               <span><strong>${{ totalToPay.toFixed(2) }}</strong> protegidos hasta el evento.</span>
             </div>
             <div class="es-line"></div>
             <div class="escrow-stage">
               <div class="es-num">3</div>
-              <div class="es-icon">✓</div>
+              <div class="es-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
               <strong>24h post-evento</strong>
               <span>Liberación al talento. Si no se presenta: <strong>reembolso 100%</strong>.</span>
             </div>
@@ -88,7 +94,10 @@
                   <input type="text" placeholder="•••" class="input-field" disabled />
                 </div>
               </div>
-              <p class="stripe-pending">⚠ Stripe Connect aún no configurado en este entorno. Usa "Marcar como pagado" para simular.</p>
+              <p class="stripe-pending">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Stripe Connect aún no configurado en este entorno. Usa "Marcar como pagado" para simular.
+              </p>
             </div>
 
             <div v-else-if="selectedMethod === 'ach'" class="card-form">

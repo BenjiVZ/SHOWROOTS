@@ -186,7 +186,7 @@ def send_new_message_email(recipient, sender, booking, preview):
         <h1 style="margin: 0; font-size: 20px; color: #0d0d0d; font-weight: 800;">PULSAR</h1>
       </div>
       <div style="padding: 32px;">
-        <h2 style="color: #c1d82f; margin-top: 0; font-size:18px;">💬 Nuevo mensaje de {sender_name}</h2>
+        <h2 style="color: #c1d82f; margin-top: 0; font-size:18px;">Nuevo mensaje de {sender_name}</h2>
         <p>Hola <strong>{rcpt_name}</strong>, te escribieron en la reserva <code style="color:#c1d82f;">{booking.booking_code or '#' + str(booking.id)}</code>.</p>
         <blockquote style="margin: 16px 0; padding: 14px 18px; background:#1a1a1a; border-left:3px solid #c1d82f; border-radius:6px; color:#e0e0e0; font-style: italic;">
           {preview}

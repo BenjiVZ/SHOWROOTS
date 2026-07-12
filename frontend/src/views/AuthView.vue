@@ -335,7 +335,8 @@
 
               <transition name="fade-slide">
                 <div v-if="googlePrefilled" class="success-toast">
-                  ✅ Datos de Google cargados. Elige tu rol y crea una contraseña.
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>
+                  Datos de Google cargados. Elige tu rol y crea una contraseña.
                 </div>
               </transition>
 

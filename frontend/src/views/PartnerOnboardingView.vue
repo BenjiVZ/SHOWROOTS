@@ -11,18 +11,24 @@
 
       <!-- Status banner (si ya está en pending/verified/rejected) -->
       <div v-if="profile && profile.status === 'pending'" class="status-banner pending">
-        <strong>⏳ Tu perfil está en revisión.</strong>
-        Te avisaremos cuando un admin de Pulsar lo apruebe (target 48h).
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div><strong>Tu perfil está en revisión.</strong> Te avisaremos cuando un admin de Pulsar lo apruebe (target 48h).</div>
       </div>
       <div v-else-if="profile && profile.status === 'verified'" class="status-banner verified">
-        <strong>✅ Tu perfil está verificado.</strong>
-        Ya podés publicar packs desde el dashboard de Aliado.
-        <router-link to="/partner" class="banner-link">Ir al dashboard →</router-link>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        <div>
+          <strong>Tu perfil está verificado.</strong>
+          Ya puedes publicar packs desde el dashboard de Aliado.
+          <router-link to="/partner" class="banner-link">Ir al dashboard →</router-link>
+        </div>
       </div>
       <div v-else-if="profile && profile.status === 'rejected'" class="status-banner rejected">
-        <strong>❌ Tu solicitud fue rechazada.</strong>
-        <span v-if="profile.rejection_reason">Motivo: {{ profile.rejection_reason }}</span>
-        <span>Podés ajustar y volver a enviar.</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <div>
+          <strong>Tu solicitud fue rechazada.</strong>
+          <span v-if="profile.rejection_reason"> Motivo: {{ profile.rejection_reason }}</span>
+          <span>Puedes ajustar y volver a enviar.</span>
+        </div>
       </div>
 
       <!-- Steps bar -->
@@ -36,8 +42,8 @@
 
       <!-- ── STEP 1: Categorías ── -->
       <div v-else-if="canEdit && step === 1" class="card">
-        <h2>¿Qué tipo de equipo ofrecés?</h2>
-        <p class="card-sub">Elegí todas las categorías que tengas disponibles. Podrás detallarlas en cada Pack más adelante.</p>
+        <h2>¿Qué tipo de equipo ofreces?</h2>
+        <p class="card-sub">Elige todas las categorías que tengas disponibles. Podrás detallarlas en cada Pack más adelante.</p>
 
         <div class="check-grid">
           <button
@@ -68,8 +74,8 @@
       <div v-else-if="canEdit && step === 2" class="card">
         <h2>Fotos del equipo</h2>
         <p class="card-sub">
-          Subí mínimo <strong>{{ MIN_PHOTOS }}</strong> fotos claras del equipo: setup armado, equipos individuales,
-          y el depósito/garage donde lo guardás. Las usamos para verificar que existe.
+          Sube mínimo <strong>{{ MIN_PHOTOS }}</strong> fotos claras del equipo: setup armado, equipos individuales,
+          y el depósito/garage donde lo guardas. Las usamos para verificar que existe.
         </p>
 
         <div class="photo-grid">
@@ -115,7 +121,7 @@
       <!-- ── STEP 3: Cobertura ── -->
       <div v-else-if="canEdit && step === 3" class="card">
         <h2>Cobertura y disponibilidad</h2>
-        <p class="card-sub">Decinos hasta dónde llegás y cuántos eventos podés cubrir en simultáneo.</p>
+        <p class="card-sub">Dinos hasta dónde llegas y cuántos eventos puedes cubrir en simultáneo.</p>
 
         <div class="form-grid">
           <div class="form-group full">
@@ -136,7 +142,7 @@
           <div class="form-group full">
             <label class="label">Radio de cobertura: <strong>{{ form.coverage_radius_km }} km</strong></label>
             <input v-model.number="form.coverage_radius_km" type="range" min="10" max="300" step="10" class="range-slider" />
-            <small class="form-hint">Hasta dónde te movés sin recargos.</small>
+            <small class="form-hint">Hasta dónde te mueves sin recargos.</small>
           </div>
 
           <div class="form-group">
@@ -155,7 +161,7 @@
           </div>
           <div class="form-group full">
             <label class="label">Notas (opcional)</label>
-            <textarea v-model="form.notes" rows="3" class="input-field" placeholder="Algo más que querés que sepamos: zonas específicas, restricciones, etc."></textarea>
+            <textarea v-model="form.notes" rows="3" class="input-field" placeholder="Algo más que quieres que sepamos: zonas específicas, restricciones, etc."></textarea>
           </div>
         </div>
 
@@ -172,7 +178,7 @@
       <!-- ── STEP 4: Verificación ── -->
       <div v-else-if="canEdit && step === 4" class="card">
         <h2>Revisión y envío a verificación</h2>
-        <p class="card-sub">Revisá los datos. Cuando envíes, un admin de Pulsar lo aprobará en máximo 48h.</p>
+        <p class="card-sub">Revisa los datos. Cuando envíes, un admin de Pulsar lo aprobará en máximo 48h.</p>
 
         <div class="review-block">
           <div class="review-row">
@@ -200,7 +206,8 @@
         </div>
 
         <div class="warning-note">
-          ⚠️ Una vez enviado, no podés editar el perfil hasta que el admin responda.
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Una vez enviado, no puedes editar el perfil hasta que el admin responda.
         </div>
 
         <p v-if="error" class="form-error">{{ error }}</p>
@@ -338,7 +345,7 @@ async function fetchProfile() {
     }
   } catch (e) {
     if (e?.response?.status === 403) {
-      error.value = 'Activá primero el rol Aliado en Mi Cuenta.'
+      error.value = 'Activa primero el rol Aliado en Mi Cuenta.'
       setTimeout(() => router.push('/account'), 1500)
     } else {
       error.value = 'No se pudo cargar tu perfil.'

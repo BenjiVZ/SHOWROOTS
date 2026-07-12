@@ -199,7 +199,7 @@
           </h2>
           <div class="genres-list">
             <span v-for="e in eventTypeTags" :key="e.value" class="badge badge-event">
-              <span class="badge-event-icon">{{ e.icon }}</span>{{ e.label }}
+              <span class="badge-event-icon" v-html="e.icon"></span>{{ e.label }}
             </span>
           </div>
         </section>
@@ -234,12 +234,12 @@
             Packs de Producción
             <span class="prod-badge">Partner verificado</span>
           </h2>
-          <p class="prod-sub">Estos packs los podés rentar incluso si no contratás a {{ talent.stage_name }} como DJ.</p>
+          <p class="prod-sub">Estos packs los puedes rentar incluso si no contratas a {{ talent.stage_name }} como DJ.</p>
           <div class="prod-packs-grid">
             <div v-for="p in productionPacks" :key="p.id" class="prod-pack-card">
               <div class="prod-pack-thumb">
                 <img v-if="p.cover_image" :src="p.cover_image" :alt="p.name" />
-                <span v-else class="prod-pack-emoji">{{ prodCategoryIcon(p.category) }}</span>
+                <span v-else class="prod-pack-emoji" v-html="prodCategoryIcon(p.category)"></span>
               </div>
               <div class="prod-pack-body">
                 <div class="prod-pack-name">{{ p.name }}</div>
@@ -339,7 +339,10 @@
           <!-- Info pair (texto) -->
           <div class="coverage-info-pair">
             <div>
-              <div class="coverage-label">📍 Zonas de cobertura</div>
+              <div class="coverage-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Zonas de cobertura
+              </div>
               <div class="coverage-value">
                 <span v-if="serviceZonesList.length">{{ serviceZonesList.join(', ') }}</span>
                 <span v-else>{{ talent.city }}<span v-if="talent.coverage_radius_km"> · radio {{ talent.coverage_radius_km }} km</span></span>
@@ -349,7 +352,10 @@
               </div>
             </div>
             <div v-if="languagesList.length">
-              <div class="coverage-label">🌐 Idiomas en MC</div>
+              <div class="coverage-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                Idiomas en MC
+              </div>
               <div class="coverage-value">{{ languagesList.join(', ') }}</div>
             </div>
           </div>
@@ -922,26 +928,28 @@ function videoEmbedUrl(url) {
   return null
 }
 
-// ── Event types ──
+// ── Event types (SVG icons) ──
+const _svg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
 const EVENT_TYPE_LABELS = {
-  wedding: { icon: '💍', label: 'Bodas' },
-  corporate: { icon: '🏢', label: 'Corporativo' },
-  birthday: { icon: '🎂', label: 'Cumpleaños' },
-  cocktail: { icon: '🍸', label: 'Cocktail / Brunch' },
-  club: { icon: '🪩', label: 'Club / Residencia' },
-  launch: { icon: '🚀', label: 'Lanzamiento' },
-  graduation: { icon: '🎓', label: 'Graduación' },
-  festival: { icon: '🎪', label: 'Festival' },
-  private: { icon: '🎉', label: 'Fiesta Privada' },
-  anniversary: { icon: '💐', label: 'Aniversario' },
+  wedding:     { icon: `${_svg}<circle cx="9" cy="15" r="5"/><circle cx="16" cy="15" r="5"/><path d="M7 9l2-5h6l2 5"/></svg>`,                                                                                                                                                                                       label: 'Bodas' },
+  corporate:   { icon: `${_svg}<rect x="4" y="2" width="16" height="20"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="12" y1="6" x2="12" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/></svg>`,                                                                                                            label: 'Corporativo' },
+  birthday:    { icon: `${_svg}<path d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8"/><path d="M4 16s1.5-2 4-2 3.5 2 4 2 1.5-2 4-2 4 2 4 2"/><line x1="2" y1="21" x2="22" y2="21"/><line x1="12" y1="4" x2="12" y2="11"/></svg>`,                                                                                          label: 'Cumpleaños' },
+  cocktail:    { icon: `${_svg}<path d="M5 3h14l-7 9z"/><path d="M12 12v9"/><path d="M8 21h8"/></svg>`,                                                                                                                                                                                                            label: 'Cocktail / Brunch' },
+  club:        { icon: `${_svg}<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>`,                                                                                                                                                                                                              label: 'Club / Residencia' },
+  launch:      { icon: `${_svg}<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/></svg>`,                                                                    label: 'Lanzamiento' },
+  graduation:  { icon: `${_svg}<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>`,                                                                                                                                                                                      label: 'Graduación' },
+  festival:    { icon: `${_svg}<path d="M2 20h20"/><path d="M12 3L4 20"/><path d="M12 3l8 17"/></svg>`,                                                                                                                                                                                                            label: 'Festival' },
+  private:     { icon: `${_svg}<path d="M8 22h8"/><path d="M12 11v11"/><path d="M19 3l-7 8-7-8"/><path d="M5 3h14"/></svg>`,                                                                                                                                                                                       label: 'Fiesta Privada' },
+  anniversary: { icon: `${_svg}<path d="M12 21s-8-6-8-12a5 5 0 019-3 5 5 0 019 3c0 6-8 12-8 12z"/></svg>`,                                                                                                                                                                                                          label: 'Aniversario' },
 }
+const _DEFAULT_ET_SVG = `${_svg}<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`
 
 const eventTypeTags = computed(() => {
   const types = talent.value?.event_types
   if (!Array.isArray(types)) return []
   return types.map(value => ({
     value,
-    icon: EVENT_TYPE_LABELS[value]?.icon || '📅',
+    icon: EVENT_TYPE_LABELS[value]?.icon || _DEFAULT_ET_SVG,
     label: EVENT_TYPE_LABELS[value]?.label || value,
   }))
 })
@@ -965,8 +973,16 @@ const languagesList = computed(() => {
 // ── Packs ──
 const packs = computed(() => talent.value?.packs || [])
 const productionPacks = ref([])
-const PROD_CATEGORY_ICONS = { sound: '🔊', lights: '💡', screens: '📺', mics: '🎤', dj_booth: '🎚', fx: '🪩' }
-function prodCategoryIcon(c) { return PROD_CATEGORY_ICONS[c] || '📦' }
+const PROD_CATEGORY_ICONS = {
+  sound:    `${_svg}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>`,
+  lights:   `${_svg}<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.7.6 1 1.5 1 2.3v1h6v-1c0-.8.3-1.7 1-2.3A7 7 0 0012 2z"/></svg>`,
+  screens:  `${_svg}<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+  mics:     `${_svg}<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`,
+  dj_booth: `${_svg}<rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>`,
+  fx:       `${_svg}<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>`,
+}
+const _DEFAULT_PACK_SVG = `${_svg}<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`
+function prodCategoryIcon(c) { return PROD_CATEGORY_ICONS[c] || _DEFAULT_PACK_SVG }
 
 // ── FAQ open state ──
 const faqOpen = ref({})

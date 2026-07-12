@@ -22,8 +22,8 @@
               <span v-html="iconSvg(n.notification_type)"></span>
             </div>
             <div class="notif-content">
-              <strong>{{ n.title }}</strong>
-              <p>{{ n.message }}</p>
+              <strong>{{ stripEmoji(n.title) }}</strong>
+              <p>{{ stripEmoji(n.message) }}</p>
               <time>{{ timeAgo(n.created_at) }}</time>
             </div>
             <div v-if="!n.is_read" class="notif-dot"></div>
@@ -107,23 +107,68 @@ function iconBg(type) {
     request_rejected: 'var(--color-error-light)',
     payment_received: 'var(--color-success-light)',
     booking_confirmed: 'var(--color-success-light)',
+    booking_completed: 'var(--color-success-light)',
+    booking_expired: 'rgba(150,150,150,0.15)',
+    event_reminder: 'var(--color-warning-light)',
+    reminder: 'var(--color-warning-light)',
     new_message: 'var(--color-secondary-light)',
     new_review: 'var(--color-warning-light)',
+    system: 'var(--color-success-light)',
+    tier_upgrade: 'var(--color-primary-ultra-light)',
+    premium_invitation: 'var(--color-primary-ultra-light)',
+    flagged_warning: 'var(--color-error-light)',
+    open_gig_available: 'var(--color-primary-ultra-light)',
+    open_gig_offer_received: 'var(--color-primary-ultra-light)',
+    open_gig_offer_accepted: 'var(--color-success-light)',
+    open_gig_offer_rejected: 'rgba(150,150,150,0.15)',
+    open_gig_expired: 'rgba(150,150,150,0.15)',
   }
   return map[type] || 'rgba(255,255,255,0.05)'
 }
 
 function iconSvg(type) {
   const icons = {
+    // Solicitudes tradicionales
     new_request: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
     request_accepted: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
     request_rejected: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    // Pagos
     payment_received: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+    // Bookings
     booking_confirmed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><polyline points="9 12 12 15 16 10"/></svg>',
+    booking_completed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    booking_expired: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    // Recordatorios
+    event_reminder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    reminder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    // Chat
     new_message: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-secondary)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    // Reseñas
     new_review: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    // Sistema / verificación (shield-check)
+    system: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+    // Tier / plan
+    tier_upgrade: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>',
+    premium_invitation: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    // Warning (alert-triangle)
+    flagged_warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    // Solicitudes abiertas — rayo
+    open_gig_available: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+    open_gig_offer_received: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    open_gig_offer_accepted: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    open_gig_offer_rejected: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    open_gig_expired: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
   }
   return icons[type] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>'
+}
+
+// Strip emojis (y símbolos pictográficos) del principio del texto,
+// para que las notificaciones viejas que los tenían en el título/mensaje
+// se muestren limpias (ahora los emojis viven en el ícono del lado izquierdo).
+const EMOJI_RE = /[\p{Extended_Pictographic}\p{Emoji_Presentation}️]/gu
+function stripEmoji(txt) {
+  if (!txt) return ''
+  return String(txt).replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim()
 }
 
 function handleOutsideClick(e) {

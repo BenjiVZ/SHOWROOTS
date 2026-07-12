@@ -122,7 +122,10 @@
           {{ t.label }}
           <small v-if="t.hint && !t.locked" class="tab-hint">{{ t.hint }}</small>
           <span v-if="t.badge" class="tab-badge">{{ t.badge }}</span>
-          <span v-if="t.locked" class="tab-lock-badge">{{ t.lockedPlan }} 🔒</span>
+          <span v-if="t.locked" class="tab-lock-badge">
+            {{ t.lockedPlan }}
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
         </button>
       </nav>
 
@@ -132,7 +135,9 @@
         <!-- ═══ Solicitudes Pendientes ═══ -->
         <section v-if="activeTab === 'requests'" class="tab-panel animate-fade-in" data-tour="requests">
           <div v-if="pendingRequests.length === 0" class="empty-state-rich">
-            <div class="empty-celebration-icon">🎉</div>
+            <div class="empty-celebration-icon">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3L2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="M22 2L2 22"/><path d="M22 13.66L13.66 22"/><path d="M15 8L8 15"/></svg>
+            </div>
             <h3 class="empty-title">{{ profile ? 'Tu perfil está publicado' : '¡Bienvenido a Pulsar!' }}</h3>
             <p class="empty-desc">
               Las solicitudes empezarán a llegar cuando los clientes te encuentren en búsquedas.
@@ -166,7 +171,8 @@
             </div>
 
             <p class="empty-tip">
-              💡 Los DJs con perfil completo reciben <strong>3× más solicitudes</strong> que los incompletos.
+              <svg class="tip-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.7.6 1 1.5 1 2.3v1h6v-1c0-.8.3-1.7 1-2.3A7 7 0 0012 2z"/></svg>
+              Los DJs con perfil completo reciben <strong>3× más solicitudes</strong> que los incompletos.
             </p>
           </div>
           <div v-else class="request-list">
@@ -229,15 +235,15 @@
               <h3 style="margin:0;color:#fff">Solicitudes abiertas</h3>
               <p style="margin:4px 0 0;color:var(--color-text-muted);font-size:0.9rem;">
                 Publicaciones de clientes que buscan un DJ. Los <strong>Premium</strong> las ven al instante,
-                los <strong>Pro</strong> a los 3 min y los <strong>Standard</strong> a los 6 min. Enviá tu oferta rápido.
+                los <strong>Pro</strong> a los 3 min y los <strong>Standard</strong> a los 6 min. Envía tu oferta rápido.
               </p>
             </div>
           </div>
 
           <div v-if="!openGigs.length" class="empty-state" style="padding:40px 20px;text-align:center;color:var(--color-text-muted)">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            <p style="margin-top:8px">No hay solicitudes abiertas disponibles para vos ahora mismo.</p>
-            <p style="font-size:0.85rem">Volvé más tarde — te avisamos por email cuando llegue una nueva.</p>
+            <p style="margin-top:8px">No hay solicitudes abiertas disponibles para ti ahora mismo.</p>
+            <p style="font-size:0.85rem">Vuelve más tarde — te avisamos por email cuando llegue una nueva.</p>
           </div>
 
           <div v-else class="og-list">
@@ -250,10 +256,10 @@
               </div>
               <div class="og-meta">
                 <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg> {{ g.event_date }}</span>
-                <span>🕐 {{ g.event_time_start }} · {{ g.event_duration_hours }}h</span>
-                <span>📍 {{ g.event_city || 'Panamá' }}</span>
-                <span v-if="g.guest_count">👥 {{ g.guest_count }} invitados</span>
-                <span v-if="g.budget">💰 USD {{ g.budget }}</span>
+                <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ g.event_time_start }} · {{ g.event_duration_hours }}h</span>
+                <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ g.event_city || 'Panamá' }}</span>
+                <span v-if="g.guest_count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> {{ g.guest_count }} invitados</span>
+                <span v-if="g.budget"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> USD {{ g.budget }}</span>
               </div>
               <div class="og-footer">
                 <span class="og-offers">{{ g.offers_count }} oferta{{ g.offers_count === 1 ? '' : 's' }}</span>
@@ -371,12 +377,17 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <div>
               <strong>¿Cómo funciona?</strong> Por defecto estás <b>disponible todos los días</b>.
-              Hacé <b>click en un día</b> para marcar que <b>no</b> estás disponible (bloquearlo).
-              Volvé a hacer click para liberarlo. Los días con reserva confirmada se marcan solos y no se pueden editar.
+              Haz <b>click en un día</b> para marcar que <b>no</b> estás disponible (bloquearlo).
+              Vuelve a hacer click para liberarlo. Los días con reserva confirmada se marcan solos y no se pueden editar.
             </div>
           </div>
 
           <div class="calendar-container glass">
+            <div class="calendar-legend calendar-legend-top">
+              <span class="legend-item"><span class="legend-box box-available"></span> Disponible <small>(por defecto)</small></span>
+              <span class="legend-item"><span class="legend-box box-blocked"></span> No disponible <small>(vos lo bloqueaste)</small></span>
+              <span class="legend-item"><span class="legend-box box-booked"></span> Reservado <small>(evento confirmado)</small></span>
+            </div>
             <div class="calendar-header">
               <button class="btn btn-ghost btn-sm" @click="changeMonth(-1)" aria-label="Mes anterior">←</button>
               <div class="cal-header-center">
@@ -401,15 +412,16 @@
                 :title="dayTooltip(day)"
                 @click="onDayClick(day)">
                 <span class="day-num">{{ day.day }}</span>
-                <span v-if="day.status === 'booked'" class="day-tag">🎉 Reservado</span>
-                <span v-else-if="day.status === 'blocked'" class="day-tag">🚫 No disp.</span>
+                <span v-if="day.status === 'booked'" class="day-tag">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Reservado
+                </span>
+                <span v-else-if="day.status === 'blocked'" class="day-tag">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  No disp.
+                </span>
                 <span v-else-if="day.isToday" class="day-tag day-tag-today">Hoy</span>
               </div>
-            </div>
-            <div class="calendar-legend">
-              <span class="legend-item"><span class="legend-box box-available"></span> Disponible <small>(por defecto)</small></span>
-              <span class="legend-item"><span class="legend-box box-blocked"></span> No disponible <small>(vos lo bloqueaste)</small></span>
-              <span class="legend-item"><span class="legend-box box-booked"></span> Reservado <small>(evento confirmado)</small></span>
             </div>
           </div>
         </section>
@@ -533,7 +545,10 @@
             <div>
               <h3 class="gallery-h3">
                 Video en vivo
-                <span v-if="videoLocked" class="inline-lock-badge">Pro 🔒</span>
+                <span v-if="videoLocked" class="inline-lock-badge">
+                  Pro
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </span>
               </h3>
               <p class="gallery-sub">
                 <template v-if="videoLocked">Disponible en plan Pro · Muestra tu show a los clientes.</template>
@@ -544,7 +559,9 @@
 
           <!-- Card locked si el Plan no permite videos -->
           <div v-if="videoLocked" class="video-locked-card">
-            <div class="vlc-icon">🔒</div>
+            <div class="vlc-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
             <div class="vlc-content">
               <strong>Tu plan Standard no incluye video en vivo</strong>
               <p>Sube a plan Pro para mostrar tu show en vivo a los clientes. Los DJs con video reciben hasta el doble de solicitudes.</p>
@@ -593,7 +610,10 @@
 
           <!-- Nota Partner: para DJs con equipo propio -->
           <div class="partner-hint">
-            <div class="partner-hint-title">💡 Importante: estas son tarifas de tu performance</div>
+            <div class="partner-hint-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.7.6 1 1.5 1 2.3v1h6v-1c0-.8.3-1.7 1-2.3A7 7 0 0012 2z"/></svg>
+              Importante: estas son tarifas de tu performance
+            </div>
             <p>
               Las tarifas que ves aquí son solo del DJ (tu show). El sonido, luces y demás producción se cotizan aparte.
             </p>
@@ -677,7 +697,9 @@
         <section v-if="activeTab === 'faqs'" class="tab-panel animate-fade-in">
           <!-- Locked preview (Plan Standard no incluye FAQ) -->
           <div v-if="faqLocked" class="locked-preview">
-            <div class="locked-icon">🔒</div>
+            <div class="locked-icon">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
             <h3>FAQ está disponible en plan PRO</h3>
             <p class="locked-desc">
               Responde preguntas comunes de tus clientes ("¿Tomas requests?", "¿Cuánto tiempo de setup necesitas?")
@@ -978,7 +1000,7 @@
           <div class="recommended-section">
             <h3 class="h3-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Aliados de producción recomendados</h3>
             <p class="form-hint">
-              Marcá los Aliados de producción con los que trabajás siempre. Aparecerán primero
+              Marca los Aliados de producción con los que trabajas siempre. Aparecerán primero
               cuando tus clientes agreguen packs a sus reservas.
             </p>
 
@@ -1144,39 +1166,39 @@ const tourSteps = [
     icon: ICON.activity,
     target: '[data-tour="stats"]',
     title: 'Tus números de un vistazo',
-    body: 'Acá ves tus <strong>solicitudes pendientes</strong>, <strong>reservas activas</strong>, eventos completados y tu <strong>calificación</strong>.',
+    body: 'Aquí ves tus <strong>solicitudes pendientes</strong>, <strong>reservas activas</strong>, eventos completados y tu <strong>calificación</strong>.',
   },
   {
     icon: ICON.layout,
     target: '[data-tour="tabs"]',
     title: 'Todo se organiza en pestañas',
-    body: 'Desde acá manejás <strong>Solicitudes</strong>, <strong>Reservas</strong>, <strong>Ingresos</strong>, <strong>Calendario</strong>, <strong>Galería</strong>, <strong>Tarifas</strong> y tu <strong>Perfil</strong>.',
+    body: 'Desde aquí manejas <strong>Solicitudes</strong>, <strong>Reservas</strong>, <strong>Ingresos</strong>, <strong>Calendario</strong>, <strong>Galería</strong>, <strong>Tarifas</strong> y tu <strong>Perfil</strong>.',
   },
   {
     icon: ICON.inbox,
     tab: 'requests',
     target: '[data-tour="requests"]',
-    title: 'Solicitudes: respondé rápido',
-    body: 'Cuando un cliente te quiere contratar, la solicitud aparece acá. <strong>Aceptá, rechazá o ajustá el precio</strong>. Responder rápido mejora tu posición en las búsquedas.',
+    title: 'Solicitudes: responde rápido',
+    body: 'Cuando un cliente te quiere contratar, la solicitud aparece aquí. <strong>Acepta, rechaza o ajusta el precio</strong>. Responder rápido mejora tu posición en las búsquedas.',
   },
   {
     icon: ICON.calendar,
     tab: 'calendar',
     target: '#calendar-section',
     title: 'Tu calendario de disponibilidad',
-    body: 'Marcá los días en que <strong>NO</strong> estás disponible. Hacé click en un día para <strong>bloquearlo</strong>; volvé a hacer click para <strong>liberarlo</strong>. Los días con reserva confirmada se marcan solos.',
+    body: 'Marca los días en que <strong>NO</strong> estás disponible. Haz click en un día para <strong>bloquearlo</strong>; vuelve a hacer click para <strong>liberarlo</strong>. Los días con reserva confirmada se marcan solos.',
   },
   {
     icon: ICON.user,
     tab: 'profile',
     target: '[data-tour="profile"]',
-    title: 'Completá tu perfil',
-    body: 'Mientras más completo tu perfil (foto, bio, géneros, tarifas), <strong>más reservas conseguís</strong>. Un perfil completo puede recibir hasta 3× más solicitudes.',
+    title: 'Completa tu perfil',
+    body: 'Mientras más completo tu perfil (foto, bio, géneros, tarifas), <strong>más reservas consigues</strong>. Un perfil completo puede recibir hasta 3× más solicitudes.',
   },
   {
     icon: ICON.bulb,
-    title: '¿Necesitás repasar?',
-    body: 'Podés reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡Éxitos con tus eventos!',
+    title: '¿Necesitas repasar?',
+    body: 'Puedes reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡Éxitos con tus eventos!',
   },
 ]
 const bookings = ref([])
@@ -2271,7 +2293,7 @@ function goToday() {
 
 function dayTooltip(day) {
   if (!day.current) return ''
-  if (day.status === 'booked') return 'Tenés un evento confirmado este día'
+  if (day.status === 'booked') return 'Tienes un evento confirmado este día'
   if (day.isPast) return 'Fecha pasada'
   if (day.status === 'blocked') return 'Click para marcar que SÍ estás disponible'
   return 'Click para marcar que NO estás disponible'
@@ -2430,7 +2452,7 @@ async function fetchAvailability() {
 onMounted(async () => {
   loading.value = true
   // 1) Cargar el perfil PRIMERO. Si el talento no tiene perfil, fetchProfile
-  //    redirige al onboarding y cortamos acá (evita 404 en cascada).
+  //    redirige al onboarding y cortamos aquí (evita 404 en cascada).
   await fetchProfile()
   if (!profile.value) { loading.value = false; return }
   // 2) Ya hay perfil → cargar el resto del dashboard.
@@ -2922,7 +2944,7 @@ onMounted(async () => {
 /* Disponible por defecto: verde suave, con hover que invita a bloquear */
 .cal-day.available { background: rgba(198,255,0,0.06); border-color: rgba(198,255,0,0.18); }
 .cal-day.available:hover { background: rgba(255,80,80,0.12); border-color: rgba(255,80,80,0.5); }
-.cal-day.available:hover::after { content: '🚫'; position: absolute; bottom: 3px; font-size: 9px; opacity: 0.7; }
+.cal-day.available:hover::after { content: '✕'; position: absolute; bottom: 2px; right: 4px; font-size: 11px; color: var(--color-error); opacity: 0.65; font-weight: 700; }
 .cal-day.other-month { opacity: 0.15; pointer-events: none; }
 .cal-day.is-past { opacity: 0.3; pointer-events: none; cursor: default; }
 .cal-day.today { border-color: var(--color-primary); border-width: 2px; }
@@ -2934,6 +2956,7 @@ onMounted(async () => {
 .day-tag { font-size: 8.5px; font-weight: 700; letter-spacing: 0.02em; text-align: center; line-height: 1.1; }
 .day-tag-today { color: var(--color-primary); text-transform: uppercase; }
 .calendar-legend { display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: center; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.calendar-legend-top { margin-top: 0; padding-top: 0; padding-bottom: var(--space-3); margin-bottom: var(--space-3); border-top: none; border-bottom: 1px solid var(--color-border); }
 .legend-item { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-secondary, #c3c8d0); }
 .legend-item small { color: var(--color-text-muted); }
 .legend-box { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid; flex-shrink: 0; }

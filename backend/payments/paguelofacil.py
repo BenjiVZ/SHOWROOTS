@@ -38,7 +38,7 @@ INTERNAL_REF_PATTERN = re.compile(r'(?:^|\s|=)(PLS-[A-F0-9]{16})\b', re.IGNORECA
 # Lista completa en: https://developers.paguelofacil.com/es/server-to-server-integration
 PFL_ERROR_MESSAGES = {
     300: 'Error en la pasarela. Reintentá en unos minutos.',
-    500: 'Sesión inválida. Volvé a iniciar el pago.',
+    500: 'Sesión inválida. Vuelve a iniciar el pago.',
     600: 'Comercio no válido — credenciales o CCLW incorrectos.',
     601: 'Comercio suspendido (sin actividad en los últimos 90 días).',
     602: 'Faltan datos obligatorios.',
@@ -199,7 +199,7 @@ def build_sdk_config(
     if not cclw or not api_key:
         raise ValueError(
             'PAGUELOFACIL_CCLW y/o PAGUELOFACIL_ACCESS_TOKEN no configurados. '
-            'Revisá el .env del droplet.'
+            'Revisa el .env del droplet.'
         )
 
     # Embebemos el internal_reference en la descripción con marcador 'ref='

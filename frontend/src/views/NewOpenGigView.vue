@@ -13,18 +13,18 @@
           </svg>
         </div>
         <div>
-          <h1>Publicá tu solicitud</h1>
+          <h1>Publica tu solicitud</h1>
           <p class="hero-sub">
-            Contanos qué necesitás y recibí ofertas de DJs y Aliados de producción.
-            Podés pedir solo un DJ, solo un pack de sonido, un combo completo… lo que quieras.
+            Cuéntanos qué necesitas y recibe ofertas de DJs y Aliados de producción.
+            Puedes pedir solo un DJ, solo un pack de sonido, un combo completo… lo que quieras.
           </p>
         </div>
       </div>
 
       <form @submit.prevent="handleSubmit" class="form-card">
-        <h2 class="section-title">¿Qué necesitás?</h2>
+        <h2 class="section-title">¿Qué necesitas?</h2>
         <p class="section-hint">
-          Elegí uno o varios. Recibirás ofertas separadas por cada categoría — podés aceptar
+          Elige uno o varios. Recibirás ofertas separadas por cada categoría — puedes aceptar
           un DJ + un pack de luces + uno de sonido, por ejemplo.
         </p>
         <div class="form-group">
@@ -40,7 +40,7 @@
               <span class="need-desc">{{ n.desc }}</span>
             </button>
           </div>
-          <p v-if="needsError" class="need-error">Elegí al menos una opción.</p>
+          <p v-if="needsError" class="need-error">Elige al menos una opción.</p>
         </div>
 
         <h2 class="section-title" style="margin-top:24px">Detalles del evento</h2>
@@ -120,7 +120,7 @@
         <div class="form-group">
           <label class="form-label">Descripción / requerimientos</label>
           <textarea v-model="form.description" class="form-input" rows="4"
-            placeholder="Detalles del ambiente que buscás, canciones especiales, requerimientos técnicos…"></textarea>
+            placeholder="Detalles del ambiente que buscas, canciones especiales, requerimientos técnicos…"></textarea>
         </div>
 
         <div v-if="error" class="error-msg">{{ error }}</div>
@@ -134,7 +134,7 @@
         </div>
 
         <p class="fine-print">
-          Si pedís DJ, los Premium reciben la notificación al instante, los Pro a los 3 min y los Standard a los 6.
+          Si pides DJ, los Premium reciben la notificación al instante, los Pro a los 3 min y los Standard a los 6.
           Los Aliados aprobados reciben la notificación al instante. La solicitud expira a las 24 horas.
         </p>
       </form>
@@ -220,11 +220,11 @@ const isValid = computed(() =>
 async function handleSubmit() {
   if (!form.requested_items.length) {
     needsError.value = true
-    error.value = 'Elegí al menos qué necesitás (DJ, sonido, luces, etc.).'
+    error.value = 'Elige al menos qué necesitas (DJ, sonido, luces, etc.).'
     return
   }
   if (!isValid.value) {
-    error.value = 'Completá los campos obligatorios.'
+    error.value = 'Completa los campos obligatorios.'
     return
   }
   error.value = ''

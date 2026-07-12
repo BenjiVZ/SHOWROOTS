@@ -276,7 +276,8 @@
                 Reportado por: <strong>{{ d.reported_by_name }}</strong>
               </p>
               <div v-if="d.refund_amount" class="dispute-refund">
-                💸 Reembolsado: <strong>${{ Number(d.refund_amount).toFixed(2) }}</strong>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Reembolsado: <strong>${{ Number(d.refund_amount).toFixed(2) }}</strong>
               </div>
             </div>
             <div v-if="d.status === 'open' || d.status === 'investigating'" class="dispute-actions">
@@ -330,7 +331,10 @@
               <img :src="ph.file" :alt="ph.caption || 'Foto'" />
             </a>
           </div>
-          <div v-else class="pp-info-row" style="color:#ef4444">⚠ Sin fotos cargadas</div>
+          <div v-else class="pp-info-row" style="color:#ef4444; display:flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Sin fotos cargadas
+          </div>
 
           <div v-if="pp.rejection_reason" class="pp-rejection">Motivo del rechazo: {{ pp.rejection_reason }}</div>
 

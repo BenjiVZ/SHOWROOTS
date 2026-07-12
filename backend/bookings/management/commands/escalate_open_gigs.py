@@ -71,7 +71,7 @@ def escalate_open_gigs_job():
             title='Tu solicitud expiró',
             message=(
                 f'Tu solicitud abierta para el {gig.event_date} expiró sin ofertas aceptadas. '
-                f'Podés publicarla de nuevo o buscar un DJ directamente.'
+                f'Puedes publicarla de nuevo o buscar un DJ directamente.'
             ),
             link=f'/dashboard/open-gigs/{gig.id}',
         )

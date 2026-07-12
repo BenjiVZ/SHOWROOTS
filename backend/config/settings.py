@@ -246,7 +246,7 @@ PAGUELOFACIL_WEBHOOK_URL = os.environ.get(
 )
 # HMAC-SHA256 del body con este secret debe matchear el header X-Paguelofacil-Signature.
 # Si está vacío y estamos en sandbox: aceptamos sin validar. En prod: warning.
-# Cuando soporte de PFL active el webhook, pedirles el secret y configurarlo acá.
+# Cuando soporte de PFL active el webhook, pedirles el secret y configurarlo aquí.
 PAGUELOFACIL_WEBHOOK_SECRET = os.environ.get('PAGUELOFACIL_WEBHOOK_SECRET', '')
 
 # ── Production hardening ──
@@ -277,7 +277,7 @@ if os.environ.get('USE_SPACES', 'False') == 'True':
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_FILE_OVERWRITE = False
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    # CDN opcional — si activás el CDN del Space, exponé media bajo ese hostname.
+    # CDN opcional — si activas el CDN del Space, expón media bajo ese hostname.
     SPACES_CDN = os.environ.get('SPACES_CDN', '')
     if SPACES_CDN:
         MEDIA_URL = f'https://{SPACES_CDN}/'

@@ -2,7 +2,10 @@
   <div class="hiw-page">
     <div class="container">
       <header class="hiw-hero animate-fade-in-up">
-        <span class="hero-tag">🛡 Cómo funciona Pulsar</span>
+        <span class="hero-tag">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Cómo funciona Pulsar
+        </span>
         <h1>Reserva sin sorpresas. <span class="text-accent">Pagas, queda en custodia, llega.</span></h1>
         <p class="hero-sub">Pulsar es un marketplace curado de DJs, músicos y bandas en Panamá. Tu pago está protegido hasta 24h después del evento.</p>
       </header>
@@ -30,19 +33,25 @@
         </div>
         <div class="escrow-timeline">
           <div class="escrow-stage">
-            <div class="es-icon">💳</div>
+            <div class="es-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
             <strong>Hoy</strong>
-            <span>Pagás a Pulsar. No al talento directamente.</span>
+            <span>Pagas a Pulsar. No al talento directamente.</span>
           </div>
           <div class="escrow-arrow">→</div>
           <div class="escrow-stage">
-            <div class="es-icon">🛡</div>
+            <div class="es-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
             <strong>En custodia</strong>
             <span>El dinero queda retenido hasta el día del evento.</span>
           </div>
           <div class="escrow-arrow">→</div>
           <div class="escrow-stage">
-            <div class="es-icon">✓</div>
+            <div class="es-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
             <strong>24h post-evento</strong>
             <span>Si todo salió bien, se libera el pago. Si no, reembolso 100%.</span>
           </div>

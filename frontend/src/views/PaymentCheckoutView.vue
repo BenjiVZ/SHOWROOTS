@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <!-- El SDK renderiza el formulario acá -->
+        <!-- El SDK renderiza el formulario aquí -->
         <div id="container-form" class="pf-container"></div>
 
         <p class="tiny-help">
@@ -114,7 +114,7 @@ async function initCheckout() {
     if (!window.pfWallet) {
       throw new Error(
         'El SDK de Paguelofacil no se inicializó correctamente. ' +
-        'Probablemente el script bloqueó (revisá Network tab + AdBlock).'
+        'Probablemente el script bloqueó (revisa Network tab + AdBlock).'
       )
     }
 
@@ -144,7 +144,7 @@ async function initCheckout() {
         console.error('[PFL] onError', errData)
         error.value =
           (errData?.message || errData?.description || 'Hubo un problema con el formulario de pago.') +
-          ' (revisá la console)'
+          ' (revisa la console)'
       },
       onTxSuccess: async (txData) => {
         console.log('[PFL] onTxSuccess', txData)

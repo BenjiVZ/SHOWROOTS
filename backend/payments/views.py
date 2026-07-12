@@ -72,7 +72,7 @@ class InitCheckoutView(APIView):
 
         if booking.client_id != request.user.id:
             return Response(
-                {'detail': 'No tenés permiso para pagar esta reserva.'},
+                {'detail': 'No tienes permiso para pagar esta reserva.'},
                 status=http_status.HTTP_403_FORBIDDEN,
             )
 

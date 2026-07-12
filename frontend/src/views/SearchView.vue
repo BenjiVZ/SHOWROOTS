@@ -88,7 +88,7 @@
             <button v-for="et in eventTypeOptions" :key="et.value" type="button"
               class="filter-chip filter-chip-event" :class="{ active: filters.eventTypesArr.includes(et.value) }"
               @click="toggleMulti('eventTypesArr', et.value)">
-              <span>{{ et.icon }}</span> {{ et.label }}
+              <span class="et-icon" v-html="et.icon"></span> {{ et.label }}
             </button>
           </div>
         </div>
@@ -151,8 +151,8 @@
             </svg>
           </div>
           <div class="ogb-text">
-            <strong>¿No sabés a quién elegir?</strong>
-            <span>Publicá tu solicitud y los DJs te enviarán ofertas — Premium primero, después Pro y Standard.</span>
+            <strong>¿No sabes a quién elegir?</strong>
+            <span>Publica tu solicitud y los DJs te enviarán ofertas — Premium primero, después Pro y Standard.</span>
           </div>
           <span class="ogb-cta">
             Publicar
@@ -282,13 +282,14 @@ const tierOptions = [
   { value: 'premium', label: '★★ Premium' },
 ]
 const languageOptions = ['Español', 'Inglés', 'Portugués', 'Francés']
+const _et = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
 const eventTypeOptions = [
-  { value: 'wedding', icon: '💍', label: 'Bodas' },
-  { value: 'corporate', icon: '🏢', label: 'Corporativo' },
-  { value: 'birthday', icon: '🎂', label: 'Cumpleaños' },
-  { value: 'cocktail', icon: '🍸', label: 'Cocktail' },
-  { value: 'club', icon: '🪩', label: 'Club' },
-  { value: 'launch', icon: '🚀', label: 'Lanzamiento' },
+  { value: 'wedding',   icon: `${_et}<circle cx="9" cy="15" r="5"/><circle cx="16" cy="15" r="5"/><path d="M7 9l2-5h6l2 5"/></svg>`,                                                                       label: 'Bodas' },
+  { value: 'corporate', icon: `${_et}<rect x="4" y="2" width="16" height="20"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="12" y1="6" x2="12" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/></svg>`, label: 'Corporativo' },
+  { value: 'birthday',  icon: `${_et}<path d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8"/><path d="M4 16s1.5-2 4-2 3.5 2 4 2 1.5-2 4-2 4 2 4 2"/><line x1="2" y1="21" x2="22" y2="21"/><line x1="12" y1="4" x2="12" y2="11"/></svg>`, label: 'Cumpleaños' },
+  { value: 'cocktail',  icon: `${_et}<path d="M5 3h14l-7 9z"/><path d="M12 12v9"/><path d="M8 21h8"/></svg>`,                                                                                              label: 'Cocktail' },
+  { value: 'club',      icon: `${_et}<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>`,                                                                                                 label: 'Club' },
+  { value: 'launch',    icon: `${_et}<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`, label: 'Lanzamiento' },
 ]
 const moodOptions = ['Boda elegante', 'After party', 'Cocktail formal', 'Cumpleaños hype', 'Lounge', 'High energy']
 
@@ -360,6 +361,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.et-icon { display: inline-flex; align-items: center; margin-right: 4px; color: var(--color-primary); vertical-align: -3px; }
+
 .search-page {
   padding-top: var(--space-4);
   min-height: 100vh;

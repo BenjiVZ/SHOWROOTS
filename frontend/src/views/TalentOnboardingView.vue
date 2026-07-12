@@ -20,7 +20,10 @@
             <div :key="currentStep">
               <!-- Step 0: Welcome -->
               <template v-if="currentStep === 0">
-                <span class="step-badge">✦ Registro de Talentos</span>
+                <span class="step-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  Registro de Talentos
+                </span>
                 <h1>Únete a <span class="text-accent">Pulsar</span> y lleva tu talento a más escenarios</h1>
                 <p class="step-subtitle">Forma parte de una red curada de DJs, músicos y artistas conectados con eventos, marcas y experiencias.</p>
               </template>
@@ -213,7 +216,10 @@
               <div class="form-group">
                 <label>País</label>
                 <input :value="form.country" type="text" class="onboard-input onboard-input--locked" readonly disabled aria-readonly="true" />
-                <span class="field-hint">🔒 Pulsar opera únicamente en Panamá.</span>
+                <span class="field-hint">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Pulsar opera únicamente en Panamá.
+                </span>
               </div>
             </div>
 

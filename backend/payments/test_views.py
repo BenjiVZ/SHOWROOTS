@@ -183,7 +183,7 @@ class PflTestSimWebhookView(View):
                 },
                 'note': (
                     'Solo se parseó el payload — no se ejecutó la lógica de post-procesado. '
-                    'Para probar el flujo completo, hacé un POST real al endpoint del webhook.'
+                    'Para probar el flujo completo, haz un POST real al endpoint del webhook.'
                 ),
             })
         except Exception as e:

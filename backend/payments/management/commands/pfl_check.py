@@ -111,7 +111,7 @@ class Command(BaseCommand):
             ))
             if target == 'sandbox':
                 self.stdout.write('   → Las credenciales son de SANDBOX (test).')
-                self.stdout.write('   → Podés cobrar con tarjetas de prueba sin riesgo.')
+                self.stdout.write('   → Puedes cobrar con tarjetas de prueba sin riesgo.')
             else:
                 self.stdout.write('   → Las credenciales son de PRODUCCIÓN (real).')
                 self.stdout.write(
@@ -128,7 +128,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.WARNING(
                         '   → Probablemente son de PRODUCCIÓN. '
-                        'Volvé a correr con --target production.'
+                        'Vuelve a correr con --target production.'
                     )
                 )
             else:
@@ -140,4 +140,4 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 f'\n⚠️ Respuesta inesperada (code={code}): {desc}'
             ))
-            self.stdout.write('   Revisá el JSON arriba para más contexto.')
+            self.stdout.write('   Revisa el JSON arriba para más contexto.')

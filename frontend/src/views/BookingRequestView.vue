@@ -66,7 +66,7 @@
                       required
                       @change="onTimeStartChange"
                     >
-                      <option value="" disabled>Elegí una hora</option>
+                      <option value="" disabled>Elige una hora</option>
                       <option v-for="t in timeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
                     </select>
                   </div>
@@ -82,7 +82,7 @@
                       @change="onTimeEndChange"
                     >
                       <option value="" disabled>
-                        {{ form.event_time_start ? 'Elegí la hora de fin' : 'Primero elegí la hora de inicio' }}
+                        {{ form.event_time_start ? 'Elige la hora de fin' : 'Primero elige la hora de inicio' }}
                       </option>
                       <option v-for="t in timeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
                     </select>
@@ -99,14 +99,14 @@
                         :disabled="!form.event_time_start"
                         @click="selectDuration(0)">Personalizado</button>
                     </div>
-                    <p v-if="!form.event_time_start" class="duration-hint">Elegí la hora de inicio para habilitar la duración.</p>
+                    <p v-if="!form.event_time_start" class="duration-hint">Elige la hora de inicio para habilitar la duración.</p>
                   </div>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Ciudad del Evento</label>
                   <select v-model="form.event_city" class="form-input">
-                    <option value="" disabled>Elegí la ciudad</option>
+                    <option value="" disabled>Elige la ciudad</option>
                     <option v-for="c in panamaCities" :key="c" :value="c">{{ c }}</option>
                   </select>
                   <CityPickerMap v-model="form.event_city" />
@@ -152,7 +152,7 @@
                 </h2>
 
                 <div class="form-group">
-                  <label class="form-label">Género Musical / Ambiente <span class="label-hint">(podés elegir varios)</span></label>
+                  <label class="form-label">Género Musical / Ambiente <span class="label-hint">(puedes elegir varios)</span></label>
                   <div class="genre-chips">
                     <button type="button" v-for="g in genres" :key="g"
                       class="chip" :class="{ active: selectedGenres.includes(g) }"
@@ -201,7 +201,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     Packs de {{ talent?.stage_name || 'este talento' }}
                   </h4>
-                  <p class="packs-sub">Elegí un pack pre-armado, o dejalo sin seleccionar y configurá la producción a tu medida abajo.</p>
+                  <p class="packs-sub">Elige un pack pre-armado, o déjalo sin seleccionar y configura la producción a tu medida abajo.</p>
                   <div class="packs-grid">
                     <button type="button" v-for="p in talentPacks" :key="p.id"
                       class="pack-card" :class="{ active: selectedPackId === p.id }"
@@ -225,7 +225,7 @@
                       </div>
                     </button>
                   </div>
-                  <div class="packs-or"><span>o configurá tu producción</span></div>
+                  <div class="packs-or"><span>o configura tu producción</span></div>
                 </div>
 
                 <div class="services-grid">
@@ -775,7 +775,7 @@ function validateStep(step) {
       return false
     }
     if (!form.value.event_time_end) {
-      error.value = 'Selecciona la hora final (o elegí una duración rápida).'
+      error.value = 'Selecciona la hora final (o elige una duración rápida).'
       return false
     }
     if (!form.value.event_location) { error.value = 'Ingresa la ubicación.'; return false }

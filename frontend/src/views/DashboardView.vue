@@ -103,9 +103,15 @@
             <div class="uc-info">
               <strong>{{ auth.isTalent ? b.client_name : b.talent_name }}</strong>
               <p>{{ b.event_type_display || b.event_type }} · {{ formatDate(b.event_date) }}</p>
-              <span v-if="b.event_city" class="uc-location">📍 {{ b.event_city }}</span>
+              <span v-if="b.event_city" class="uc-location">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ b.event_city }}
+              </span>
             </div>
-            <span class="uc-escrow">🛡 ${{ Number(b.amount_paid || 0).toFixed(2) }} en custodia</span>
+            <span class="uc-escrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ${{ Number(b.amount_paid || 0).toFixed(2) }} en custodia
+            </span>
           </router-link>
         </div>
       </div>
@@ -118,7 +124,7 @@
           </div>
           <div>
             <strong>Solicitudes abiertas</strong>
-            <p>Publicá lo que necesitás y los DJs te envían ofertas — Premium primero, después Pro y Standard.</p>
+            <p>Publica lo que necesitas y los DJs te envían ofertas — Premium primero, después Pro y Standard.</p>
           </div>
         </div>
         <div class="ogb-actions">
@@ -193,18 +199,18 @@ const router = useRouter()
 // ── Manual de uso: pasos del tour del dashboard de cliente ──
 const tourSteps = [
   {
-    title: '¡Bienvenido a Pulsar! 🎉',
-    body: 'Este es tu panel. Desde acá seguís tus reservas de DJs, músicos y bandas para tus eventos. Te muestro lo básico en 20 segundos.',
+    title: '¡Bienvenido a Pulsar!',
+    body: 'Este es tu panel. Desde aquí sigues tus reservas de DJs, músicos y bandas para tus eventos. Te muestro lo básico en 20 segundos.',
   },
   {
     target: '[data-tour="stats"]',
     title: 'Tu resumen',
-    body: 'Acá ves tus <strong>próximos eventos</strong>, el dinero <strong>en custodia</strong> (protegido hasta que se realice el evento) y tus eventos completados.',
+    body: 'Aquí ves tus <strong>próximos eventos</strong>, el dinero <strong>en custodia</strong> (protegido hasta que se realice el evento) y tus eventos completados.',
   },
   {
     target: '[data-tour="tabs"]',
     title: 'Filtrá tus reservas',
-    body: 'Usá estas pestañas para filtrar por estado: <strong>todas, activas, completadas o canceladas</strong>.',
+    body: 'Usa estas pestañas para filtrar por estado: <strong>todas, activas, completadas o canceladas</strong>.',
   },
   {
     target: '[data-tour="bookings"]',
@@ -212,8 +218,8 @@ const tourSteps = [
     body: 'Cada reserva se abre con un click para ver el detalle, chatear con el talento y <strong>pagar de forma segura</strong>. El dinero queda protegido hasta el día del evento.',
   },
   {
-    title: '¿Necesitás repasar? 💡',
-    body: 'Podés reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡A disfrutar tu evento! 🎶',
+    title: '¿Necesitas repasar?',
+    body: 'Puedes reabrir este manual cuando quieras con el botón <strong>“Ayuda”</strong> abajo a la derecha. ¡A disfrutar tu evento!',
   },
 ]
 const bookings = ref([])

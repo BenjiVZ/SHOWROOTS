@@ -23,7 +23,7 @@
       <div v-else-if="status === 'declined'" class="state error">
         <div class="icon error">✕</div>
         <h2>Pago rechazado</h2>
-        <p class="muted">{{ errorMessage || 'El banco rechazó la transacción. Probá con otra tarjeta.' }}</p>
+        <p class="muted">{{ errorMessage || 'El banco rechazó la transacción. Prueba con otra tarjeta.' }}</p>
         <button v-if="bookingId" class="btn primary" @click="$router.push(`/dashboard/bookings/${bookingId}/pay`)">
           Reintentar
         </button>

@@ -47,7 +47,7 @@
 
         <!-- ═══ Panel para DJ ═══ -->
         <div v-if="isTalent && gig.status === 'open' && gig.requested_items?.includes('dj') && !myTalentOffer" class="offer-form-card">
-          <h2>Enviá tu oferta como DJ</h2>
+          <h2>Envía tu oferta como DJ</h2>
           <p class="sub">El cliente verá tu perfil, rating y precio. Sé competitivo.</p>
           <div class="form-row">
             <div class="form-group">
@@ -58,7 +58,7 @@
           <div class="form-group">
             <label class="form-label">Mensaje para el cliente</label>
             <textarea v-model="djOfferForm.message" class="form-input" rows="3"
-              placeholder="Contale por qué sos su mejor opción, qué incluye tu servicio…"></textarea>
+              placeholder="Contale por qué eres su mejor opción, qué incluye tu servicio…"></textarea>
           </div>
           <div v-if="offerError" class="error-msg">{{ offerError }}</div>
           <div class="cta-row">
@@ -85,7 +85,7 @@
         <!-- ═══ Panel para Partner ═══ -->
         <div v-if="isPartner && gig.status === 'open'" class="offer-form-card">
           <h2>Enviar oferta de pack</h2>
-          <p class="sub">Podés mandar una oferta por cada categoría que ofrezcas. Elegí uno de tus packs (opcional).</p>
+          <p class="sub">Puedes mandar una oferta por cada categoría que ofrezcas. Elige uno de tus packs (opcional).</p>
 
           <template v-for="cat in partnerCoverableCats" :key="cat">
             <div v-if="!myPartnerOfferFor(cat)" class="partner-offer-block">
@@ -166,8 +166,8 @@
                     </div>
                     <div class="offer-meta">
                       <span v-if="o.offer_kind === 'dj' && Number(o.talent_rating) > 0">★ {{ Number(o.talent_rating).toFixed(1) }} ({{ o.talent_reviews }})</span>
-                      <span v-if="o.provider_city">📍 {{ o.provider_city }}</span>
-                      <span v-if="o.pack_name">📦 {{ o.pack_name }}</span>
+                      <span v-if="o.provider_city"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ o.provider_city }}</span>
+                      <span v-if="o.pack_name"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> {{ o.pack_name }}</span>
                     </div>
                     <p v-if="o.message" class="offer-message">"{{ o.message }}"</p>
                   </div>
