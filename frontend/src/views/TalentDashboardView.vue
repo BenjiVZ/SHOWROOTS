@@ -385,7 +385,7 @@
           <div class="calendar-container glass">
             <div class="calendar-legend calendar-legend-top">
               <span class="legend-item"><span class="legend-box box-available"></span> Disponible <small>(por defecto)</small></span>
-              <span class="legend-item"><span class="legend-box box-blocked"></span> No disponible <small>(vos lo bloqueaste)</small></span>
+              <span class="legend-item"><span class="legend-box box-blocked"></span> No disponible <small>(lo bloqueaste tú)</small></span>
               <span class="legend-item"><span class="legend-box box-booked"></span> Reservado <small>(evento confirmado)</small></span>
             </div>
             <div class="calendar-header">

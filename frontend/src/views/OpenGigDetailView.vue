@@ -309,7 +309,7 @@ watch([() => partnerCoverableCats.value.join(','), () => myPacks.value.length], 
 async function sendDjOffer() {
   offerError.value = ''
   if (!djOfferForm.quoted_price || djOfferForm.quoted_price <= 0) {
-    offerError.value = 'Ingresá un precio válido.'
+    offerError.value = 'Ingresa un precio válido.'
     return
   }
   sending.value = true
@@ -330,7 +330,7 @@ async function sendPartnerOffer(cat) {
   offerError.value = ''
   const f = partnerForms[cat]
   if (!f?.quoted_price || f.quoted_price <= 0) {
-    offerError.value = 'Ingresá un precio válido.'
+    offerError.value = 'Ingresa un precio válido.'
     return
   }
   sending.value = true

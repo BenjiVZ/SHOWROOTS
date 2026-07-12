@@ -2368,7 +2368,7 @@ class GigOfferAcceptView(APIView):
             send_booking_notification_email(
                 provider_user,
                 '¡Aceptaron tu oferta!',
-                f'El cliente aceptó tu oferta. Ingresá a tu panel para coordinar el evento.',
+                f'El cliente aceptó tu oferta. Ingresa a tu panel para coordinar el evento.',
                 booking=booking,
             )
         except Exception:

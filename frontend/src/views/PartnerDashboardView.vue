@@ -293,7 +293,7 @@
                         v-model="packEditor.form.dj_name"
                         type="text"
                         class="input-field"
-                        placeholder="Ej: DJ ShowRoots — o deja vacío si eres vos"
+                        placeholder="Ej: DJ ShowRoots — o deja vacío si eres tú"
                       />
                     </div>
                   </div>
