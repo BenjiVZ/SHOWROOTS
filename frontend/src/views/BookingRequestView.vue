@@ -792,6 +792,8 @@ function prevStep() { currentStep.value--; error.value = '' }
 
 // Helpers de draft persistence (sobreviven login/registro)
 const DRAFT_KEY = 'booking_draft'
+// El borrador vive 15 minutos; pasado ese tiempo se descarta.
+const DRAFT_TTL_MS = 15 * 60 * 1000
 
 function snapshotDraft() {
   return {
@@ -800,29 +802,44 @@ function snapshotDraft() {
     selectedServices: selectedServices.value,
     serviceDetails: { ...serviceDetails },
     selectedDuration: selectedDuration.value,
+    selectedGenres: selectedGenres.value,
+    selectedPackId: selectedPackId.value,
     currentStep: currentStep.value,
     savedAt: Date.now(),
   }
 }
 
 function persistDraft() {
-  // No guardar si el usuario ya está logueado (el draft solo aplica al flujo "registrate para enviar").
-  if (auth.isLoggedIn) return
   try {
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshotDraft()))
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(snapshotDraft()))
   } catch { /* quota / private mode — silent */ }
 }
 
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+    sessionStorage.removeItem(DRAFT_KEY) // limpiar drafts viejos del formato anterior
+  } catch { /* silent */ }
+}
+
 function restoreDraftIfMatches() {
-  const raw = sessionStorage.getItem(DRAFT_KEY)
+  // Compat: leer también del sessionStorage (formato anterior)
+  const raw = localStorage.getItem(DRAFT_KEY) || sessionStorage.getItem(DRAFT_KEY)
   if (!raw) return false
   try {
     const saved = JSON.parse(raw)
+    // Vencido (más de 15 min) → borrar y empezar de cero
+    if (!saved.savedAt || Date.now() - saved.savedAt > DRAFT_TTL_MS) {
+      clearDraft()
+      return false
+    }
     if (String(saved.talentId) !== String(talentId)) return false  // Draft de otro talento — ignorar
     if (saved.form) Object.assign(form.value, saved.form)
     if (Array.isArray(saved.selectedServices)) selectedServices.value = saved.selectedServices
     if (saved.serviceDetails) Object.assign(serviceDetails, saved.serviceDetails)
     if (saved.selectedDuration) selectedDuration.value = saved.selectedDuration
+    if (Array.isArray(saved.selectedGenres)) selectedGenres.value = saved.selectedGenres
+    if (saved.selectedPackId != null) selectedPackId.value = saved.selectedPackId
     if (saved.currentStep != null) currentStep.value = saved.currentStep
     return true
   } catch {
@@ -844,35 +861,22 @@ onMounted(async () => {
     talentPacks.value = data.results || data || []
   } catch { /* sin packs */ }
 
-  // Restaurar borrador si pertenece a este talento
-  const restored = restoreDraftIfMatches()
-  if (restored && auth.isLoggedIn) {
-    // Si el usuario llegó ya logueado con un draft restaurado, ya no hace falta — lo limpiamos.
-    sessionStorage.removeItem(DRAFT_KEY)
-  }
+  // Restaurar borrador (si pertenece a este talento y tiene menos de 15 min)
+  restoreDraftIfMatches()
 })
 
-// Auto-guardar borrador (con debounce) mientras el usuario edita y no está logueado.
-// Cubre el caso de navegar al navbar para registrarse sin haber hecho submit.
+// Auto-guardar borrador (con debounce) mientras el usuario edita.
+// Se restaura al volver dentro de los 15 min; pasado eso, se descarta.
 let saveTimer = null
 function scheduleDraftSave() {
-  if (auth.isLoggedIn) return
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(persistDraft, 400)
 }
 watch(
-  () => [form.value, selectedServices.value, serviceDetails, selectedDuration.value, currentStep.value],
+  () => [form.value, selectedServices.value, serviceDetails, selectedDuration.value, selectedGenres.value, selectedPackId.value, currentStep.value],
   scheduleDraftSave,
   { deep: true }
 )
-
-// Si el usuario se loguea durante esta sesión, limpiar el draft (ya no se necesita).
-watch(() => auth.isLoggedIn, (loggedIn) => {
-  if (loggedIn) {
-    if (saveTimer) clearTimeout(saveTimer)
-    sessionStorage.removeItem(DRAFT_KEY)
-  }
-})
 
 async function handleSubmit() {
   if (descViolations.value.length) {
@@ -945,6 +949,9 @@ async function handleSubmit() {
     const { data } = await api.post('/bookings/create/', payload)
     createdBooking.value = data
     showSuccess.value = true
+    // Solicitud enviada → el borrador ya no se necesita
+    if (saveTimer) clearTimeout(saveTimer)
+    clearDraft()
   } catch (e) {
     const data = e.response?.data
     if (data) {
