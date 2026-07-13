@@ -25,33 +25,14 @@
         </p>
 
         <!-- Search Bar — Primary CTA -->
-        <div class="hero-search glass animate-fade-in-up" style="animation-delay: 0.3s">
-          <div class="search-field">
-            <label>Tipo de talento</label>
-            <select v-model="searchType" class="input-field">
-              <option value="">Todos</option>
-              <option value="dj">DJ</option>
-              <option value="musician">Músico</option>
-              <option value="band">Banda</option>
-            </select>
-          </div>
-          <div class="search-field">
-            <label>Ciudad</label>
-            <input v-model="searchCity" type="text" class="input-field" placeholder="Ej: Panamá" />
-          </div>
-          <div class="search-field hide-mobile">
-            <label>Género musical</label>
-            <select v-model="searchGenre" class="input-field">
-              <option value="">Todos</option>
-              <option v-for="g in genres" :key="g.id" :value="g.slug">{{ g.name }}</option>
-            </select>
-          </div>
-          <button class="btn btn-cta btn-lg search-btn" @click="doSearch">
+        <!-- CTA principal -->
+        <div class="hero-cta-row animate-fade-in-up" style="animation-delay: 0.3s">
+          <router-link to="/search" class="btn btn-cta btn-lg">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
-            Buscar
-          </button>
+            Explorar talentos
+          </router-link>
         </div>
 
         <!-- Stats -->
@@ -203,35 +184,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import api from '@/api'
 import TalentCard from '@/components/talent/TalentCard.vue'
 
-const router = useRouter()
-const genres = ref([])
 const featured = ref([])
 const stats = ref({})
 
-const searchType = ref('')
-const searchCity = ref('')
-const searchGenre = ref('')
-
-function doSearch() {
-  const query = {}
-  if (searchType.value) query.talent_type = searchType.value
-  if (searchCity.value) query.city = searchCity.value
-  if (searchGenre.value) query.genre = searchGenre.value
-  router.push({ name: 'search', query })
-}
-
 onMounted(async () => {
   try {
-    const [genresRes, featuredRes, statsRes] = await Promise.all([
-      api.get('/genres/'),
+    const [featuredRes, statsRes] = await Promise.all([
       api.get('/featured/'),
       api.get('/stats/'),
     ])
-    genres.value = genresRes.data
     featured.value = featuredRes.data
     stats.value = statsRes.data
   } catch (err) {
@@ -377,35 +341,11 @@ onMounted(async () => {
   50% { opacity: 0.8; transform: scale(1.05); }
 }
 
-/* Search Bar CTA */
-.hero-search {
+/* Hero CTA */
+.hero-cta-row {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  padding: var(--space-5);
-  border-radius: var(--radius-2xl);
-  max-width: 880px;
+  justify-content: center;
   margin: 0 auto var(--space-12);
-}
-
-.search-field {
-  flex: 1;
-  text-align: left;
-}
-
-.search-field label {
-  display: block;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-2);
-}
-
-.search-btn {
-  flex-shrink: 0;
-  height: 46px;
 }
 
 /* Stats */
@@ -688,15 +628,7 @@ onMounted(async () => {
   .hero { padding-top: var(--space-20); }
   .hero h1 { font-size: var(--font-size-4xl); }
 
-  .hero-search {
-    flex-direction: column;
-    align-items: stretch;
-    padding: var(--space-4);
-    gap: var(--space-2);
-  }
-
   .hide-mobile { display: none; }
-  .search-btn { width: 100%; }
 
   .categories-grid { grid-template-columns: 1fr; }
   .talents-grid { grid-template-columns: 1fr; }
@@ -750,18 +682,6 @@ onMounted(async () => {
   background: rgba(193, 216, 47, 0.12);
   border-color: rgba(193, 216, 47, 0.25);
   color: #5a6e10;
-}
-
-/* Search bar — frosted glass with warm shadow */
-[data-theme="light"] .hero-search {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(193, 216, 47, 0.15);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.06),
-    0 1px 4px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Stats — subtle warm background */
