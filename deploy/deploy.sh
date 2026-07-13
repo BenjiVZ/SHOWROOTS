@@ -53,7 +53,9 @@ ok "PAYMENTS_ENABLED=false"
 step "3/5  Backend: deps + migraciones + restart"
 "$VENV/bin/pip" install -r "$REPO_DIR/backend/requirements.txt" -q || die "Falló pip install"
 ok "Dependencias del backend al día"
-( cd "$REPO_DIR/backend" && "$VENV/bin/python" manage.py migrate --noinput ) || warn "migrate reportó algo — revisá arriba"
+( cd "$REPO_DIR/backend" && "$VENV/bin/python" manage.py migrate --noinput ) || warn "migrate reportó algo — revisa arriba"
+# Recolectar estáticos (CSS/JS del admin de Django, etc.)
+( cd "$REPO_DIR/backend" && "$VENV/bin/python" manage.py collectstatic --noinput ) || warn "collectstatic reportó algo — revisa arriba"
 systemctl restart "$SERVICE" || die "No pude reiniciar $SERVICE"
 sleep 2
 if [ "$(systemctl is-active "$SERVICE")" = "active" ]; then
