@@ -218,11 +218,11 @@ onBeforeUnmount(() => {
 h1 {
   margin: 0 0 1.5rem;
   font-size: 1.5rem;
-  color: var(--color-text, #fff);
+  color: var(--color-text-primary);
 }
 h2 {
   margin: 0 0 .5rem;
-  color: var(--color-text, #fff);
+  color: var(--color-text-primary);
 }
 .summary {
   background: rgba(255, 255, 255, 0.04);
@@ -238,7 +238,7 @@ h2 {
   color: var(--color-text-muted, #aaa);
 }
 .summary .row strong {
-  color: var(--color-text, #fff);
+  color: var(--color-text-primary);
 }
 .summary .row.tiny {
   font-size: .78rem;
@@ -270,7 +270,7 @@ h2 {
 .state-success {
   text-align: center;
   padding: 2rem 1rem;
-  color: var(--color-text, #fff);
+  color: var(--color-text-primary);
 }
 .spinner {
   width: 40px;
@@ -302,7 +302,7 @@ h2 {
   padding: .7rem 1.4rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;
-  color: var(--color-text, #fff);
+  color: var(--color-text-primary);
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;

@@ -128,7 +128,7 @@ onMounted(verify)
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
-.state h2 { margin: .5rem 0; color: var(--color-text, #fff); }
+.state h2 { margin: .5rem 0; color: var(--color-text-primary); }
 .muted { color: var(--color-text-muted, #aaa); font-size: .9rem; }
 .icon {
   width: 64px; height: 64px;
@@ -158,7 +158,7 @@ onMounted(verify)
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,.2);
   background: transparent;
-  color: var(--color-text, #fff);
+  color: var(--color-text-primary);
   cursor: pointer;
   font-weight: 600;
 }

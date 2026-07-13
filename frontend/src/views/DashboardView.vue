@@ -655,14 +655,17 @@ onMounted(async () => {
   display: flex; justify-content: space-between; align-items: center; gap: 16px;
   padding: 16px 20px; margin-bottom: var(--space-4);
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(193, 216, 47, 0.13), rgba(193, 216, 47, 0.03));
-  border: 1px solid rgba(193, 216, 47, 0.32);
+  background:
+    linear-gradient(135deg, var(--color-primary-ultra-light), transparent 60%),
+    linear-gradient(300deg, var(--color-accent-light), transparent 55%);
+  border: 1px solid var(--color-border);
 }
 .ogb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .ogb-icon {
   flex-shrink: 0; width: 48px; height: 48px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(193, 216, 47, 0.18); border-radius: 50%; color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  border-radius: 50%; color: var(--color-bg-primary);
 }
 .ogb-left strong { color: var(--color-text-primary); font-size: 0.98rem; }
 .ogb-left p { margin: 3px 0 0; color: var(--color-text-muted); font-size: 0.85rem; line-height: 1.4; }

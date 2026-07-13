@@ -623,31 +623,33 @@ onMounted(async () => {
   gap: 16px;
   padding: 16px 20px;
   margin: 16px 0 24px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(193, 216, 47, 0.14), rgba(193, 216, 47, 0.04));
-  border: 1px solid rgba(193, 216, 47, 0.35);
+  border-radius: var(--radius-xl, 14px);
+  background:
+    linear-gradient(135deg, var(--color-primary-ultra-light), transparent 60%),
+    linear-gradient(300deg, var(--color-accent-light), transparent 55%);
+  border: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
   transition: transform 0.15s, border-color 0.15s;
 }
 .open-gig-banner:hover {
   transform: translateY(-1px);
-  border-color: rgba(193, 216, 47, 0.6);
+  border-color: var(--color-border-hover);
 }
 .ogb-icon {
   flex-shrink: 0;
   width: 48px; height: 48px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(193, 216, 47, 0.18);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   border-radius: 50%;
-  color: #C1D82F;
+  color: var(--color-bg-primary);
 }
 .ogb-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ogb-text strong { color: var(--color-text, #fff); font-size: 0.98rem; }
-.ogb-text span { color: var(--color-text-muted, #cfcfcf); font-size: 0.85rem; line-height: 1.4; }
+.ogb-text strong { color: var(--color-text-primary); font-size: 0.98rem; }
+.ogb-text span { color: var(--color-text-muted); font-size: 0.85rem; line-height: 1.4; }
 .ogb-cta {
   display: inline-flex; align-items: center; gap: 4px;
-  background: #C1D82F; color: #0d0d0d;
+  background: var(--color-primary); color: var(--color-bg-primary);
   padding: 8px 14px; border-radius: 999px;
   font-weight: 700; font-size: 0.85rem;
   white-space: nowrap;
