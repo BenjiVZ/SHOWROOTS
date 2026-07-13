@@ -1,16 +1,25 @@
 <template>
   <div class="search-page">
     <div class="container search-layout">
-      <!-- Sidebar -->
-      <aside class="filters-sidebar glass">
-        <div class="filters-header">
-          <h3>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filtros
-          </h3>
-          <button class="btn btn-ghost btn-sm" @click="clearFilters">Limpiar</button>
-        </div>
+      <!-- Drawer de filtros (panel flotante) -->
+      <Teleport to="body">
+        <Transition name="drawer-fade">
+          <div v-if="filtersOpen" class="filters-backdrop" @click="filtersOpen = false"></div>
+        </Transition>
+        <Transition name="drawer-slide">
+          <aside v-if="filtersOpen" class="filters-drawer glass">
+            <div class="filters-header">
+              <h3>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Filtros
+                <span v-if="activeFilterCount" class="fh-count">{{ activeFilterCount }}</span>
+              </h3>
+              <button class="drawer-close" @click="filtersOpen = false" aria-label="Cerrar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
 
+            <div class="filters-body">
         <div class="filter-group">
           <label class="label">Tipo de talento</label>
           <select v-model="filters.talent_type" class="input-field" @change="fetchTalents">
@@ -102,7 +111,15 @@
               @click="toggleMulti('moodsArr', m)">{{ m }}</button>
           </div>
         </div>
-      </aside>
+            </div>
+
+            <div class="filters-footer">
+              <button class="btn btn-ghost" @click="clearFilters">Limpiar</button>
+              <button class="btn btn-cta" @click="filtersOpen = false">Ver {{ totalCount }} resultado{{ totalCount === 1 ? '' : 's' }}</button>
+            </div>
+          </aside>
+        </Transition>
+      </Teleport>
 
       <!-- Results -->
       <main class="results">
@@ -111,7 +128,13 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             Buscar Talentos
           </h1>
-          <div class="sort-control" ref="sortRef">
+          <div class="results-actions">
+            <button type="button" class="filters-trigger" @click="filtersOpen = true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtros
+              <span v-if="activeFilterCount" class="filters-trigger-badge">{{ activeFilterCount }}</span>
+            </button>
+            <div class="sort-control" ref="sortRef">
             <label class="label" style="margin: 0">Ordenar por</label>
             <div class="custom-select" :class="{ open: sortOpen }">
               <button type="button" class="custom-select-trigger" @click="sortOpen = !sortOpen">
@@ -138,6 +161,7 @@
                 </ul>
               </Transition>
             </div>
+          </div>
           </div>
         </div>
 
@@ -201,7 +225,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
 import TalentCard from '@/components/talent/TalentCard.vue'
@@ -260,7 +284,10 @@ function onSortDocClick(e) {
 }
 
 onMounted(() => document.addEventListener('mousedown', onSortDocClick))
-onUnmounted(() => document.removeEventListener('mousedown', onSortDocClick))
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onSortDocClick)
+  document.body.style.overflow = ''
+})
 
 const filters = ref({
   talent_type: route.query.talent_type || '',
@@ -274,6 +301,19 @@ const filters = ref({
   languagesArr: [],
   eventTypesArr: [],
   moodsArr: [],
+})
+
+// Panel de filtros flotante
+const filtersOpen = ref(false)
+const activeFilterCount = computed(() => {
+  const f = filters.value
+  let n = 0
+  ;['talent_type', 'genre', 'city', 'price_max', 'min_rating', 'talent_level', 'experience_level'].forEach(k => { if (f[k]) n++ })
+  n += f.languagesArr.length + f.eventTypesArr.length + f.moodsArr.length
+  return n
+})
+watch(filtersOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
 })
 
 const tierOptions = [
@@ -369,10 +409,8 @@ onMounted(async () => {
 }
 
 .search-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: var(--space-8);
-  align-items: flex-start;
+  /* Resultados a todo el ancho; los filtros viven en un panel flotante */
+  display: block;
 }
 
 .chip-row {
@@ -411,30 +449,80 @@ onMounted(async () => {
   background: rgba(236,72,153,0.08);
 }
 
-.filters-sidebar {
-  position: sticky;
-  top: 100px;
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
+/* ── Botón que abre el panel de filtros ── */
+.results-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.filters-trigger {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: var(--radius-full);
+  border: 1px solid var(--color-border); background: var(--color-bg-elevated);
+  color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: 600;
+  font-family: var(--font-body); cursor: pointer; transition: all var(--transition-fast);
+  height: 42px;
+}
+.filters-trigger:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.filters-trigger-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-full);
+  background: var(--color-primary); color: var(--color-bg-primary);
+  font-size: 0.72rem; font-weight: 800;
 }
 
+/* ── Panel flotante (drawer) ── */
+.filters-backdrop {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+}
+.filters-drawer {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 1201;
+  width: 340px; max-width: 88vw;
+  display: flex; flex-direction: column;
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  box-shadow: 0 0 40px rgba(0,0,0,0.35);
+  border-radius: 0 var(--radius-2xl) var(--radius-2xl) 0;
+}
 .filters-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-6);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
-
 .filters-header h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-base);
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--font-size-base); margin: 0;
 }
+.fh-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-full);
+  background: var(--color-primary); color: var(--color-bg-primary);
+  font-size: 0.72rem; font-weight: 800;
+}
+.drawer-close {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius-md);
+  background: transparent; border: none; color: var(--color-text-muted); cursor: pointer;
+}
+.drawer-close:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
+.filters-body {
+  flex: 1; overflow-y: auto;
+  padding: var(--space-5) var(--space-6);
+}
+.filters-footer {
+  display: flex; gap: var(--space-3); flex-shrink: 0;
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.filters-footer .btn { flex: 1; justify-content: center; }
 
 .filter-group {
   margin-bottom: var(--space-5);
 }
+
+/* Transiciones del drawer */
+.drawer-fade-enter-active, .drawer-fade-leave-active { transition: opacity 0.25s ease; }
+.drawer-fade-enter-from, .drawer-fade-leave-to { opacity: 0; }
+.drawer-slide-enter-active, .drawer-slide-leave-active { transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); }
+.drawer-slide-enter-from, .drawer-slide-leave-to { transform: translateX(-100%); }
 
 .results-header {
   display: flex;
@@ -608,12 +696,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .search-layout {
-    grid-template-columns: 1fr;
-  }
-  .filters-sidebar {
-    position: static;
-  }
+  .filters-drawer { border-radius: 0; }
 }
 
 /* Banner de solicitud abierta */
