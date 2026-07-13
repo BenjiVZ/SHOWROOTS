@@ -305,10 +305,77 @@
 
           <!-- Chat Section -->
           <div class="chat-card glass">
-            <h3>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              Chat
-            </h3>
+            <div class="chat-header">
+              <h3>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                Chat
+              </h3>
+              <button type="button" class="chat-details-toggle" :class="{ open: showEventDetails }" @click="showEventDetails = !showEventDetails">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Detalles del evento
+                <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </div>
+
+            <!-- Panel de detalles del evento (desplegable) -->
+            <transition name="details-slide">
+              <div v-if="showEventDetails" class="event-details-panel">
+                <div class="edp-title">{{ booking.event_name || booking.event_type_display || 'Evento' }}</div>
+                <div class="edp-grid">
+                  <div class="edp-item">
+                    <span class="edp-label">Fecha</span>
+                    <span class="edp-value">{{ formatDate(booking.event_date) }}</span>
+                  </div>
+                  <div class="edp-item" v-if="booking.event_time_start">
+                    <span class="edp-label">Hora</span>
+                    <span class="edp-value">{{ booking.event_time_start?.slice(0,5) }}<template v-if="booking.event_time_end"> — {{ booking.event_time_end.slice(0,5) }}</template></span>
+                  </div>
+                  <div class="edp-item" v-if="booking.event_duration_hours">
+                    <span class="edp-label">Duración</span>
+                    <span class="edp-value">{{ booking.event_duration_hours }} h</span>
+                  </div>
+                  <div class="edp-item" v-if="booking.event_type_display || booking.event_type">
+                    <span class="edp-label">Tipo</span>
+                    <span class="edp-value">{{ booking.event_type_display || booking.event_type }}</span>
+                  </div>
+                  <div class="edp-item" v-if="booking.event_city">
+                    <span class="edp-label">Ciudad</span>
+                    <span class="edp-value">{{ booking.event_city }}</span>
+                  </div>
+                  <div class="edp-item" v-if="booking.event_location">
+                    <span class="edp-label">Ubicación</span>
+                    <span class="edp-value">{{ booking.event_location }}</span>
+                  </div>
+                  <div class="edp-item" v-if="booking.guest_count">
+                    <span class="edp-label">Invitados</span>
+                    <span class="edp-value">~{{ booking.guest_count }}</span>
+                  </div>
+                  <div class="edp-item" v-if="booking.event_indoor !== null && booking.event_indoor !== undefined">
+                    <span class="edp-label">Espacio</span>
+                    <span class="edp-value">{{ booking.event_indoor ? 'Interior' : 'Exterior' }}</span>
+                  </div>
+                  <div class="edp-item edp-item-full" v-if="booking.genre_preference">
+                    <span class="edp-label">Género / Ambiente</span>
+                    <span class="edp-value">{{ booking.genre_preference }}</span>
+                  </div>
+                </div>
+                <div v-if="normalizedServices.length" class="edp-services">
+                  <span class="edp-label">Producción</span>
+                  <div class="edp-svc-tags">
+                    <span v-for="(item, idx) in normalizedServices" :key="idx" class="edp-svc-tag">
+                      {{ serviceLabels[item.service] || item.service }}<template v-if="item.details?.name"> · {{ item.details.name }}</template>
+                    </span>
+                  </div>
+                </div>
+                <div v-if="booking.description" class="edp-desc">
+                  <span class="edp-label">Descripción</span>
+                  <p>{{ booking.description }}</p>
+                </div>
+                <button type="button" class="edp-full-link" @click="scrollToTop">
+                  Ver ficha completa arriba ↑
+                </button>
+              </div>
+            </transition>
             <div class="chat-disclaimer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Toda comunicación queda dentro de Pulsar. No compartas teléfonos, emails ni redes.
@@ -576,6 +643,12 @@ const talentNotes = ref('')
 const reviewRating = ref(0)
 const reviewComment = ref('')
 const chatContainer = ref(null)
+const showEventDetails = ref(false)
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  showEventDetails.value = false
+}
 
 // ── Anti-desintermediación en chat ──
 const chatViolations = ref([])
@@ -1146,7 +1219,48 @@ onMounted(async () => {
 
 /* Chat */
 .chat-card { padding: var(--space-6); border-radius: var(--radius-xl); }
-.chat-card h3 { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-base); margin-bottom: var(--space-4); }
+.chat-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
+.chat-card h3 { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-base); margin: 0; }
+.chat-details-toggle {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 6px 12px; border-radius: var(--radius-full);
+  border: 1px solid var(--color-border); background: var(--color-bg-elevated);
+  color: var(--color-text-secondary); font-size: var(--font-size-sm);
+  font-family: var(--font-body); transition: all var(--transition-fast);
+}
+.chat-details-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.chat-details-toggle.open { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-ultra-light, rgba(193,216,47,0.08)); }
+.chat-details-toggle .chevron { transition: transform var(--transition-fast); }
+.chat-details-toggle.open .chevron { transform: rotate(180deg); }
+
+/* Panel de detalles del evento */
+.event-details-panel {
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated); padding: var(--space-4);
+  margin-bottom: var(--space-4); overflow: hidden;
+}
+.edp-title { font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-3); }
+.edp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-3); }
+.edp-item { display: flex; flex-direction: column; gap: 2px; }
+.edp-item-full { grid-column: 1 / -1; }
+.edp-label { font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.edp-value { font-size: var(--font-size-sm); color: var(--color-text-primary); font-weight: 500; }
+.edp-services, .edp-desc { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.edp-svc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.edp-svc-tag {
+  padding: 3px 10px; border-radius: var(--radius-full);
+  background: var(--color-bg-card); border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs); color: var(--color-text-secondary);
+}
+.edp-desc p { margin: 6px 0 0; font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.5; }
+.edp-full-link {
+  display: inline-block; margin-top: var(--space-3);
+  background: none; border: none; cursor: pointer; padding: 0;
+  color: var(--color-primary); font-size: var(--font-size-sm); font-family: var(--font-body);
+}
+.edp-full-link:hover { text-decoration: underline; }
+.details-slide-enter-active, .details-slide-leave-active { transition: all 0.25s ease; }
+.details-slide-enter-from, .details-slide-leave-to { opacity: 0; transform: translateY(-8px); }
 .chat-messages { max-height: 400px; overflow-y: auto; margin-bottom: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-2); }
 .chat-empty { text-align: center; padding: var(--space-8); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 .chat-msg { display: flex; }
