@@ -695,8 +695,47 @@ onMounted(async () => {
   color: var(--color-text-muted);
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .filters-drawer { border-radius: 0; }
+  .filters-drawer {
+    border-radius: 0;
+    width: 100%;
+    max-width: 420px;
+  }
+  /* El header pasa a columna: título arriba, controles abajo a lo ancho */
+  .results-header {
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .results-header h1 { font-size: var(--font-size-xl); }
+  .results-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .sort-control {
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .sort-control .label { display: none; }  /* ahorra espacio, el ícono ya lo dice */
+  .custom-select { min-width: 0; flex: 1; max-width: 220px; }
+}
+
+@media (max-width: 480px) {
+  .results-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+  .filters-trigger { width: 100%; justify-content: center; height: 44px; }
+  .sort-control { justify-content: stretch; }
+  .custom-select { max-width: none; }
+  .custom-select-trigger { justify-content: space-between; }
+  /* En pantallas muy chicas el drawer ocupa todo */
+  .filters-drawer { max-width: 100%; }
+  .filters-header, .filters-body, .filters-footer {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
 }
 
 /* Banner de solicitud abierta */
