@@ -46,7 +46,7 @@
         <h2 class="section-title" style="margin-top:24px">Detalles del evento</h2>
 
         <div class="form-group">
-          <label class="form-label">Tipo de evento *</label>
+          <label class="form-label">Tipo de evento <span class="req">*</span></label>
           <div class="event-tiles">
             <button v-for="t in eventTypeTiles" :key="t.value" type="button"
               class="event-tile" :class="{ selected: form.event_type === t.value }"
@@ -64,15 +64,15 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Fecha *</label>
+            <label class="form-label">Fecha <span class="req">*</span></label>
             <input v-model="form.event_date" type="date" class="form-input" :min="minDate" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Hora inicio *</label>
+            <label class="form-label">Hora inicio <span class="req">*</span></label>
             <input v-model="form.event_time_start" type="time" class="form-input" required @change="syncEnd">
           </div>
           <div class="form-group">
-            <label class="form-label">Duración *</label>
+            <label class="form-label">Duración <span class="req">*</span></label>
             <select v-model.number="form.event_duration_hours" class="form-input" @change="syncEnd" required>
               <option v-for="h in [2,3,4,5,6,8]" :key="h" :value="h">{{ h }} horas</option>
             </select>
@@ -81,11 +81,11 @@
 
         <div class="form-row">
           <div class="form-group" style="flex:2">
-            <label class="form-label">Ubicación *</label>
+            <label class="form-label">Ubicación <span class="req">*</span></label>
             <input v-model="form.event_location" type="text" class="form-input" placeholder="Dirección del evento" required>
           </div>
           <div class="form-group" style="flex:1">
-            <label class="form-label">Ciudad *</label>
+            <label class="form-label">Ciudad <span class="req">*</span></label>
             <input v-model="form.event_city" type="text" class="form-input" placeholder="Panamá" required>
           </div>
         </div>
@@ -248,154 +248,187 @@ async function handleSubmit() {
 <style scoped>
 .open-gig-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a0a, #0d0d0d);
-  padding: 24px 0 60px;
-  color: #f5f5f5;
+  background: var(--color-bg-primary);
+  padding: var(--space-6) 0 var(--space-16);
+  color: var(--color-text-primary);
 }
-.container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 var(--space-5); }
 
 .back-link {
   display: inline-flex; align-items: center; gap: 6px;
-  color: #C1D82F; text-decoration: none; font-weight: 500;
-  margin-bottom: 20px;
+  color: var(--color-primary); text-decoration: none; font-weight: 600;
+  margin-bottom: var(--space-5); font-size: var(--font-size-sm);
 }
 .back-link:hover { text-decoration: underline; }
 
+/* ── Hero: usa los DOS colores de marca (primary → accent) ── */
 .hero-banner {
-  display: flex; gap: 20px; align-items: center;
-  background: linear-gradient(135deg, rgba(193, 216, 47, 0.12), rgba(193, 216, 47, 0.04));
-  border: 1px solid rgba(193, 216, 47, 0.3);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
+  position: relative; overflow: hidden;
+  display: flex; gap: var(--space-5); align-items: center;
+  background:
+    linear-gradient(135deg, var(--color-primary-ultra-light), transparent 60%),
+    linear-gradient(300deg, var(--color-accent-light), transparent 55%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
 }
 .hero-icon {
   flex-shrink: 0; width: 72px; height: 72px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  background: rgba(193, 216, 47, 0.15);
-  color: #C1D82F;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: var(--color-bg-primary);
+  box-shadow: 0 8px 24px var(--color-accent-light);
 }
-.hero-banner h1 { margin: 0; font-size: 1.7rem; color: #fff; }
-.hero-sub { margin: 6px 0 0; color: #cfcfcf; font-size: 0.95rem; line-height: 1.5; }
-.hero-sub strong { color: #C1D82F; }
+.hero-banner h1 { margin: 0; font-size: 1.7rem; color: var(--color-text-primary); }
+.hero-sub { margin: 6px 0 0; color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.55; }
+.hero-sub strong { color: var(--color-primary); }
 
 .form-card {
-  background: #141414;
-  border: 1px solid #242424;
-  border-radius: 16px;
-  padding: 28px;
+  background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
 }
-.section-title { font-size: 1.15rem; margin: 0 0 8px; color: #fff; }
-.section-hint { margin: 0 0 16px; color: #a0a0a0; font-size: 0.88rem; }
+
+/* Título de sección con barra de acento (segundo color con rol claro) */
+.section-title {
+  position: relative; padding-left: 14px;
+  font-size: 1.15rem; margin: 0 0 8px; color: var(--color-text-primary);
+}
+.section-title::before {
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
+  width: 4px; border-radius: var(--radius-full);
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+}
+.section-hint { margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: 0.88rem; line-height: 1.5; }
 
 .need-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
+  gap: var(--space-3);
 }
 .need-tile {
   position: relative;
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  background: #0d0d0d; border: 1px solid #2a2a2a;
-  border-radius: 12px; padding: 14px 14px 12px;
-  color: #cfcfcf; cursor: pointer; text-align: left;
-  transition: all 0.15s;
+  background: var(--color-bg-elevated); border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 16px 14px 14px;
+  color: var(--color-text-secondary); cursor: pointer; text-align: left;
+  transition: all var(--transition-fast, 0.15s);
 }
-.need-tile:hover { border-color: #4a4a4a; }
-.need-tile.selected { border-color: #C1D82F; background: rgba(193, 216, 47, 0.08); color: #fff; }
+.need-tile:hover { border-color: var(--color-border-hover); transform: translateY(-2px); }
+.need-tile.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-ultra-light);
+  color: var(--color-text-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ultra-light);
+}
 .need-check {
   position: absolute; top: 10px; right: 10px;
   width: 20px; height: 20px; border-radius: 6px;
-  border: 1.5px solid #3a3a3a;
+  border: 1.5px solid var(--color-border);
   display: flex; align-items: center; justify-content: center;
-  color: #0d0d0d; background: transparent;
+  color: var(--color-bg-primary); background: transparent;
+  transition: all var(--transition-fast, 0.15s);
 }
-.need-tile.selected .need-check { background: #C1D82F; border-color: #C1D82F; }
-.need-icon { color: #C1D82F; }
-.need-label { font-weight: 600; font-size: 0.98rem; }
-.need-desc { color: #a0a0a0; font-size: 0.8rem; line-height: 1.3; }
-.need-error { color: #ff8a8a; font-size: 0.85rem; margin: 8px 0 0; }
+.need-tile.selected .need-check { background: var(--color-primary); border-color: var(--color-primary); }
+.need-icon { color: var(--color-primary); }
+.need-label { font-weight: 700; font-size: 0.98rem; }
+.need-desc { color: var(--color-text-muted); font-size: 0.8rem; line-height: 1.35; }
+.need-error { color: var(--color-accent); font-size: 0.85rem; margin: 8px 0 0; font-weight: 500; }
 
-.form-group { margin-bottom: 18px; }
+.form-group { margin-bottom: var(--space-5); }
 .form-row {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4);
   margin-bottom: 6px;
 }
-.form-label { display: block; font-size: 0.85rem; font-weight: 500; color: #cfcfcf; margin-bottom: 6px; }
-.optional { color: #7a7a7a; font-weight: 400; font-size: 0.8rem; }
+.form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 6px; }
+.form-label :deep(*) { pointer-events: none; }
+.optional { color: var(--color-text-muted); font-weight: 400; font-size: 0.8rem; }
+.req { color: var(--color-accent); font-weight: 700; }
 .form-input {
   width: 100%; box-sizing: border-box;
-  background: #0d0d0d;
-  border: 1px solid #2a2a2a;
-  color: #f5f5f5;
-  padding: 10px 12px; border-radius: 8px;
-  font-size: 0.92rem;
-  transition: border-color 0.15s;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 11px 13px; border-radius: var(--radius-md);
+  font-size: 0.92rem; font-family: inherit;
+  transition: border-color var(--transition-fast, 0.15s), box-shadow var(--transition-fast, 0.15s);
 }
-.form-input:focus { outline: none; border-color: #C1D82F; }
-textarea.form-input { font-family: inherit; resize: vertical; }
+.form-input:focus {
+  outline: none; border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ultra-light);
+}
+textarea.form-input { resize: vertical; }
 
 .event-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px;
+  gap: var(--space-3);
 }
 .event-tile {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  background: #0d0d0d; border: 1px solid #2a2a2a;
-  border-radius: 12px; padding: 14px 8px;
-  color: #cfcfcf; font-size: 0.85rem; cursor: pointer;
-  transition: all 0.15s;
+  background: var(--color-bg-elevated); border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 16px 8px;
+  color: var(--color-text-secondary); font-size: 0.85rem; cursor: pointer;
+  transition: all var(--transition-fast, 0.15s);
 }
-.event-tile:hover { border-color: #4a4a4a; }
-.event-tile.selected { border-color: #C1D82F; background: rgba(193, 216, 47, 0.08); color: #fff; }
-.event-tile-icon { color: #C1D82F; }
+.event-tile:hover { border-color: var(--color-border-hover); transform: translateY(-2px); }
+.event-tile.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-ultra-light);
+  color: var(--color-text-primary);
+}
+.event-tile-icon { color: var(--color-primary); }
 
 .toggle-row { display: flex; gap: 8px; }
 .toggle-btn {
-  flex: 1; background: #0d0d0d; border: 1px solid #2a2a2a;
-  color: #cfcfcf; padding: 10px; border-radius: 8px; cursor: pointer;
-  transition: all 0.15s;
+  flex: 1; background: var(--color-bg-elevated); border: 1px solid var(--color-border);
+  color: var(--color-text-secondary); padding: 11px; border-radius: var(--radius-md); cursor: pointer;
+  font-family: inherit; transition: all var(--transition-fast, 0.15s);
 }
-.toggle-btn.active { border-color: #C1D82F; background: rgba(193, 216, 47, 0.1); color: #fff; }
+.toggle-btn.active { border-color: var(--color-primary); background: var(--color-primary-ultra-light); color: var(--color-text-primary); }
 
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-  background: #0d0d0d; border: 1px solid #2a2a2a; color: #cfcfcf;
-  padding: 7px 14px; border-radius: 999px; font-size: 0.85rem; cursor: pointer;
-  transition: all 0.15s;
+  background: var(--color-bg-elevated); border: 1px solid var(--color-border); color: var(--color-text-secondary);
+  padding: 8px 15px; border-radius: var(--radius-full); font-size: 0.85rem; cursor: pointer;
+  font-family: inherit; transition: all var(--transition-fast, 0.15s);
 }
-.chip:hover { border-color: #4a4a4a; }
-.chip.active { border-color: #C1D82F; background: rgba(193, 216, 47, 0.12); color: #C1D82F; }
+.chip:hover { border-color: var(--color-border-hover); }
+.chip.active { border-color: var(--color-primary); background: var(--color-primary-ultra-light); color: var(--color-primary); font-weight: 600; }
 
 .error-msg {
-  background: rgba(220, 60, 60, 0.15); border: 1px solid rgba(220, 60, 60, 0.4);
-  color: #ff8a8a; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem;
-  margin-bottom: 16px;
+  background: var(--color-accent-light); border: 1px solid var(--color-accent);
+  color: var(--color-accent); padding: 11px 15px; border-radius: var(--radius-md); font-size: 0.9rem;
+  margin-bottom: var(--space-4);
 }
 
 .cta-row {
   display: flex; justify-content: flex-end; gap: 10px;
-  margin-top: 24px; padding-top: 20px; border-top: 1px solid #242424;
+  margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border);
 }
 .btn {
-  padding: 11px 22px; border-radius: 999px; font-weight: 600; cursor: pointer;
-  border: 1px solid transparent; font-size: 0.92rem;
+  padding: 12px 24px; border-radius: var(--radius-full); font-weight: 700; cursor: pointer;
+  border: 1px solid transparent; font-size: 0.92rem; font-family: inherit;
+  transition: all var(--transition-fast, 0.15s);
 }
-.btn-primary { background: #C1D82F; color: #0d0d0d; }
-.btn-primary:hover:not(:disabled) { background: #d5ef47; }
-.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
-.btn-ghost { background: transparent; border-color: #2a2a2a; color: #cfcfcf; }
-.btn-ghost:hover { border-color: #4a4a4a; color: #fff; }
+.btn-primary { background: var(--color-primary); color: var(--color-bg-primary); }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); transform: translateY(-1px); box-shadow: 0 6px 18px var(--color-primary-ultra-light); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ghost { background: transparent; border-color: var(--color-border); color: var(--color-text-secondary); }
+.btn-ghost:hover { border-color: var(--color-border-hover); color: var(--color-text-primary); }
 
 .fine-print {
-  margin-top: 14px;
-  color: #7a7a7a; font-size: 0.78rem; text-align: center;
+  margin-top: var(--space-4);
+  color: var(--color-text-muted); font-size: 0.78rem; text-align: center; line-height: 1.5;
 }
 
 @media (max-width: 600px) {
   .hero-banner { flex-direction: column; text-align: center; }
-  .form-card { padding: 20px; }
+  .form-card { padding: var(--space-5); }
 }
 </style>
