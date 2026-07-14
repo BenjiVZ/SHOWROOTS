@@ -225,6 +225,9 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
+            # Devueltos en la respuesta (read-only) para poder encadenar acciones
+            # tras crear la reserva (agregar packs de producción, mostrar código).
+            'id', 'booking_code', 'status',
             'talent', 'event_type', 'event_name', 'event_date',
             'event_time_start', 'event_time_end', 'event_duration_hours',
             'event_location', 'event_city', 'event_indoor',
@@ -235,6 +238,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             # Partner fields
             'client_final_name', 'client_final_email', 'client_final_phone',
         ]
+        read_only_fields = ['id', 'booking_code', 'status']
 
     def validate_talent(self, value):
         if not value.is_approved:

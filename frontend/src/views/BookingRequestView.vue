@@ -228,116 +228,92 @@
                   <div class="packs-or"><span>o configura tu producción</span></div>
                 </div>
 
-                <div class="services-grid">
-                  <button type="button" v-for="svc in availableServices" :key="svc.id"
-                    class="service-card"
-                    :class="{ active: isServiceSelected(svc.id) }"
-                    @click="toggleService(svc.id)"
-                  >
-                    <div class="svc-icon" v-html="svc.icon"></div>
-                    <span class="svc-name">{{ svc.name }}</span>
-                    <div class="svc-check">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                  </button>
-                </div>
+                <!-- Marketplace de producción: packs REALES de proveedores -->
+                <div class="prod-market">
+                  <h4 class="packs-heading">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    ¿Necesitas sonido, luces u otros servicios?
+                  </h4>
+                  <p class="packs-sub">
+                    Agrégalos de nuestros proveedores verificados. Combinas lo que quieras — no dependen del DJ.<template v-if="talent?.stage_name"> Los que <strong>{{ talent.stage_name }}</strong> recomienda aparecen primero.</template>
+                  </p>
 
-                <!-- Dynamic Questions per Service -->
-                <div v-if="selectedServices.length > 0" class="dynamic-questions">
-                  <!-- SOUND -->
-                  <div v-if="isServiceSelected('sound')" class="svc-detail glass">
-                    <h4>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                      Detalles de Sonido
-                    </h4>
-                    <div class="form-group">
-                      <label class="form-label">¿Para cuántas personas?</label>
-                      <select v-model="serviceDetails.sound.capacity" class="form-input">
-                        <option value="">Seleccionar...</option>
-                        <option value="small">Hasta 50 personas</option>
-                        <option value="medium">50 - 150 personas</option>
-                        <option value="large">150 - 500 personas</option>
-                        <option value="xlarge">500+ personas</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">¿Necesita micrófono?</label>
-                      <div class="toggle-row">
-                        <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.sound.microphone }" @click="serviceDetails.sound.microphone = true">Sí</button>
-                        <button type="button" class="toggle-btn sm" :class="{ active: !serviceDetails.sound.microphone }" @click="serviceDetails.sound.microphone = false">No</button>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Tipo de evento</label>
-                      <div class="toggle-row">
-                        <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.sound.level === 'basic' }" @click="serviceDetails.sound.level = 'basic'">Básico</button>
-                        <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.sound.level === 'pro' }" @click="serviceDetails.sound.level = 'pro'">Profesional</button>
-                      </div>
-                    </div>
+                  <!-- Categorías -->
+                  <div class="prod-cats">
+                    <button v-for="c in prodCategories" :key="c.value" type="button"
+                      class="prod-cat-chip" :class="{ active: prodCategory === c.value }"
+                      @click="prodCategory = c.value">
+                      <span class="pc-icon" v-html="c.icon"></span> {{ c.label }}
+                    </button>
                   </div>
 
-                  <!-- LIGHTS -->
-                  <div v-if="isServiceSelected('lights')" class="svc-detail glass">
-                    <h4>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.7.6 1 1.5 1 2.3v1h6v-1c0-.8.3-1.7 1-2.3A7 7 0 0012 2z"/></svg>
-                      Detalles de Iluminación
-                    </h4>
-                    <div class="form-group">
-                      <label class="form-label">Tipo de iluminación</label>
-                      <div class="genre-chips">
-                        <button type="button" v-for="t in ['Ambiental','Fiesta','Arquitectónica','Moving Heads']" :key="t"
-                          class="chip sm" :class="{ active: serviceDetails.lights.type === t }"
-                          @click="serviceDetails.lights.type = t"
-                        >{{ t }}</button>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">¿Decorativa o de show?</label>
-                      <div class="toggle-row">
-                        <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.lights.purpose === 'decorative' }" @click="serviceDetails.lights.purpose = 'decorative'">Decorativa</button>
-                        <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.lights.purpose === 'show' }" @click="serviceDetails.lights.purpose = 'show'">Show</button>
-                      </div>
-                    </div>
+                  <!-- Filtro de tamaño -->
+                  <div class="prod-size-bar">
+                    <span v-if="form.guest_count && suggestedEventSize && !showAllSizes" class="prod-size-hint">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                      Packs para ~{{ form.guest_count }} personas ({{ suggestedSizeLabel }})
+                    </span>
+                    <label class="prod-size-toggle">
+                      <input type="checkbox" v-model="showAllSizes" />
+                      Ver todos los tamaños
+                    </label>
                   </div>
 
-                  <!-- DJ BOOTH -->
-                  <div v-if="isServiceSelected('booth')" class="svc-detail glass">
-                    <h4>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
-                      Tipo de DJ Booth
-                    </h4>
-                    <div class="genre-chips">
-                      <button type="button" v-for="t in ['Estándar','Blanco','Con Branding','Con Pantalla']" :key="t"
-                        class="chip sm" :class="{ active: serviceDetails.booth.type === t }"
-                        @click="serviceDetails.booth.type = t"
-                      >{{ t }}</button>
-                    </div>
+                  <!-- Cargando -->
+                  <div v-if="prodLoading" class="prod-loading">
+                    <span class="spinner"></span> Buscando proveedores…
                   </div>
 
-                  <!-- SCREENS -->
-                  <div v-if="isServiceSelected('screens')" class="svc-detail glass">
-                    <h4>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                      Pantallas / Visuales
+                  <!-- Grilla de packs reales -->
+                  <div v-else-if="prodPacks.length" class="packs-grid">
+                    <button type="button" v-for="p in prodPacks" :key="p.id"
+                      class="pack-card prod-pack-card" :class="{ active: isInCart(p.id) }"
+                      @click="toggleCartPack(p)">
+                      <span v-if="p.is_recommended" class="pack-popular pack-rec">★ RECOMENDADO</span>
+                      <div class="pack-name">{{ p.name }}</div>
+                      <div class="prod-vendor">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                        {{ p.vendor?.name }}<template v-if="p.vendor?.city"> · {{ p.vendor.city }}</template>
+                      </div>
+                      <div class="pack-price">
+                        ${{ Number(p.price).toFixed(0) }}
+                        <span v-if="p.event_size_display" class="pack-duration">· {{ p.event_size_display }}</span>
+                      </div>
+                      <div v-if="p.includes_technician || p.includes_setup || p.includes_dj" class="prod-includes">
+                        <span v-if="p.includes_technician" class="inc-tag">Técnico</span>
+                        <span v-if="p.includes_setup" class="inc-tag">Montaje</span>
+                        <span v-if="p.includes_dj" class="inc-tag inc-dj">Incluye DJ</span>
+                      </div>
+                      <div class="pack-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </button>
+                  </div>
+
+                  <!-- Vacío -->
+                  <div v-else class="prod-empty">
+                    <p>Aún no hay proveedores de <strong>{{ currentCatLabel }}</strong> publicados<template v-if="!showAllSizes && suggestedEventSize"> para ese tamaño</template>.</p>
+                    <button v-if="!showAllSizes" type="button" class="btn btn-ghost btn-sm" @click="showAllSizes = true">Ver todos los tamaños</button>
+                    <p class="prod-empty-sub">Puedes describir lo que necesitas en las notas de abajo y lo coordinamos.</p>
+                  </div>
+
+                  <!-- Carrito de producción -->
+                  <div v-if="cartPacks.length" class="prod-cart glass">
+                    <h4 class="cart-title">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                      Tu producción ({{ cartPacks.length }})
                     </h4>
-                    <div class="form-group">
-                      <label class="form-label">¿Tiene contenido propio?</label>
-                      <div class="toggle-row">
-                        <button type="button" class="toggle-btn sm" :class="{ active: serviceDetails.screens.hasContent }" @click="serviceDetails.screens.hasContent = true">Sí, tengo contenido</button>
-                        <button type="button" class="toggle-btn sm" :class="{ active: !serviceDetails.screens.hasContent }" @click="serviceDetails.screens.hasContent = false">Necesito apoyo</button>
+                    <div class="cart-lines">
+                      <div v-for="p in cartPacks" :key="p.id" class="cart-line">
+                        <span class="cart-line-name">{{ p.name }} <small>· {{ p.vendor?.name }}</small></span>
+                        <span class="cart-line-price">${{ Number(p.price).toFixed(0) }}</span>
+                        <button type="button" class="cart-remove" @click="toggleCartPack(p)" aria-label="Quitar">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                       </div>
                     </div>
-                  </div>
-
-                  <!-- TECHNICIAN -->
-                  <div v-if="isServiceSelected('technician')" class="svc-detail glass">
-                    <h4>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-                      Soporte Técnico
-                    </h4>
-                    <div class="form-group">
-                      <label class="form-label">¿Horario especial de montaje?</label>
-                      <input v-model="serviceDetails.technician.schedule" type="text" class="form-input" placeholder="Ej: Montaje desde las 2pm">
+                    <div class="cart-subtotal">
+                      <span>Subtotal producción</span><span>${{ cartSubtotal.toFixed(0) }}</span>
                     </div>
                   </div>
                 </div>
@@ -429,12 +405,12 @@
                   </div>
                 </div>
 
-                <!-- Services Summary -->
-                <div v-if="selectedServices.length > 0" class="services-summary glass">
-                  <h4>Servicios Adicionales</h4>
+                <!-- Producción del marketplace -->
+                <div v-if="cartPacks.length" class="services-summary glass">
+                  <h4>Producción adicional ({{ cartPacks.length }})</h4>
                   <div class="svc-tags">
-                    <span v-for="svc in selectedServices" :key="svc" class="svc-tag">
-                      {{ availableServices.find(s => s.id === svc)?.name }}
+                    <span v-for="p in cartPacks" :key="p.id" class="svc-tag">
+                      {{ p.name }} — ${{ Number(p.price).toFixed(0) }}<template v-if="p.vendor?.name"> · {{ p.vendor.name }}</template>
                     </span>
                   </div>
                 </div>
@@ -504,9 +480,9 @@
                 <span>Duración</span>
                 <span>{{ durationHours }} hrs</span>
               </div>
-              <div v-if="selectedServices.length > 0" class="price-row">
-                <span>Servicios extras</span>
-                <span>{{ selectedServices.length }} seleccionados</span>
+              <div v-for="p in cartPacks" :key="p.id" class="price-row price-row-prod">
+                <span>{{ p.name }}</span>
+                <span>${{ Number(p.price).toFixed(0) }}</span>
               </div>
               <div class="summary-divider" v-if="estimatedPrice > 0"></div>
               <div class="price-row price-total" v-if="estimatedPrice > 0">
@@ -556,6 +532,14 @@
             </div>
           </div>
 
+          <div v-if="packAddWarnings.length" class="pack-warn-block">
+            <strong>Algunos servicios no se pudieron agregar:</strong>
+            <ul>
+              <li v-for="(w, i) in packAddWarnings" :key="i">{{ w }}</li>
+            </ul>
+            <span class="pack-warn-sub">Puedes coordinarlos por chat con el talento.</span>
+          </div>
+
           <div class="trust-pill">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Pago protegido por Pulsar · Reembolso 100% si el talento no se presenta
@@ -572,7 +556,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
@@ -618,15 +602,17 @@ function toggleGenre(g) {
   form.value.genre_preference = selectedGenres.value.join(', ')
 }
 
-const availableServices = [
-  { id: 'sound', name: 'Sonido', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>' },
-  { id: 'lights', name: 'Luces', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' },
-  { id: 'booth', name: 'DJ Booth', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>' },
-  { id: 'microphone', name: 'Micrófono', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>' },
-  { id: 'screens', name: 'Pantallas', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
-  { id: 'ledfloor', name: 'Piso LED', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>' },
-  { id: 'technician', name: 'Técnico', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>' },
+// Categorías del marketplace de producción (coinciden con ProductionPack.category en el backend)
+const _pc = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+const prodCategories = [
+  { value: 'sound',    label: 'Sonido',      icon: `${_pc}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>` },
+  { value: 'lights',   label: 'Luces',       icon: `${_pc}<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>` },
+  { value: 'screens',  label: 'Pantallas',   icon: `${_pc}<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>` },
+  { value: 'mics',     label: 'Micrófonos',  icon: `${_pc}<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>` },
+  { value: 'dj_booth', label: 'DJ Booth',    icon: `${_pc}<rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>` },
+  { value: 'fx',       label: 'Efectos',     icon: `${_pc}<path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/></svg>` },
 ]
+const SIZE_LABELS = { small: 'Hasta 80', medium: '80–300', large: '300+' }
 
 const eventTypeLabels = {
   wedding: 'Boda', corporate: 'Corporativo', birthday: 'Cumpleaños',
@@ -641,8 +627,6 @@ const howItWorks = [
   'Pagas para confirmar',
 ]
 
-const selectedServices = ref([])
-
 // ── Packs pre-armados del talento ──
 const talentPacks = ref([])
 const selectedPackId = ref(null)
@@ -650,13 +634,48 @@ const selectedPack = computed(() => talentPacks.value.find(p => p.id === selecte
 function togglePack(id) {
   selectedPackId.value = selectedPackId.value === id ? null : id
 }
-const serviceDetails = reactive({
-  sound: { capacity: '', microphone: false, level: 'basic' },
-  lights: { type: '', purpose: 'decorative' },
-  booth: { type: 'Estándar' },
-  screens: { hasContent: false },
-  technician: { schedule: '' },
+
+// ── Marketplace de producción (packs reales de proveedores) ──
+const prodCategory = ref('sound')
+const prodPacks = ref([])
+const prodLoading = ref(false)
+const showAllSizes = ref(false)
+const packAddWarnings = ref([])
+
+const suggestedEventSize = computed(() => {
+  const g = form.value.guest_count || 0
+  if (!g) return ''
+  if (g < 80) return 'small'
+  if (g <= 300) return 'medium'
+  return 'large'
 })
+const suggestedSizeLabel = computed(() => SIZE_LABELS[suggestedEventSize.value] || '')
+const currentCatLabel = computed(() => prodCategories.find(c => c.value === prodCategory.value)?.label || '')
+
+async function fetchProdPacks() {
+  prodLoading.value = true
+  try {
+    const params = { category: prodCategory.value, for_talent_id: talentId }
+    if (!showAllSizes.value && suggestedEventSize.value) params.event_size = suggestedEventSize.value
+    const { data } = await api.get('/production-packs/', { params })
+    prodPacks.value = Array.isArray(data) ? data : (data.results || [])
+  } catch {
+    prodPacks.value = []
+  } finally {
+    prodLoading.value = false
+  }
+}
+watch([prodCategory, showAllSizes, suggestedEventSize], fetchProdPacks)
+
+// Carrito: packs de producción elegidos (objetos completos)
+const cartPacks = ref([])
+function isInCart(id) { return cartPacks.value.some(p => p.id === id) }
+function toggleCartPack(p) {
+  const i = cartPacks.value.findIndex(x => x.id === p.id)
+  if (i >= 0) cartPacks.value.splice(i, 1)
+  else cartPacks.value.push(p)
+}
+const cartSubtotal = computed(() => cartPacks.value.reduce((s, p) => s + Number(p.price || 0), 0))
 
 const form = ref({
   event_type: '',
@@ -747,19 +766,15 @@ const durationHours = computed(() => {
 })
 
 const estimatedPrice = computed(() => {
-  // Con un pack de precio fijo elegido, el estimado es el precio del pack
-  // (los packs son paquetes cerrados del talento).
-  if (selectedPack.value?.price) return parseFloat(selectedPack.value.price)
-  if (!talent.value?.hourly_rate || durationHours.value <= 0) return 0
-  return parseFloat(talent.value.hourly_rate) * durationHours.value
+  // Base: pack cerrado del talento, o tarifa por hora × duración.
+  let base = 0
+  if (selectedPack.value?.price) base = parseFloat(selectedPack.value.price)
+  else if (talent.value?.hourly_rate && durationHours.value > 0) {
+    base = parseFloat(talent.value.hourly_rate) * durationHours.value
+  }
+  // + producción del marketplace (packs reales de proveedores)
+  return base + cartSubtotal.value
 })
-
-function isServiceSelected(id) { return selectedServices.value.includes(id) }
-function toggleService(id) {
-  const i = selectedServices.value.indexOf(id)
-  if (i >= 0) selectedServices.value.splice(i, 1)
-  else selectedServices.value.push(id)
-}
 
 function formatDate(d) {
   if (!d) return '—'
@@ -799,8 +814,9 @@ function snapshotDraft() {
   return {
     talentId: String(talentId),
     form: form.value,
-    selectedServices: selectedServices.value,
-    serviceDetails: { ...serviceDetails },
+    cartPacks: cartPacks.value,
+    prodCategory: prodCategory.value,
+    showAllSizes: showAllSizes.value,
     selectedDuration: selectedDuration.value,
     selectedGenres: selectedGenres.value,
     selectedPackId: selectedPackId.value,
@@ -835,8 +851,9 @@ function restoreDraftIfMatches() {
     }
     if (String(saved.talentId) !== String(talentId)) return false  // Draft de otro talento — ignorar
     if (saved.form) Object.assign(form.value, saved.form)
-    if (Array.isArray(saved.selectedServices)) selectedServices.value = saved.selectedServices
-    if (saved.serviceDetails) Object.assign(serviceDetails, saved.serviceDetails)
+    if (Array.isArray(saved.cartPacks)) cartPacks.value = saved.cartPacks
+    if (saved.prodCategory) prodCategory.value = saved.prodCategory
+    if (typeof saved.showAllSizes === 'boolean') showAllSizes.value = saved.showAllSizes
     if (saved.selectedDuration) selectedDuration.value = saved.selectedDuration
     if (Array.isArray(saved.selectedGenres)) selectedGenres.value = saved.selectedGenres
     if (saved.selectedPackId != null) selectedPackId.value = saved.selectedPackId
@@ -863,6 +880,9 @@ onMounted(async () => {
 
   // Restaurar borrador (si pertenece a este talento y tiene menos de 15 min)
   restoreDraftIfMatches()
+
+  // Cargar el catálogo de producción del marketplace (categoría inicial)
+  fetchProdPacks()
 })
 
 // Auto-guardar borrador (con debounce) mientras el usuario edita.
@@ -873,7 +893,7 @@ function scheduleDraftSave() {
   saveTimer = setTimeout(persistDraft, 400)
 }
 watch(
-  () => [form.value, selectedServices.value, serviceDetails, selectedDuration.value, selectedGenres.value, selectedPackId.value, currentStep.value],
+  () => [form.value, cartPacks.value, prodCategory.value, showAllSizes.value, selectedDuration.value, selectedGenres.value, selectedPackId.value, currentStep.value],
   scheduleDraftSave,
   { deep: true }
 )
@@ -894,16 +914,13 @@ async function handleSubmit() {
   submitting.value = true
 
   try {
-    // Build services array
-    const services = selectedServices.value.map(id => ({
-      service: id,
-      details: serviceDetails[id] || {}
-    }))
-
-    // Pack pre-armado del talento elegido → va primero en additional_services
+    // additional_services (JSON) guarda solo el pack pre-armado del talento.
+    // Los packs de producción del marketplace se crean como líneas reales
+    // (BookingPack) más abajo, vía POST /bookings/<id>/packs/.
+    const services = []
     if (selectedPack.value) {
       const p = selectedPack.value
-      services.unshift({
+      services.push({
         service: 'talent_pack',
         details: {
           id: p.id,
@@ -948,6 +965,20 @@ async function handleSubmit() {
     }
     const { data } = await api.post('/bookings/create/', payload)
     createdBooking.value = data
+
+    // Agregar los packs de producción del marketplace como líneas reales del booking.
+    // Si alguno no se puede (día no disponible / capacidad del aliado), no se cae toda
+    // la reserva: se avisa y el resto continúa.
+    packAddWarnings.value = []
+    for (const p of cartPacks.value) {
+      try {
+        await api.post(`/bookings/${data.id}/packs/`, { pack_id: p.id })
+      } catch (e) {
+        const msg = e.response?.data?.detail || `No se pudo agregar "${p.name}".`
+        packAddWarnings.value.push(msg)
+      }
+    }
+
     showSuccess.value = true
     // Solicitud enviada → el borrador ya no se necesita
     if (saveTimer) clearTimeout(saveTimer)
@@ -1232,6 +1263,109 @@ select.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
   content: ''; flex: 1; height: 1px; background: var(--color-border);
 }
 .price-row-pack span:first-child { color: var(--color-primary); font-weight: 600; }
+
+/* ── Marketplace de producción ── */
+.prod-market { margin-top: var(--space-2); }
+.prod-cats { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.prod-cat-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm); font-family: var(--font-body);
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.prod-cat-chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.prod-cat-chip.active {
+  border-color: var(--color-primary); background: var(--color-primary);
+  color: var(--color-bg-primary); font-weight: 600;
+}
+.prod-cat-chip .pc-icon { display: inline-flex; align-items: center; }
+
+.prod-size-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4);
+}
+.prod-size-hint {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--font-size-xs); color: var(--color-text-muted);
+}
+.prod-size-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--font-size-xs); color: var(--color-text-secondary);
+  cursor: pointer; user-select: none;
+}
+.prod-size-toggle input { accent-color: var(--color-primary); cursor: pointer; }
+
+.prod-loading {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-6); color: var(--color-text-muted); font-size: var(--font-size-sm);
+}
+
+/* Tarjeta de pack real */
+.prod-pack-card .pack-price { color: var(--color-text-primary); }
+.prod-vendor {
+  display: flex; align-items: center; gap: 5px;
+  font-size: var(--font-size-xs); color: var(--color-text-muted); margin: 2px 0 var(--space-2);
+}
+.prod-vendor svg { color: var(--color-primary); flex-shrink: 0; }
+.prod-includes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.inc-tag {
+  padding: 1px 7px; border-radius: 999px;
+  background: var(--color-bg-card); border: 1px solid var(--color-border);
+  font-size: 0.64rem; font-weight: 600; color: var(--color-text-secondary);
+}
+.inc-tag.inc-dj { border-color: var(--color-accent); color: var(--color-accent); }
+.pack-rec { background: var(--color-accent); }
+
+.prod-empty {
+  text-align: center; padding: var(--space-6);
+  border: 1px dashed var(--color-border); border-radius: var(--radius-lg);
+  display: flex; flex-direction: column; gap: var(--space-2); align-items: center;
+}
+.prod-empty p { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin: 0; }
+.prod-empty-sub { color: var(--color-text-muted) !important; font-size: var(--font-size-xs) !important; }
+
+/* Carrito de producción */
+.prod-cart { margin-top: var(--space-5); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); }
+.cart-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: var(--font-size-sm); margin-bottom: var(--space-3); color: var(--color-text-primary);
+}
+.cart-title svg { color: var(--color-primary); }
+.cart-lines { display: flex; flex-direction: column; gap: var(--space-2); }
+.cart-line { display: flex; align-items: center; gap: var(--space-3); }
+.cart-line-name { flex: 1; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.cart-line-name small { color: var(--color-text-muted); }
+.cart-line-price { font-weight: 700; color: var(--color-text-primary); font-size: var(--font-size-sm); }
+.cart-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  border: none; background: transparent; color: var(--color-text-muted); cursor: pointer;
+}
+.cart-remove:hover { background: rgba(232,93,74,0.12); color: var(--color-accent); }
+.cart-subtotal {
+  display: flex; justify-content: space-between;
+  margin-top: var(--space-3); padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-weight: 700; color: var(--color-primary); font-size: var(--font-size-sm);
+}
+.price-row-prod span:first-child {
+  color: var(--color-text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;
+}
+
+.pack-warn-block {
+  text-align: left; padding: var(--space-3) var(--space-4);
+  background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3);
+  border-radius: var(--radius-lg); margin-bottom: var(--space-4);
+  font-size: 0.8rem; color: var(--color-text-secondary);
+}
+.pack-warn-block strong { color: #f59e0b; display: block; margin-bottom: 4px; font-size: 0.82rem; }
+.pack-warn-block ul { margin: 0 0 4px; padding-left: var(--space-4); }
+.pack-warn-sub { font-size: 0.72rem; color: var(--color-text-muted); }
 
 /* ── Toggle Row ── */
 .toggle-row { display: flex; gap: var(--space-2); }
