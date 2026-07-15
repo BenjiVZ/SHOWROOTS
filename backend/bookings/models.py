@@ -47,7 +47,9 @@ class Booking(models.Model):
     talent = models.ForeignKey(
         'talents.TalentProfile',
         on_delete=models.CASCADE,
-        related_name='bookings'
+        related_name='bookings',
+        null=True, blank=True,
+        help_text='Talento reservado. Puede ser NULL: reserva de solo-servicios (sin DJ).'
     )
     partner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -164,11 +166,21 @@ class Booking(models.Model):
         return False
 
     def __str__(self):
-        return f"Booking #{self.id} - {self.client} → {self.talent} ({self.get_status_display()})"
+        target = self.talent or 'Solo servicios'
+        return f"Booking #{self.id} - {self.client} → {target} ({self.get_status_display()})"
+
+    @property
+    def is_service_only(self):
+        """Reserva de solo-servicios (packs de producción) sin DJ/talento."""
+        return self.talent_id is None
 
     def calculate_estimated_price(self):
-        """Calculate estimated price based on talent hourly rate and duration."""
-        if self.talent.hourly_rate and self.event_duration_hours:
+        """Calcula el precio estimado según tarifa/hora del talento y duración.
+
+        En reservas de solo-servicios (sin talento) no hay tarifa/hora: el precio
+        proviene de los packs (packs_subtotal), así que se deja en None.
+        """
+        if self.talent and self.talent.hourly_rate and self.event_duration_hours:
             self.precio_estimado = self.talent.hourly_rate * self.event_duration_hours
             return self.precio_estimado
         return None
@@ -234,7 +246,7 @@ class Booking(models.Model):
 
     def calculate_dynamic_surcharge(self):
         """Sobreprecio Premium en alta temporada (sólo si talent_level == 'premium')."""
-        if self.talent.talent_level != 'premium':
+        if not self.talent or self.talent.talent_level != 'premium':
             return Decimal('0.00')
         if not self.is_high_season():
             return Decimal('0.00')
@@ -268,6 +280,9 @@ class Booking(models.Model):
         """
         config = PlatformConfig.get_config()
         base = self.final_price or Decimal('0.00')
+        # Reserva de solo-servicios: la base del fee es el subtotal de packs.
+        if self.is_service_only:
+            base = self.packs_subtotal
         if base <= 0:
             self.service_fee = Decimal('0.00')
             return self.service_fee
@@ -393,9 +408,11 @@ class Payment(models.Model):
         from bookings.models import PlatformConfig
         config = PlatformConfig.get_config()
 
-        # Determine platform commission based on talent level
+        # Determine platform commission based on talent level.
+        # Reserva de solo-servicios (sin DJ): no hay tier; la porción DJ es 0
+        # (dj_base=0 más abajo), así que el rate de plataforma DJ es indiferente.
         if platform_rate is None:
-            talent_level = self.booking.talent.talent_level
+            talent_level = self.booking.talent.talent_level if self.booking.talent else None
             if talent_level == 'premium':
                 platform_rate = config.premium_commission_rate
             elif talent_level == 'pro':

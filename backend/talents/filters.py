@@ -20,6 +20,9 @@ class TalentFilter(django_filters.FilterSet):
     is_featured = django_filters.BooleanFilter()
     equipment = django_filters.BooleanFilter(field_name='equipment_own')
 
+    # Disponibilidad por fecha: excluye talentos bloqueados/reservados ese día.
+    available_date = django_filters.DateFilter(method='filter_available_date')
+
     # Filtros nuevos sobre campos JSONField (búsqueda por contains)
     languages = django_filters.CharFilter(method='filter_languages')
     event_types = django_filters.CharFilter(method='filter_event_types')
@@ -65,11 +68,25 @@ class TalentFilter(django_filters.FilterSet):
             return queryset
         return queryset.filter(genres__slug__in=items).distinct()
 
+    def filter_available_date(self, queryset, name, value):
+        """Excluye talentos con la fecha bloqueada o ya reservada.
+
+        Cuando una reserva se acepta/confirma se crea una fila Availability
+        con status='booked', así que filtrar por blocked/booked cubre ambos.
+        """
+        if not value:
+            return queryset
+        from .models import Availability
+        unavailable = Availability.objects.filter(
+            date=value, status__in=['blocked', 'booked']
+        ).values_list('talent_id', flat=True)
+        return queryset.exclude(id__in=list(unavailable))
+
     class Meta:
         model = TalentProfile
         fields = [
             'talent_type', 'talent_level', 'experience_level', 'genre', 'genres',
             'city', 'country', 'price_min', 'price_max', 'experience_min',
             'rating_min', 'is_available', 'is_featured', 'equipment',
-            'languages', 'event_types', 'moods',
+            'languages', 'event_types', 'moods', 'available_date',
         ]

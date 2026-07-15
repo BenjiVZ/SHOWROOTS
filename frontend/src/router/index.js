@@ -96,6 +96,11 @@ const routes = [
     component: () => import('@/views/PacksCatalogView.vue'),
   },
   {
+    path: '/reservar-servicios',
+    name: 'service-booking',
+    component: () => import('@/views/ServiceBookingView.vue'),
+  },
+  {
     path: '/aliado/:userId',
     name: 'aliado-profile',
     component: () => import('@/views/AliadoProfileView.vue'),

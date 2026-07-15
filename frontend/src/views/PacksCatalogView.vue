@@ -22,6 +22,10 @@
             <div><strong>Confirma rápido</strong><span>Respuesta en menos de 24h</span></div>
           </div>
         </div>
+        <router-link :to="{ name: 'service-booking' }" class="btn btn-primary catalog-cta">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          Armar mi reserva de servicios (con o sin DJ) →
+        </router-link>
       </header>
 
       <div class="catalog-layout">
@@ -303,17 +307,17 @@
 
               <div class="detail-note" :class="{ 'detail-note-dj': detail.pack?.includes_dj }">
                 <template v-if="detail.pack?.includes_dj">
-                  Este pack es <strong>turnkey</strong> — incluye el DJ. Reservalo directamente desde el perfil del aliado.
+                  Este pack es <strong>turnkey</strong> — incluye el DJ. También puedes reservarlo desde el perfil del aliado.
                 </template>
                 <template v-else>
-                  Para agregar este pack a un evento, crea una reserva con un DJ y lo agregas desde el booking.
+                  Reserva este servicio solo, o suma un DJ y otros servicios en el mismo evento.
                 </template>
               </div>
 
               <div class="detail-actions">
                 <button class="btn btn-ghost" @click="closeDetail">Cerrar</button>
                 <router-link v-if="detail.pack?.vendor?.id" :to="`/aliado/${detail.pack.vendor.id}`" class="btn btn-outline" @click="closeDetail">Ver perfil del aliado</router-link>
-                <router-link v-if="!detail.pack?.includes_dj" to="/search" class="btn btn-primary" @click="closeDetail">Buscar DJ →</router-link>
+                <router-link :to="{ name: 'service-booking', query: { pack: detail.pack?.id } }" class="btn btn-primary" @click="closeDetail">Reservar este servicio →</router-link>
               </div>
             </div>
           </div>
@@ -461,6 +465,7 @@ onMounted(() => {
 .container { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-4); }
 
 .catalog-header { margin-bottom: var(--space-5); }
+.catalog-cta { margin-top: var(--space-5); display: inline-flex; align-items: center; gap: 8px; }
 .catalog-header h1 { font-family: 'Poppins', sans-serif; font-size: 2.2rem; margin-bottom: var(--space-2); }
 .catalog-sub { color: var(--color-text-muted); max-width: 600px; line-height: 1.55; }
 

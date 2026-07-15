@@ -44,6 +44,11 @@
         </div>
 
         <div class="filter-group">
+          <label class="label">Disponible en fecha</label>
+          <input v-model="filters.available_date" type="date" class="input-field" @change="fetchTalents" />
+        </div>
+
+        <div class="filter-group">
           <label class="label">Precio máximo ($)</label>
           <input v-model="filters.price_max" type="number" class="input-field" placeholder="Sin límite" @input="debounceSearch" />
         </div>
@@ -298,6 +303,7 @@ const filters = ref({
   ordering: '-rating_avg',
   talent_level: route.query.tier || '',
   experience_level: '',
+  available_date: '',
   languagesArr: [],
   eventTypesArr: [],
   moodsArr: [],
@@ -308,7 +314,7 @@ const filtersOpen = ref(false)
 const activeFilterCount = computed(() => {
   const f = filters.value
   let n = 0
-  ;['talent_type', 'genre', 'city', 'price_max', 'min_rating', 'talent_level', 'experience_level'].forEach(k => { if (f[k]) n++ })
+  ;['talent_type', 'genre', 'city', 'price_max', 'min_rating', 'talent_level', 'experience_level', 'available_date'].forEach(k => { if (f[k]) n++ })
   n += f.languagesArr.length + f.eventTypesArr.length + f.moodsArr.length
   return n
 })
@@ -351,7 +357,7 @@ async function fetchTalents() {
   try {
     const params = { page: page.value }
     // Mapeo: arrays → CSV; resto directo
-    const simpleKeys = ['talent_type', 'genre', 'city', 'price_max', 'min_rating', 'ordering', 'talent_level', 'experience_level']
+    const simpleKeys = ['talent_type', 'genre', 'city', 'price_max', 'min_rating', 'ordering', 'talent_level', 'experience_level', 'available_date']
     simpleKeys.forEach(k => {
       if (filters.value[k]) params[k] = filters.value[k]
     })
@@ -378,7 +384,7 @@ function debounceSearch() {
 function clearFilters() {
   filters.value = {
     talent_type: '', genre: '', city: '', price_max: '', min_rating: '', ordering: '-rating_avg',
-    talent_level: '', experience_level: '',
+    talent_level: '', experience_level: '', available_date: '',
     languagesArr: [], eventTypesArr: [], moodsArr: [],
   }
   page.value = 1

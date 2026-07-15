@@ -35,23 +35,26 @@ def expire_bookings_job():
         booking.status = 'cancelada'
         booking.save(update_fields=['status'])
 
+        target = booking.talent.stage_name if booking.talent else 'los servicios solicitados'
+
         # Notify client
         Notification.objects.create(
             user=booking.client,
             notification_type='booking_expired',
             title='Solicitud expirada',
-            message=f'Tu solicitud para {booking.talent.stage_name} expiró por falta de respuesta.',
+            message=f'Tu solicitud para {target} expiró por falta de respuesta.',
             link=f'/dashboard/bookings/{booking.id}'
         )
 
-        # Notify talent
-        Notification.objects.create(
-            user=booking.talent.user,
-            notification_type='booking_expired',
-            title='Solicitud expirada',
-            message=f'La solicitud de {booking.client.get_full_name()} expiró sin respuesta.',
-            link=f'/dashboard/bookings/{booking.id}'
-        )
+        # Notify talent (solo si hay DJ)
+        if booking.talent:
+            Notification.objects.create(
+                user=booking.talent.user,
+                notification_type='booking_expired',
+                title='Solicitud expirada',
+                message=f'La solicitud de {booking.client.get_full_name()} expiró sin respuesta.',
+                link=f'/dashboard/bookings/{booking.id}'
+            )
 
         # Send email notifications
         try:
@@ -59,7 +62,7 @@ def expire_bookings_job():
             send_booking_notification_email(
                 booking.client,
                 'Solicitud Expirada',
-                f'Tu solicitud para {booking.talent.stage_name} del {booking.event_date} expiró porque no fue respondida a tiempo. Puedes buscar otro talento.',
+                f'Tu solicitud para {target} del {booking.event_date} expiró porque no fue respondida a tiempo. Puedes buscar otro talento.',
                 booking=booking
             )
         except Exception:
@@ -87,23 +90,25 @@ def send_reminders_job():
 
     count = 0
     for booking in upcoming:
+        target = booking.talent.stage_name if booking.talent else 'los servicios contratados'
         # Remind client
         Notification.objects.create(
             user=booking.client,
             notification_type='event_reminder',
             title='¡Tu evento es mañana!',
-            message=f'Recuerda: {booking.talent.stage_name} estará en tu evento mañana ({booking.event_date}).',
+            message=f'Recuerda: {target} estará en tu evento mañana ({booking.event_date}).',
             link=f'/dashboard/bookings/{booking.id}'
         )
 
-        # Remind talent
-        Notification.objects.create(
-            user=booking.talent.user,
-            notification_type='event_reminder',
-            title='Tienes un evento mañana',
-            message=f'Recuerda: tienes un evento para {booking.client.get_full_name()} mañana ({booking.event_date}).',
-            link=f'/dashboard/bookings/{booking.id}'
-        )
+        # Remind talent (solo si hay DJ)
+        if booking.talent:
+            Notification.objects.create(
+                user=booking.talent.user,
+                notification_type='event_reminder',
+                title='Tienes un evento mañana',
+                message=f'Recuerda: tienes un evento para {booking.client.get_full_name()} mañana ({booking.event_date}).',
+                link=f'/dashboard/bookings/{booking.id}'
+            )
 
         # Send emails
         try:
@@ -111,15 +116,16 @@ def send_reminders_job():
             send_booking_notification_email(
                 booking.client,
                 '¡Tu evento es mañana!',
-                f'{booking.talent.stage_name} estará en tu evento mañana. ¡Prepárate!',
+                f'{target} estará en tu evento mañana. ¡Prepárate!',
                 booking=booking
             )
-            send_booking_notification_email(
-                booking.talent.user,
-                'Tienes un evento mañana',
-                f'Recuerda que tienes un evento para {booking.client.get_full_name()} mañana.',
-                booking=booking
-            )
+            if booking.talent:
+                send_booking_notification_email(
+                    booking.talent.user,
+                    'Tienes un evento mañana',
+                    f'Recuerda que tienes un evento para {booking.client.get_full_name()} mañana.',
+                    booking=booking
+                )
         except Exception:
             pass
 
@@ -144,35 +150,39 @@ def auto_complete_bookings_job():
         booking.status = 'completada'
         booking.save(update_fields=['status', 'updated_at'])
 
-        # Update talent stats
-        talent = booking.talent
-        talent.total_bookings = Booking.objects.filter(
-            talent=talent, status='completada'
-        ).count()
-        talent.save(update_fields=['total_bookings'])
+        target = booking.talent.stage_name if booking.talent else 'los servicios contratados'
+
+        # Update talent stats (solo si hay DJ)
+        if booking.talent:
+            talent = booking.talent
+            talent.total_bookings = Booking.objects.filter(
+                talent=talent, status='completada'
+            ).count()
+            talent.save(update_fields=['total_bookings'])
 
         # Notify client to leave a review
         Notification.objects.create(
             user=booking.client,
             notification_type='booking_completed',
             title='Evento completado',
-            message=f'Tu evento con {booking.talent.stage_name} ha sido completado. ¡Deja una reseña!',
+            message=f'Tu evento con {target} ha sido completado. ¡Deja una reseña!',
             link=f'/dashboard/bookings/{booking.id}'
         )
-        Notification.objects.create(
-            user=booking.talent.user,
-            notification_type='booking_completed',
-            title='Evento completado',
-            message=f'El evento para {booking.client.get_full_name()} ha finalizado.',
-            link=f'/dashboard/bookings/{booking.id}'
-        )
+        if booking.talent:
+            Notification.objects.create(
+                user=booking.talent.user,
+                notification_type='booking_completed',
+                title='Evento completado',
+                message=f'El evento para {booking.client.get_full_name()} ha finalizado.',
+                link=f'/dashboard/bookings/{booking.id}'
+            )
 
         try:
             from accounts.emails import send_booking_notification_email
             send_booking_notification_email(
                 booking.client,
                 'Evento Completado — ¡Deja tu reseña!',
-                f'Tu evento con {booking.talent.stage_name} ha sido marcado como completado. ¡Nos encantaría saber tu opinión!',
+                f'Tu evento con {target} ha sido marcado como completado. ¡Nos encantaría saber tu opinión!',
                 booking=booking
             )
         except Exception:

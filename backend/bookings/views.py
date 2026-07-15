@@ -31,7 +31,7 @@ class IsBookingParticipant(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
             obj.client == request.user or
-            obj.talent.user == request.user or
+            (obj.talent and obj.talent.user == request.user) or
             (obj.partner and obj.partner == request.user)
         )
 
@@ -75,6 +75,10 @@ class BookingCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         booking = serializer.save()
+        # Reserva de solo-servicios (sin DJ): no hay talento a quien notificar.
+        # A los proveedores de los packs se les avisa cuando se agregan (BookingPacksView).
+        if not booking.talent:
+            return
         # Create notification for talent
         Notification.objects.create(
             user=booking.talent.user,
@@ -142,8 +146,11 @@ class BookingUpdateStatusView(generics.UpdateAPIView):
 
         booking.save()
 
-        # Auto-block date when confirmed
-        if new_status in ('confirmada', 'aceptada'):
+        # Nombre a mostrar en notificaciones (reserva de solo-servicios no tiene DJ)
+        talent_name = booking.talent.stage_name if booking.talent else 'el proveedor'
+
+        # Auto-block date when confirmed (solo si hay DJ con agenda)
+        if new_status in ('confirmada', 'aceptada') and booking.talent:
             from talents.models import Availability
             Availability.objects.update_or_create(
                 talent=booking.talent,
@@ -157,14 +164,14 @@ class BookingUpdateStatusView(generics.UpdateAPIView):
                 user=booking.client,
                 notification_type='request_accepted',
                 title='¡Tu solicitud fue aceptada!',
-                message=f'{booking.talent.stage_name} aceptó tu solicitud. Procede al pago para confirmar.',
+                message=f'{talent_name} aceptó tu solicitud. Procede al pago para confirmar.',
                 link=f'/dashboard/bookings/{booking.id}'
             )
             from accounts.emails import send_booking_notification_email
             send_booking_notification_email(
                 booking.client,
                 '¡Tu solicitud fue aceptada!',
-                f'{booking.talent.stage_name} aceptó tu solicitud para {booking.event_date}. Procede al pago para confirmar la reserva.',
+                f'{talent_name} aceptó tu solicitud para {booking.event_date}. Procede al pago para confirmar la reserva.',
                 booking=booking
             )
         elif new_status == 'rechazada':
@@ -172,19 +179,20 @@ class BookingUpdateStatusView(generics.UpdateAPIView):
                 user=booking.client,
                 notification_type='request_rejected',
                 title='Solicitud rechazada',
-                message=f'{booking.talent.stage_name} no puede asistir a tu evento.',
+                message=f'{talent_name} no puede asistir a tu evento.',
                 link=f'/dashboard/bookings/{booking.id}'
             )
             from accounts.emails import send_booking_notification_email
             send_booking_notification_email(
                 booking.client,
                 'Solicitud Rechazada',
-                f'{booking.talent.stage_name} no puede asistir a tu evento del {booking.event_date}. Puedes buscar otros talentos disponibles.',
+                f'{talent_name} no puede asistir a tu evento del {booking.event_date}. Puedes buscar otros talentos disponibles.',
                 booking=booking
             )
         elif new_status == 'confirmada':
             from accounts.emails import send_booking_notification_email
-            for user in [booking.client, booking.talent.user]:
+            recipients = [booking.client] + ([booking.talent.user] if booking.talent else [])
+            for user in recipients:
                 Notification.objects.create(
                     user=user,
                     notification_type='booking_confirmed',
@@ -201,32 +209,34 @@ class BookingUpdateStatusView(generics.UpdateAPIView):
 
         # Update talent's total bookings on completion
         if new_status == 'completada':
-            talent = booking.talent
-            talent.total_bookings = Booking.objects.filter(
-                talent=talent, status='completada'
-            ).count()
-            talent.save(update_fields=['total_bookings'])
+            from accounts.emails import send_booking_notification_email
+            if booking.talent:
+                talent = booking.talent
+                talent.total_bookings = Booking.objects.filter(
+                    talent=talent, status='completada'
+                ).count()
+                talent.save(update_fields=['total_bookings'])
 
             # Notify both parties
-            from accounts.emails import send_booking_notification_email
             Notification.objects.create(
                 user=booking.client,
                 notification_type='booking_completed',
                 title='Evento completado',
-                message=f'Tu evento con {booking.talent.stage_name} ha sido marcado como completado. ¡Deja una reseña!',
+                message=f'Tu evento con {talent_name} ha sido marcado como completado. ¡Deja una reseña!',
                 link=f'/dashboard/bookings/{booking.id}'
             )
-            Notification.objects.create(
-                user=booking.talent.user,
-                notification_type='booking_completed',
-                title='Evento completado',
-                message=f'El evento para {booking.client.get_full_name()} ha sido completado.',
-                link=f'/dashboard/bookings/{booking.id}'
-            )
+            if booking.talent:
+                Notification.objects.create(
+                    user=booking.talent.user,
+                    notification_type='booking_completed',
+                    title='Evento completado',
+                    message=f'El evento para {booking.client.get_full_name()} ha sido completado.',
+                    link=f'/dashboard/bookings/{booking.id}'
+                )
             send_booking_notification_email(
                 booking.client,
                 'Evento Completado',
-                f'Tu evento con {booking.talent.stage_name} ha sido marcado como completado. ¡Nos encantaría saber tu opinión! Deja una reseña.',
+                f'Tu evento con {talent_name} ha sido marcado como completado. ¡Nos encantaría saber tu opinión! Deja una reseña.',
                 booking=booking
             )
 
@@ -289,7 +299,13 @@ class MessageCreateView(generics.CreateAPIView):
         msg = serializer.save()
         # Determine recipient
         booking = msg.booking
-        recipient = booking.talent.user if msg.sender == booking.client else booking.client
+        if msg.sender == booking.client:
+            # Reserva de solo-servicios: no hay DJ contraparte a quien avisar.
+            recipient = booking.talent.user if booking.talent else None
+        else:
+            recipient = booking.client
+        if not recipient:
+            return
         Notification.objects.create(
             user=recipient,
             notification_type='new_message',
@@ -454,7 +470,11 @@ class CancellationPreviewView(APIView):
             booking = Booking.objects.get(id=booking_id)
         except Booking.DoesNotExist:
             return Response({'error': 'Not found'}, status=404)
-        if booking.client != request.user and booking.talent.user != request.user:
+        is_participant = (
+            booking.client == request.user
+            or (booking.talent and booking.talent.user == request.user)
+        )
+        if not is_participant:
             return Response({'error': 'Forbidden'}, status=403)
         return Response(booking.cancellation_refund())
 
@@ -941,7 +961,8 @@ class BookingsExportCSV(APIView):
         ])
         for b in Booking.objects.select_related('client', 'talent').order_by('-created_at')[:5000]:
             writer.writerow([
-                b.booking_code, b.client.get_full_name(), b.talent.stage_name,
+                b.booking_code, b.client.get_full_name(),
+                b.talent.stage_name if b.talent else 'Solo servicios',
                 b.event_type, b.event_date, b.status,
                 b.quoted_price or '', b.service_fee or '', b.tax_amount or '',
                 b.amount_paid or '', b.created_at.isoformat(),
@@ -1461,7 +1482,12 @@ class BookingPacksView(APIView):
         except Booking.DoesNotExist:
             return None
         u = request.user
-        if booking.client != u and booking.talent.user != u and booking.partner != u:
+        is_participant = (
+            booking.client == u
+            or (booking.talent and booking.talent.user == u)
+            or booking.partner == u
+        )
+        if not is_participant:
             return None
         return booking
 
@@ -1535,6 +1561,26 @@ class BookingPacksView(APIView):
                 {'detail': 'Este pack ya está agregado al booking.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # En reservas de solo-servicios el precio y el fee salen de los packs:
+        # recalcular tras agregar.
+        if booking.is_service_only:
+            booking.calculate_service_fee()
+            booking.calculate_tax()
+            booking.save(update_fields=['service_fee', 'tax_amount'])
+
+        # Avisar al proveedor del pack que su equipo fue solicitado.
+        try:
+            Notification.objects.create(
+                user=pack.partner.user,
+                notification_type='new_request',
+                title='Nuevo pack solicitado',
+                message=f'{booking.client.get_full_name()} agregó "{pack.name}" a una reserva para el {booking.event_date}.',
+                link=f'/dashboard/bookings/{booking.id}',
+            )
+        except Exception:
+            pass
+
         return Response(
             BookingPackSerializer(bp, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
@@ -1557,7 +1603,13 @@ class BookingPackRemoveView(APIView):
                 {'detail': 'No se pueden quitar packs de un booking confirmado.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        booking = bp.booking
         bp.delete()
+        # Recalcular fee/impuesto en reservas de solo-servicios.
+        if booking.is_service_only:
+            booking.calculate_service_fee()
+            booking.calculate_tax()
+            booking.save(update_fields=['service_fee', 'tax_amount'])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

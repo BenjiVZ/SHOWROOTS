@@ -24,22 +24,24 @@ class Command(BaseCommand):
             booking.save(update_fields=['status', 'updated_at'])
 
             # Notify the client
+            target = booking.talent.stage_name if booking.talent else 'los servicios solicitados'
             Notification.objects.create(
                 user=booking.client,
                 notification_type='system',
                 title='Solicitud expirada',
-                message=f'Tu solicitud para {booking.talent.stage_name} del {booking.event_date} ha expirado sin respuesta.',
+                message=f'Tu solicitud para {target} del {booking.event_date} ha expirado sin respuesta.',
                 link=f'/dashboard/bookings/{booking.id}'
             )
 
-            # Notify the talent
-            Notification.objects.create(
-                user=booking.talent.user,
-                notification_type='system',
-                title='Solicitud expirada',
-                message=f'La solicitud de {booking.client.get_full_name()} para el {booking.event_date} ha expirado.',
-                link=f'/dashboard/bookings/{booking.id}'
-            )
+            # Notify the talent (solo si la reserva tiene DJ)
+            if booking.talent:
+                Notification.objects.create(
+                    user=booking.talent.user,
+                    notification_type='system',
+                    title='Solicitud expirada',
+                    message=f'La solicitud de {booking.client.get_full_name()} para el {booking.event_date} ha expirado.',
+                    link=f'/dashboard/bookings/{booking.id}'
+                )
 
         self.stdout.write(
             self.style.SUCCESS(f'Expiradas {count} solicitudes pendientes.')

@@ -142,8 +142,9 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 class BookingListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.get_full_name', read_only=True)
-    talent_name = serializers.CharField(source='talent.stage_name', read_only=True)
-    talent_avatar = serializers.ImageField(source='talent.cover_photo', read_only=True)
+    talent_name = serializers.SerializerMethodField()
+    talent_avatar = serializers.SerializerMethodField()
+    is_service_only = serializers.BooleanField(read_only=True)
     event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     has_review = serializers.SerializerMethodField()
@@ -158,6 +159,7 @@ class BookingListSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'id', 'booking_code', 'client_name', 'talent_name', 'talent_avatar',
+            'is_service_only',
             'event_type', 'event_type_display', 'event_name',
             'event_date', 'event_time_start', 'event_time_end',
             'event_location', 'event_city', 'guest_count',
@@ -171,6 +173,17 @@ class BookingListSerializer(serializers.ModelSerializer):
 
     def get_has_review(self, obj):
         return hasattr(obj, 'review')
+
+    def get_talent_name(self, obj):
+        return obj.talent.stage_name if obj.talent else None
+
+    def get_talent_avatar(self, obj):
+        if obj.talent and obj.talent.cover_photo:
+            try:
+                return obj.talent.cover_photo.url
+            except Exception:
+                return None
+        return None
 
 
 class BookingDetailSerializer(serializers.ModelSerializer):
@@ -193,12 +206,13 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     total_to_pay = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
+    is_service_only = serializers.BooleanField(read_only=True)
     service_fee_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
         fields = [
-            'id', 'booking_code', 'client', 'talent', 'partner', 'booking_type',
+            'id', 'booking_code', 'client', 'talent', 'is_service_only', 'partner', 'booking_type',
             'event_type', 'event_type_display',
             'event_name', 'event_date', 'event_time_start', 'event_time_end',
             'event_duration_hours', 'event_location', 'event_city',
@@ -248,9 +262,12 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        # Reserva de solo-servicios (sin DJ): no hay talento que validar.
+        talent = data.get('talent')
+        if talent is None:
+            return data
         # Check availability
         from talents.models import Availability
-        talent = data['talent']
         event_date = data['event_date']
         blocked = Availability.objects.filter(
             talent=talent, date=event_date, status__in=['blocked', 'booked']
