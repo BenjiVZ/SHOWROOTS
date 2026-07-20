@@ -945,28 +945,8 @@ async function updateStatus(newStatus) {
   }
 }
 
-async function processPayment(type) {
-  actionLoading.value = true
-  try {
-    const finalPrice = parseFloat(booking.value.quoted_price || booking.value.precio_estimado || 0)
-    const amount = type === 'deposit' ? finalPrice * 0.5 : finalPrice
-
-    await api.post('/payments/create/', {
-      booking: booking.value.id,
-      amount: amount.toFixed(2),
-      payment_type: type === 'deposit' ? 'deposit' : 'full',
-      payment_method: 'card',
-    })
-    // Reload booking
-    const { data } = await api.get(`/bookings/${booking.value.id}/`)
-    booking.value = data
-  } catch (e) {
-    const msg = e.response?.data
-    alert(typeof msg === 'object' ? Object.values(msg).flat().join(' ') : 'Error al procesar el pago.')
-  } finally {
-    actionLoading.value = false
-  }
-}
+// (removido) processPayment legacy → POST /payments/create/ (pago simulado, vuln C0).
+// El pago real se hace en PaymentCheckoutView vía la pasarela Paguelofacil.
 
 async function sendMessage() {
   if (!newMessage.value.trim()) return

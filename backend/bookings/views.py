@@ -245,28 +245,21 @@ class BookingUpdateStatusView(generics.UpdateAPIView):
 
 # ── Payment Views ──
 
-class PaymentCreateView(generics.CreateAPIView):
-    """Create a payment for a booking."""
-    serializer_class = PaymentCreateSerializer
+class PaymentCreateView(APIView):
+    """DESHABILITADO (vuln C0).
+
+    Este endpoint marcaba una reserva como pagada SIN pasar por la pasarela y sin
+    verificar el monto ni que quien pagara fuera el cliente. Era un bypass crítico.
+    El pago real se hace con Paguelofacil: POST /api/payments/paguelofacil/init/.
+    Se deja el stub devolviendo 410 para que cualquier llamada vieja falle de forma
+    explícita en vez de crear un pago falso.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        payment = serializer.save()
-        booking = payment.booking
-        # Notify both parties
-        Notification.objects.create(
-            user=booking.talent.user,
-            notification_type='payment_received',
-            title='¡Pago recibido!',
-            message=f'Se recibió un pago de ${payment.amount} para tu evento del {booking.event_date}.',
-            link=f'/dashboard/bookings/{booking.id}'
-        )
-        Notification.objects.create(
-            user=booking.client,
-            notification_type='booking_confirmed',
-            title='Pago procesado',
-            message=f'Tu pago de ${payment.amount} fue procesado exitosamente.',
-            link=f'/dashboard/bookings/{booking.id}'
+    def post(self, request, *args, **kwargs):
+        return Response(
+            {'detail': 'Método de pago deshabilitado. Usa el checkout seguro de la pasarela.'},
+            status=status.HTTP_410_GONE,
         )
 
 

@@ -41,7 +41,10 @@ def send_payment_confirmed_to_client(tx: PaguelofacilTransaction) -> None:
         client = tx.client
         if not client.email:
             return
-        talent_name = booking.talent.stage_name or booking.talent.user.email
+        talent_name = (
+            (booking.talent.stage_name or booking.talent.user.email)
+            if booking.talent else 'servicios de producción'
+        )
         subject = 'Tu pago fue confirmado'
         text = (
             f'Hola {client.first_name or client.email},\n\n'
@@ -63,6 +66,8 @@ def send_payment_confirmed_to_talent(tx: PaguelofacilTransaction, payment: Payme
     """Email al DJ avisándole que el cliente pagó."""
     try:
         booking = tx.booking
+        if not booking.talent:
+            return  # Reserva de solo-servicios: no hay DJ a quien avisar.
         talent_user = booking.talent.user
         if not talent_user.email:
             return

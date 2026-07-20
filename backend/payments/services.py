@@ -80,7 +80,9 @@ def _create_payouts_for_payment(booking: Booking, payment: Payment) -> None:
 
     # ── Payout al DJ ──
     # Reutilizamos el talent_payout que calculate_commissions ya dejó en el Payment.
-    if payment.talent_payout > 0:
+    # En reservas de solo-servicios (sin DJ) no hay talento: se omite este payout y
+    # el dinero se reparte solo entre los Aliados de los packs (abajo).
+    if booking.talent and payment.talent_payout > 0:
         Payout.objects.create(
             booking=booking,
             recipient=booking.talent.user,
@@ -144,17 +146,31 @@ def process_refund(tx: PaguelofacilTransaction, amount: Decimal, reason: str = '
     """
     from .paguelofacil import refund as pfl_refund, PaguelofacilAPIError
 
+    if tx.status == 'refunded':
+        raise ValueError('La transacción ya fue reembolsada por completo.')
     if tx.status != 'approved':
         raise ValueError('Solo se pueden reembolsar transacciones aprobadas.')
     if not tx.paguelofacil_id:
         raise ValueError('Falta el codOper de PFL — no se puede reembolsar.')
+    if amount <= 0:
+        raise ValueError('El monto del reembolso debe ser mayor a 0.')
+
+    # I5: tope acumulado. La suma de todos los reembolsos no puede superar lo cobrado.
+    already = tx.refunded_amount or Decimal('0.00')
+    if already + amount > tx.amount + Decimal('0.01'):
+        disponible = tx.amount - already
+        raise ValueError(
+            f'El reembolso (${amount}) excede el saldo reembolsable (${disponible}). '
+            f'Ya reembolsado ${already} de ${tx.amount}.'
+        )
 
     api_response = pfl_refund(tx.paguelofacil_id, amount)
     tx.webhook_payloads = (tx.webhook_payloads or []) + [
         {'event': 'refund', 'amount': str(amount), 'response': api_response}
     ]
+    tx.refunded_amount = already + amount
 
-    is_full_refund = amount >= tx.amount
+    is_full_refund = tx.refunded_amount >= tx.amount
     if is_full_refund:
         tx.status = 'refunded'
         if tx.payment:

@@ -53,6 +53,11 @@ class PaguelofacilTransaction(models.Model):
     currency = models.CharField(max_length=3, default='USD')
     payment_type = models.CharField(max_length=10, choices=PAYMENT_TYPE_CHOICES, default='full')
     description = models.CharField(max_length=200, blank=True)
+    # Monto reembolsado acumulado (para topar reembolsos parciales — vuln I5)
+    refunded_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
+        help_text='Suma de todos los reembolsos ya procesados sobre esta transacción.'
+    )
 
     # Estado
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='initiated')

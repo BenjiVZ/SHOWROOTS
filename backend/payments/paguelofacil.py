@@ -410,8 +410,10 @@ def verify_webhook_signature(payload, signature_header: str, raw_body: bytes = b
       1. Si hay PAGUELOFACIL_WEBHOOK_SECRET configurado → calcular HMAC-SHA256
          del raw_body con ese secret y comparar contra `signature_header`.
       2. Si no hay secret y estamos en sandbox → aceptar (DEV).
-      3. Si no hay secret y estamos en producción → loguear warning y aceptar,
-         pero pedirle al admin que configure el secret.
+      3. Si no hay secret y estamos en producción → RECHAZAR (vuln C2). Antes se
+         aceptaba, lo que permitía forjar webhooks anónimos y marcar pagos como
+         aprobados. El confirm/ server-side sigue siendo el camino principal; el
+         webhook solo funciona cuando el secret está configurado.
 
     Acepta tanto la cadena en signature_header con prefijo 'sha256=' como sin él.
     """
@@ -449,9 +451,11 @@ def verify_webhook_signature(payload, signature_header: str, raw_body: bytes = b
 
     # Sin secret configurado
     if PaguelofacilConfig.is_sandbox():
+        # En sandbox no hay dinero real: aceptamos para poder probar el flujo.
         return True
-    logger.warning(
-        'Webhook PFL recibido en PROD sin PAGUELOFACIL_WEBHOOK_SECRET configurado. '
-        'Configurar antes de procesar volumen serio.'
+    # PRODUCCIÓN sin secret → rechazar (C2). Un webhook sin firma no es confiable.
+    logger.error(
+        'Webhook PFL en PRODUCCIÓN sin PAGUELOFACIL_WEBHOOK_SECRET: se RECHAZA. '
+        'Configura el secret HMAC en el .env para habilitar el webhook.'
     )
-    return True
+    return False

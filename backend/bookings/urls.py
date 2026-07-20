@@ -9,7 +9,9 @@ urlpatterns = [
     path('bookings/<int:pk>/status/', views.BookingUpdateStatusView.as_view(), name='booking-status'),
 
     # Payments
-    path('payments/create/', views.PaymentCreateView.as_view(), name='payment-create'),
+    # NOTA: el endpoint legacy 'payments/create/' (pago simulado sin pasarela) se
+    # eliminó por ser un bypass crítico (C0). El pago real va por la pasarela:
+    # POST /api/payments/paguelofacil/init/  (app 'payments').
     path('bookings/<int:booking_id>/payments/', views.BookingPaymentsView.as_view(), name='booking-payments'),
 
     # Messages

@@ -48,6 +48,27 @@ from .services import create_payment_and_payouts, process_refund
 logger = logging.getLogger(__name__)
 
 
+def _first_tx_item(api_response):
+    """El endpoint MerchantTransactions devuelve `data` como array (resultado de filtro).
+    Toma el primer item — debería haber exactamente uno por codOper único."""
+    raw = api_response.get('data', {}) if isinstance(api_response, dict) else {}
+    if isinstance(raw, list):
+        return raw[0] if raw else {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def _extract_pfl_amount(api_data):
+    """Extrae el monto realmente cobrado que PFL reporta (probando varias claves)."""
+    for key in ('totalPay', 'total', 'netAmount', 'amount', 'requestPayAmount', 'montoTotal'):
+        val = api_data.get(key)
+        if val not in (None, ''):
+            try:
+                return Decimal(str(val))
+            except (ValueError, TypeError):
+                continue
+    return None
+
+
 # ─────────────────────────────────────────────────────────────────
 # Frontend: inicializar SDK
 # ─────────────────────────────────────────────────────────────────
@@ -76,7 +97,10 @@ class InitCheckoutView(APIView):
                 status=http_status.HTTP_403_FORBIDDEN,
             )
 
-        if booking.status in ('cancelled', 'completed'):
+        # Whitelist en español (los códigos de status del modelo son en español).
+        # El guard anterior usaba 'cancelled'/'completed' (inglés) que NUNCA
+        # matcheaban → se podía iniciar el pago de una reserva cancelada (vuln I4).
+        if booking.status not in ('aceptada', 'pendiente_pago'):
             return Response(
                 {'detail': f'La reserva está {booking.get_status_display()}, no se puede pagar.'},
                 status=http_status.HTTP_400_BAD_REQUEST,
@@ -96,7 +120,11 @@ class InitCheckoutView(APIView):
             )
 
         internal_ref = generate_internal_reference()
-        talent_name = booking.talent.stage_name or booking.talent.user.email
+        # Reserva de solo-servicios: no hay DJ; describimos genéricamente.
+        talent_name = (
+            (booking.talent.stage_name or booking.talent.user.email)
+            if booking.talent else 'Servicios de producción'
+        )
         description = f"Pulsar | Reserva {booking.booking_code or booking.id} | {talent_name}"[:150]
 
         tx = PaguelofacilTransaction.objects.create(
@@ -166,9 +194,7 @@ class ConfirmCheckoutView(APIView):
             )
 
         try:
-            tx = PaguelofacilTransaction.objects.select_for_update().get(
-                internal_reference=internal_ref
-            )
+            tx = PaguelofacilTransaction.objects.get(internal_reference=internal_ref)
         except PaguelofacilTransaction.DoesNotExist:
             return Response(
                 {'detail': 'Transacción no encontrada.'},
@@ -178,11 +204,12 @@ class ConfirmCheckoutView(APIView):
         if tx.client_id != request.user.id:
             return Response({'detail': 'Sin permisos.'}, status=http_status.HTTP_403_FORBIDDEN)
 
-        # Idempotencia
+        # Idempotencia rápida (se re-verifica dentro del lock).
         if tx.status == 'approved':
             return Response(PaguelofacilTransactionSerializer(tx).data)
 
-        # Verificar server-side
+        # Verificar server-side contra PFL. La llamada de red va FUERA del lock DB
+        # para no sostener un lock de fila durante un request HTTP.
         try:
             api_response = query_transaction(cod_oper)
         except PaguelofacilAPIError as e:
@@ -194,23 +221,39 @@ class ConfirmCheckoutView(APIView):
                 status=http_status.HTTP_502_BAD_GATEWAY,
             )
 
-        # El endpoint MerchantTransactions devuelve `data` como array (filter result)
-        # Tomamos el primer item — debería haber exactamente uno por codOper único.
-        api_data_raw = api_response.get('data', {}) if isinstance(api_response, dict) else {}
-        if isinstance(api_data_raw, list):
-            api_data = api_data_raw[0] if api_data_raw else {}
-        else:
-            api_data = api_data_raw
+        api_data = _first_tx_item(api_response)
+        is_approved = api_data.get('status') in (1, '1', True)
+        reported_amount = _extract_pfl_amount(api_data)
 
-        pfl_status = api_data.get('status')
-        is_approved = pfl_status in (1, '1', True)
-
+        # Aprobación bajo lock de fila: evita doble Payment/Payout en carrera con el
+        # webhook (RACE) y garantiza idempotencia real.
         with db_tx.atomic():
+            tx = PaguelofacilTransaction.objects.select_for_update().get(pk=tx.pk)
+            if tx.status == 'approved':
+                return Response(PaguelofacilTransactionSerializer(tx).data)
+
             tx.response_payload = api_response
             tx.paguelofacil_id = cod_oper
             tx.paguelofacil_auth_code = str(api_data.get('authStatus', ''))
 
             if is_approved:
+                # C1: el monto que PFL confirma DEBE cubrir el esperado. Si PFL
+                # reporta menos (o no reporta monto), NO se confirma la reserva.
+                if reported_amount is None or reported_amount < tx.amount - Decimal('0.01'):
+                    tx.status = 'error'
+                    tx.last_error = (
+                        f'Monto verificado ${reported_amount} no cubre el esperado ${tx.amount}.'
+                    )
+                    tx.save()
+                    logger.error(
+                        'PFL amount mismatch tx=%s esperado=%s reportado=%s',
+                        tx.internal_reference, tx.amount, reported_amount,
+                    )
+                    return Response(
+                        {'detail': 'El monto verificado del pago no coincide con el de la '
+                                   'reserva; no se confirmó. Contacta a soporte.'},
+                        status=http_status.HTTP_409_CONFLICT,
+                    )
                 tx.status = 'approved'
                 create_payment_and_payouts(tx)
             else:
@@ -232,6 +275,11 @@ class WebhookView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        # C2: leer el body CRUDO ANTES que request.data. Acceder a request.body
+        # después de que DRF consumió el stream (request.data) lanza
+        # RawPostDataException → el webhook devolvía 500 y nunca funcionaba.
+        raw_body = request.body or b''
+
         payload = dict(request.data) if request.data else {}
         # Normalizar valores form-encoded (PFL puede mandar listas de 1 elemento)
         payload = {k: (v[0] if isinstance(v, list) and len(v) == 1 else v) for k, v in payload.items()}
@@ -243,10 +291,11 @@ class WebhookView(APIView):
             or request.headers.get('X-Signature')
             or ''
         )
-        raw_body = request.body or b''
 
+        # C2: en producción sin secret configurado, verify_webhook_signature ahora
+        # RECHAZA (antes aceptaba forjas anónimas).
         if not verify_webhook_signature(payload, signature, raw_body):
-            logger.warning('Webhook PFL con firma inválida: %s', payload)
+            logger.warning('Webhook PFL con firma inválida/ausente: %s', payload)
             return Response({'ok': False, 'reason': 'invalid_signature'}, status=401)
 
         result = parse_webhook(payload)
@@ -254,7 +303,7 @@ class WebhookView(APIView):
             logger.error('Webhook PFL sin identificador: %s', payload)
             return Response({'ok': False, 'reason': 'no_identifier'}, status=400)
 
-        # Buscar por internal_reference primero, después por cod_oper
+        # Localizar la tx (sin lock) para saber si existe.
         tx = None
         if result.internal_reference:
             tx = PaguelofacilTransaction.objects.filter(
@@ -267,19 +316,30 @@ class WebhookView(APIView):
             logger.error('Webhook PFL para tx desconocida: %s', payload)
             return Response({'ok': False, 'reason': 'unknown_tx'}, status=404)
 
-        # Idempotencia
-        if tx.status == 'approved' and result.status == 'approved':
-            tx.webhook_payloads = (tx.webhook_payloads or []) + [payload]
-            tx.save(update_fields=['webhook_payloads', 'updated_at'])
-            return Response({'ok': True, 'duplicate': True})
-
+        # RACE: procesar bajo lock de fila (el mismo que usa confirm/) → sin doble Payment.
         with db_tx.atomic():
+            tx = PaguelofacilTransaction.objects.select_for_update().get(pk=tx.pk)
             tx.webhook_payloads = (tx.webhook_payloads or []) + [payload]
+
+            # Idempotencia: ya aprobada → solo guardamos el payload.
+            if tx.status == 'approved':
+                tx.save(update_fields=['webhook_payloads', 'updated_at'])
+                return Response({'ok': True, 'duplicate': True})
+
             tx.paguelofacil_id = result.cod_oper or tx.paguelofacil_id
             tx.paguelofacil_auth_code = result.auth_status or tx.paguelofacil_auth_code
             tx.status = result.status
 
             if result.status == 'approved' and not tx.payment_id:
+                # C1 también en el webhook: el monto reportado debe cubrir el esperado.
+                if result.amount is None or result.amount < tx.amount - Decimal('0.01'):
+                    tx.status = 'error'
+                    tx.last_error = (
+                        f'Webhook: monto ${result.amount} no cubre el esperado ${tx.amount}.'
+                    )
+                    tx.save()
+                    logger.error('Webhook PFL amount mismatch tx=%s', tx.internal_reference)
+                    return Response({'ok': False, 'reason': 'amount_mismatch'}, status=409)
                 create_payment_and_payouts(tx)
 
             tx.save()
@@ -367,9 +427,14 @@ class RefundView(APIView):
                 {'detail': 'El monto debe ser mayor a 0.'},
                 status=http_status.HTTP_400_BAD_REQUEST,
             )
-        if amount > tx.amount:
+        # I5: chequeo acumulado (el enforcement autoritativo está en process_refund
+        # bajo select_for_update; esto es solo para un mensaje temprano y claro).
+        already = tx.refunded_amount or Decimal('0.00')
+        if already + amount > tx.amount + Decimal('0.01'):
+            disponible = tx.amount - already
             return Response(
-                {'detail': f'El reembolso (${amount}) excede el monto cobrado (${tx.amount}).'},
+                {'detail': f'El reembolso (${amount}) excede el saldo reembolsable (${disponible}). '
+                           f'Ya reembolsado ${already} de ${tx.amount}.'},
                 status=http_status.HTTP_400_BAD_REQUEST,
             )
 
