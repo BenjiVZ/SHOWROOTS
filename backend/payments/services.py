@@ -5,6 +5,7 @@ Aislados de las vistas para facilitar testing y reuso (desde webhook + desde con
 from decimal import Decimal
 import logging
 
+from django.db import transaction as db_tx
 from django.utils import timezone
 
 from bookings.models import Booking, BookingPack, Payment, PlatformConfig
@@ -12,6 +13,49 @@ from bookings.models import Booking, BookingPack, Payment, PlatformConfig
 from .models import PaguelofacilTransaction, Payout
 
 logger = logging.getLogger(__name__)
+
+
+def apply_confirmation(tx: PaguelofacilTransaction, cod_oper: str, api_data: dict, api_response) -> tuple:
+    """Aplica bajo lock el resultado YA verificado de PFL sobre una transacción.
+
+    Misma lógica endurecida que ConfirmCheckoutView (verificación de monto C1 +
+    lock por fila para idempotencia), factorizada para reuso desde el tester de
+    sandbox del backoffice. La llamada de red (query_transaction) va en el caller.
+
+    Devuelve (result, detail):
+      result ∈ {'approved', 'declined', 'mismatch', 'already'}
+    """
+    from .paguelofacil import extract_amount
+
+    is_approved = api_data.get('status') in (1, '1', True)
+    reported = extract_amount(api_data)
+
+    with db_tx.atomic():
+        locked = PaguelofacilTransaction.objects.select_for_update().get(pk=tx.pk)
+        if locked.status == 'approved':
+            return ('already', None)
+
+        locked.response_payload = api_response
+        locked.paguelofacil_id = cod_oper
+        locked.paguelofacil_auth_code = str(api_data.get('authStatus', ''))
+
+        if is_approved:
+            # C1: el monto que PFL confirma debe cubrir el esperado.
+            if reported is None or reported < locked.amount - Decimal('0.01'):
+                locked.status = 'error'
+                locked.last_error = (
+                    f'Monto verificado ${reported} no cubre el esperado ${locked.amount}.'
+                )
+                locked.save()
+                return ('mismatch', locked.last_error)
+            locked.status = 'approved'
+            create_payment_and_payouts(locked)
+        else:
+            locked.status = 'declined'
+
+        locked.save()
+
+    return (locked.status, None)
 
 
 def create_payment_and_payouts(tx: PaguelofacilTransaction) -> Payment:

@@ -1,14 +1,20 @@
 from django.contrib import admin
-from .models import Booking, Payment, Message, Notification, Review, PlatformConfig
+
+from unfold.admin import ModelAdmin, TabularInline
+
+from .models import (
+    Booking, Payment, Message, Notification, Review, PlatformConfig,
+    PartnerProductionProfile, ProductionPack, OpenGigRequest,
+)
 
 
-class PaymentInline(admin.TabularInline):
+class PaymentInline(TabularInline):
     model = Payment
     extra = 0
     readonly_fields = ['commission_showroots', 'commission_partner', 'talent_payout', 'created_at']
 
 
-class MessageInline(admin.TabularInline):
+class MessageInline(TabularInline):
     model = Message
     extra = 0
     readonly_fields = ['sender', 'content', 'created_at']
@@ -16,7 +22,7 @@ class MessageInline(admin.TabularInline):
 
 
 @admin.register(Booking)
-class BookingAdmin(admin.ModelAdmin):
+class BookingAdmin(ModelAdmin):
     list_display = [
         'id', 'client', 'talent', 'event_type', 'event_date',
         'precio_estimado', 'quoted_price', 'amount_paid',
@@ -54,7 +60,7 @@ class BookingAdmin(admin.ModelAdmin):
 
 
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
+class PaymentAdmin(ModelAdmin):
     list_display = [
         'id', 'booking', 'client', 'amount', 'payment_type',
         'payment_status', 'commission_showroots', 'commission_partner',
@@ -66,7 +72,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
 
 @admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
+class MessageAdmin(ModelAdmin):
     list_display = ['id', 'booking', 'sender', 'content_preview', 'is_read', 'created_at']
     list_filter = ['is_read', 'created_at']
     search_fields = ['content', 'sender__first_name']
@@ -77,7 +83,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 @admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
+class NotificationAdmin(ModelAdmin):
     list_display = ['id', 'user', 'notification_type', 'title', 'is_read', 'created_at']
     list_filter = ['notification_type', 'is_read']
     search_fields = ['user__first_name', 'title', 'message']
@@ -85,7 +91,7 @@ class NotificationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
+class ReviewAdmin(ModelAdmin):
     list_display = ['id', 'client', 'talent', 'rating', 'comment_preview', 'created_at']
     list_filter = ['rating', 'created_at']
     search_fields = ['client__first_name', 'talent__stage_name', 'comment']
@@ -96,7 +102,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
 
 @admin.register(PlatformConfig)
-class PlatformConfigAdmin(admin.ModelAdmin):
+class PlatformConfigAdmin(ModelAdmin):
     list_display = [
         'standard_commission_rate', 'premium_commission_rate',
         'partner_commission_rate', 'service_fee_name', 'updated_at'
@@ -116,8 +122,53 @@ class PlatformConfigAdmin(admin.ModelAdmin):
     )
 
     def has_add_permission(self, request):
-        # Only allow one config instance
         return not PlatformConfig.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+# ── Marketplace de producción (Aliados) ──
+
+@admin.register(PartnerProductionProfile)
+class PartnerProductionProfileAdmin(ModelAdmin):
+    list_display = ['user', 'main_city', 'status', 'coverage_radius_km', 'onboarding_step']
+    list_filter = ['status', 'main_city']
+    search_fields = ['user__email', 'user__first_name', 'main_city']
+    actions = ['verify_partners', 'reject_partners']
+
+    @admin.action(description='Verificar aliados seleccionados')
+    def verify_partners(self, request, queryset):
+        n = queryset.update(status='verified')
+        self.message_user(request, f'{n} aliado(s) verificados.')
+
+    @admin.action(description='Rechazar aliados')
+    def reject_partners(self, request, queryset):
+        n = queryset.update(status='rejected')
+        self.message_user(request, f'{n} aliado(s) rechazados.')
+
+
+@admin.register(ProductionPack)
+class ProductionPackAdmin(ModelAdmin):
+    list_display = ['name', 'partner', 'category', 'event_size', 'price', 'status', 'rentals_count']
+    list_filter = ['category', 'event_size', 'status']
+    search_fields = ['name', 'partner__user__email']
+    actions = ['publish_packs', 'pause_packs']
+
+    @admin.action(description='Publicar packs')
+    def publish_packs(self, request, queryset):
+        n = queryset.update(status='published')
+        self.message_user(request, f'{n} pack(s) publicados.')
+
+    @admin.action(description='Pausar packs')
+    def pause_packs(self, request, queryset):
+        n = queryset.update(status='paused')
+        self.message_user(request, f'{n} pack(s) pausados.')
+
+
+@admin.register(OpenGigRequest)
+class OpenGigRequestAdmin(ModelAdmin):
+    list_display = ['id', 'client', 'event_date', 'status', 'created_at']
+    list_filter = ['status']
+    search_fields = ['client__email', 'client__first_name']
+    date_hierarchy = 'event_date'

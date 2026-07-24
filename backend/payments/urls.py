@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .test_views import (
+    PflTestCheckoutInitView,
+    PflTestConfirmView,
     PflTestInitView,
     PflTestPageView,
     PflTestQueryView,
@@ -30,9 +32,11 @@ urlpatterns = [
     path('payments/admin/payouts/<int:pk>/pay/', PayoutMarkPaidView.as_view(), name='pfl-payout-pay'),
     path('payments/admin/refund/<int:tx_id>/', RefundView.as_view(), name='pfl-refund'),
 
-    # Página de pruebas (solo admin)
-    path('payments/pfl-test/',              PflTestPageView.as_view(),       name='pfl-test'),
-    path('payments/pfl-test/init/',         PflTestInitView.as_view(),       name='pfl-test-init'),
-    path('payments/pfl-test/query/',        PflTestQueryView.as_view(),      name='pfl-test-query'),
-    path('payments/pfl-test/sim-webhook/',  PflTestSimWebhookView.as_view(), name='pfl-test-sim-webhook'),
+    # Página de pruebas / Centro de Pagos (solo admin)
+    path('payments/pfl-test/',               PflTestPageView.as_view(),         name='pfl-test'),
+    path('payments/pfl-test/init/',          PflTestInitView.as_view(),         name='pfl-test-init'),
+    path('payments/pfl-test/query/',         PflTestQueryView.as_view(),        name='pfl-test-query'),
+    path('payments/pfl-test/sim-webhook/',   PflTestSimWebhookView.as_view(),   name='pfl-test-sim-webhook'),
+    path('payments/pfl-test/checkout-init/', PflTestCheckoutInitView.as_view(), name='pfl-test-checkout-init'),
+    path('payments/pfl-test/confirm/',       PflTestConfirmView.as_view(),      name='pfl-test-confirm'),
 ]

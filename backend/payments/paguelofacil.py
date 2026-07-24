@@ -78,6 +78,27 @@ def friendly_error(code) -> str:
         return f'Error PFL ({code})'
 
 
+def first_tx_item(api_response) -> dict:
+    """El endpoint MerchantTransactions devuelve `data` como array (resultado de filtro).
+    Toma el primer item — debería haber exactamente uno por codOper único."""
+    raw = api_response.get('data', {}) if isinstance(api_response, dict) else {}
+    if isinstance(raw, list):
+        return raw[0] if raw else {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def extract_amount(api_data) -> Optional['Decimal']:
+    """Extrae el monto realmente cobrado que PFL reporta (probando varias claves)."""
+    for key in ('totalPay', 'total', 'netAmount', 'amount', 'requestPayAmount', 'montoTotal'):
+        val = api_data.get(key)
+        if val not in (None, ''):
+            try:
+                return Decimal(str(val))
+            except (ValueError, TypeError):
+                continue
+    return None
+
+
 # ─────────────────────────────────────────────────────────────────
 # Configuración de entorno (sandbox / producción)
 # ─────────────────────────────────────────────────────────────────

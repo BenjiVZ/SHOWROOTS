@@ -27,6 +27,11 @@ ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', _default_hos
 
 # Application definition
 INSTALLED_APPS = [
+    # Unfold — tema moderno del admin. DEBE ir antes de django.contrib.admin.
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -53,6 +58,103 @@ _payments_present = importlib.util.find_spec('payments') is not None
 _payments_enabled = os.environ.get('PAYMENTS_ENABLED', 'True').lower() in ('true', '1', 'yes')
 if _payments_present and _payments_enabled:
     INSTALLED_APPS.append('payments')
+
+
+# ─────────────────────────────────────────────────────────────────
+# Unfold — configuración del backoffice
+# ─────────────────────────────────────────────────────────────────
+from django.urls import reverse_lazy  # noqa: E402
+from django.utils.translation import gettext_lazy as _  # noqa: E402
+
+
+def _payments_installed(request):
+    return 'payments' in INSTALLED_APPS
+
+
+UNFOLD = {
+    'SITE_TITLE': 'Pulsar Admin',
+    'SITE_HEADER': 'Pulsar',
+    'SITE_SUBHEADER': 'Backoffice',
+    'SITE_SYMBOL': 'graphic_eq',          # Material Symbol como logo
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': True,
+    'SHOW_BACK_BUTTON': True,
+    'THEME': None,                        # deja que el usuario alterne claro/oscuro
+    'BORDER_RADIUS': '8px',
+    'COLORS': {
+        # Verde lima de Pulsar (#C1D82F) como color primario, escala 50→950.
+        'primary': {
+            '50': '247 250 229',
+            '100': '238 245 199',
+            '200': '223 236 148',
+            '300': '205 225 92',
+            '400': '193 216 47',   # marca
+            '500': '169 193 33',
+            '600': '133 155 24',
+            '700': '101 118 22',
+            '800': '80 93 23',
+            '900': '67 78 24',
+            '950': '35 43 9',
+        },
+    },
+    'SIDEBAR': {
+        'show_search': True,
+        'show_all_applications': True,
+        'navigation': [
+            {
+                'title': _('Panel'),
+                'separator': False,
+                'items': [
+                    {
+                        'title': _('Centro de Pagos'),
+                        'icon': 'payments',
+                        'link': reverse_lazy('pfl-test'),
+                        'permission': _payments_installed,
+                    },
+                ],
+            },
+            {
+                'title': _('Marketplace'),
+                'separator': True,
+                'items': [
+                    {'title': _('Reservas'), 'icon': 'event', 'link': reverse_lazy('admin:bookings_booking_changelist')},
+                    {'title': _('Talentos / DJs'), 'icon': 'music_note', 'link': reverse_lazy('admin:talents_talentprofile_changelist')},
+                    {'title': _('Aliados de producción'), 'icon': 'handshake', 'link': reverse_lazy('admin:bookings_partnerproductionprofile_changelist')},
+                    {'title': _('Packs de producción'), 'icon': 'inventory_2', 'link': reverse_lazy('admin:bookings_productionpack_changelist')},
+                    {'title': _('Solicitudes abiertas'), 'icon': 'campaign', 'link': reverse_lazy('admin:bookings_opengigrequest_changelist')},
+                ],
+            },
+            {
+                'title': _('Pagos'),
+                'separator': True,
+                'items': [
+                    {'title': _('Pagos (Bookings)'), 'icon': 'account_balance_wallet', 'link': reverse_lazy('admin:bookings_payment_changelist')},
+                    {'title': _('Transacciones PFL'), 'icon': 'credit_card', 'link': reverse_lazy('admin:payments_paguelofaciltransaction_changelist'), 'permission': _payments_installed},
+                    {'title': _('Payouts a proveedores'), 'icon': 'send_money', 'link': reverse_lazy('admin:payments_payout_changelist'), 'permission': _payments_installed},
+                ],
+            },
+            {
+                'title': _('Contenido'),
+                'separator': True,
+                'items': [
+                    {'title': _('Reseñas'), 'icon': 'star', 'link': reverse_lazy('admin:bookings_review_changelist')},
+                    {'title': _('Mensajes'), 'icon': 'chat', 'link': reverse_lazy('admin:bookings_message_changelist')},
+                    {'title': _('Notificaciones'), 'icon': 'notifications', 'link': reverse_lazy('admin:bookings_notification_changelist')},
+                    {'title': _('Géneros'), 'icon': 'queue_music', 'link': reverse_lazy('admin:talents_genre_changelist')},
+                ],
+            },
+            {
+                'title': _('Configuración'),
+                'separator': True,
+                'items': [
+                    {'title': _('Usuarios'), 'icon': 'group', 'link': reverse_lazy('admin:accounts_user_changelist')},
+                    {'title': _('Config. plataforma'), 'icon': 'settings', 'link': reverse_lazy('admin:bookings_platformconfig_changelist')},
+                ],
+            },
+        ],
+    },
+}
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

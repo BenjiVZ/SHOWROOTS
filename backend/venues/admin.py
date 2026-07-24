@@ -1,14 +1,17 @@
 from django.contrib import admin
+
+from unfold.admin import ModelAdmin, TabularInline
+
 from .models import Venue, VenuePhoto
 
 
-class VenuePhotoInline(admin.TabularInline):
+class VenuePhotoInline(TabularInline):
     model = VenuePhoto
     extra = 0
 
 
 @admin.register(Venue)
-class VenueAdmin(admin.ModelAdmin):
+class VenueAdmin(ModelAdmin):
     list_display = [
         'name', 'venue_type', 'city', 'capacity_min', 'capacity_max',
         'price_range', 'rating_avg', 'is_verified', 'is_active'

@@ -10,6 +10,9 @@ apscheduler>=3.10
 google-auth>=2.47
 requests>=2.31
 
+# Backoffice — tema moderno del admin de Django
+django-unfold>=0.60
+
 # Production
 gunicorn>=22.0
 psycopg2-binary>=2.9
