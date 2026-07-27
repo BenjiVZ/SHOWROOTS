@@ -5,7 +5,7 @@
 #
 # Hace, en orden:
 #   1. Trae los últimos cambios de GitHub (git pull).
-#   2. Asegura que la app 'payments' quede APAGADA en prod (vulnerable).
+#   2. Respeta el flag PAYMENTS_ENABLED del .env (fuente de verdad; no lo pisa).
 #   3. Backend: instala deps, corre migraciones y reinicia gunicorn.
 #   4. Frontend: asegura el .env, instala deps y recompila.
 #   5. Muestra un resumen del estado.
@@ -39,15 +39,21 @@ fi
 git pull origin main || die "Falló el git pull (¿token vencido? revisá 'git remote -v')"
 ok "Código actualizado"
 
-# ── 2. Apagar payments en producción ──────────────────────────────────
-step "2/5  Asegurando payments APAGADO en producción"
+# ── 2. Payments: respetar el flag del .env (NO pisarlo) ───────────────
+# El backend/.env del droplet es la fuente de verdad. Antes forzábamos
+# =false porque la pasarela era vulnerable; ya se cerraron las 6
+# vulnerabilidades (commit 2706ca4), así que el operador decide encenderla
+# editando el .env. Solo lo agregamos como 'false' si falta por completo
+# (default seguro para un droplet nuevo).
+step "2/5  Verificando flag de payments (respetando .env)"
 ENV_BE="$REPO_DIR/backend/.env"
 if grep -q '^PAYMENTS_ENABLED=' "$ENV_BE" 2>/dev/null; then
-  sed -i 's/^PAYMENTS_ENABLED=.*/PAYMENTS_ENABLED=false/' "$ENV_BE"
+  _pe="$(grep '^PAYMENTS_ENABLED=' "$ENV_BE" | head -1 | cut -d= -f2)"
+  ok "PAYMENTS_ENABLED=$_pe (respetado del .env)"
 else
   echo 'PAYMENTS_ENABLED=false' >> "$ENV_BE"
+  warn "No estaba definido — lo agregué como 'false' (default seguro). Editá backend/.env para encenderlo."
 fi
-ok "PAYMENTS_ENABLED=false"
 
 # ── 3. Backend ────────────────────────────────────────────────────────
 step "3/5  Backend: deps + migraciones + restart"
