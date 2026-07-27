@@ -1449,3 +1449,218 @@ class GigOffer(models.Model):
     def __str__(self):
         provider = self.talent or self.partner
         return f"Oferta #{self.id} ({self.offer_kind}) — {provider} → OpenGig #{self.request_id}"
+
+
+class PaymentMethod(models.Model):
+    """
+    Método de pago configurable desde el backoffice.
+
+    - 'manual'    → el cliente ve datos de la cuenta, paga por fuera y sube
+                    comprobante + referencia; un admin lo valida.
+    - 'automatic' → pasarela (PagueloFacil); se valida solo.
+
+    ShowRoots administra estos métodos sin tocar código.
+    """
+    KIND_CHOICES = [
+        ('manual', 'Manual (comprobante + revisión)'),
+        ('automatic', 'Automático (pasarela)'),
+    ]
+
+    name = models.CharField(
+        max_length=80,
+        help_text='Nombre visible: "Transferencia BAC", "Yappy", "Efectivo"…'
+    )
+    slug = models.SlugField(
+        max_length=90, unique=True, blank=True,
+        help_text='Identificador único (se autogenera desde el nombre si se deja vacío).'
+    )
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default='manual')
+    provider = models.CharField(
+        max_length=40, blank=True,
+        help_text="Para automáticos: 'paguelofacil'. Manuales: dejar vacío."
+    )
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    # Cómo pagar (para manuales) — todo lo que ve el cliente en el checkout
+    instructions = models.TextField(
+        blank=True, help_text='Instrucciones que ve el cliente para completar el pago.'
+    )
+    account_holder = models.CharField(
+        max_length=120, blank=True, help_text='Titular de la cuenta / beneficiario.'
+    )
+    bank_name = models.CharField(max_length=80, blank=True)
+    account_number = models.CharField(max_length=60, blank=True)
+    account_type = models.CharField(
+        max_length=40, blank=True, help_text='Ahorro / Corriente, etc.'
+    )
+    phone = models.CharField(
+        max_length=40, blank=True, help_text='Teléfono para Yappy / Nequi.'
+    )
+    extra_info = models.CharField(
+        max_length=200, blank=True, help_text='Cédula/RUC, email u otro dato de contacto.'
+    )
+    logo = models.ImageField(upload_to='payment_methods/', blank=True, null=True)
+
+    requires_proof = models.BooleanField(
+        default=True,
+        help_text='El cliente debe subir comprobante (aplica a métodos manuales).'
+    )
+    payment_method_code = models.CharField(
+        max_length=10, choices=Payment.PAYMENT_METHOD_CHOICES, default='transfer',
+        help_text='Cómo se registra en el Payment al aprobar (transfer / cash / other…).'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payment_methods'
+        ordering = ['display_order', 'name']
+        verbose_name = 'Método de pago'
+        verbose_name_plural = 'Métodos de pago'
+
+    def __str__(self):
+        return f'{self.name} ({self.get_kind_display()})'
+
+    @property
+    def is_manual(self) -> bool:
+        return self.kind == 'manual'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            base = slugify(self.name) or 'metodo'
+            slug, i = base, 2
+            while PaymentMethod.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f'{base}-{i}'
+                i += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+
+class ManualPaymentOrder(models.Model):
+    """
+    Orden de pago manual: el cliente declara que pagó por un método manual y sube
+    comprobante + referencia. Un admin la revisa y aprueba/rechaza en el backoffice.
+
+    Al aprobar se crea un Payment 'completed' (que confirma la reserva y calcula
+    comisiones) y, si la app de payouts está instalada, se generan los payouts a
+    los proveedores. Idempotente.
+    """
+    STATUS_CHOICES = [
+        ('pending_review', 'En revisión'),
+        ('approved', 'Aprobada'),
+        ('rejected', 'Rechazada'),
+        ('cancelled', 'Cancelada'),
+    ]
+
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, related_name='manual_payments'
+    )
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='manual_payment_orders'
+    )
+    method = models.ForeignKey(
+        'PaymentMethod', on_delete=models.PROTECT, related_name='orders'
+    )
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_type = models.CharField(
+        max_length=10, choices=Payment.PAYMENT_TYPE_CHOICES, default='full'
+    )
+
+    reference = models.CharField(
+        max_length=120,
+        help_text='N° de referencia / confirmación que el cliente ingresa.'
+    )
+    receipt = models.ImageField(upload_to='payments/receipts/', blank=True, null=True)
+    client_note = models.TextField(blank=True)
+
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='pending_review')
+    payment = models.ForeignKey(
+        Payment, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='manual_order'
+    )
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reviewed_manual_payments'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(blank=True)
+    rejection_reason = models.CharField(max_length=200, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'manual_payment_orders'
+        ordering = ['-created_at']
+        verbose_name = 'Pago por revisar'
+        verbose_name_plural = 'Pagos por revisar'
+        indexes = [
+            models.Index(fields=['status', 'created_at'], name='manualpay_status_created_idx'),
+        ]
+
+    def __str__(self):
+        return (
+            f'Orden manual #{self.id} — Reserva #{self.booking_id} '
+            f'(${self.amount}) [{self.get_status_display()}]'
+        )
+
+    def approve(self, by_user=None, notes: str = ''):
+        """Aprueba la orden: crea el Payment completado (confirma la reserva) y,
+        si la app 'payments' está instalada, genera los payouts. Idempotente."""
+        if self.status == 'approved' and self.payment_id:
+            return self.payment
+
+        payment = Payment.objects.create(
+            booking=self.booking,
+            client=self.client,
+            amount=self.amount,
+            payment_type=self.payment_type,
+            payment_status='completed',
+            payment_method=self.method.payment_method_code,
+            transaction_ref=f'MANUAL:{self.method.slug}:{self.reference}',
+            notes=(
+                f'Pago manual aprobado ({self.method.name}). Ref: {self.reference}.'
+                + (f' {notes}' if notes else '')
+            ),
+        )
+        self.payment = payment
+        self.status = 'approved'
+        self.reviewed_by = by_user
+        self.reviewed_at = timezone.now()
+        if notes:
+            self.review_notes = notes
+        self.save(update_fields=[
+            'payment', 'status', 'reviewed_by', 'reviewed_at', 'review_notes', 'updated_at'
+        ])
+
+        # Payouts a proveedores — solo si la app 'payments' está disponible.
+        try:
+            from django.apps import apps as django_apps
+            if django_apps.is_installed('payments'):
+                from payments.services import _create_payouts_for_payment
+                _create_payouts_for_payment(self.booking, payment)
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'No se pudieron generar payouts para la orden manual %s', self.id
+            )
+
+        return payment
+
+    def reject(self, by_user=None, reason: str = ''):
+        """Rechaza la orden. No se puede rechazar una ya aprobada."""
+        if self.status == 'approved':
+            raise ValueError('No se puede rechazar una orden ya aprobada.')
+        self.status = 'rejected'
+        self.reviewed_by = by_user
+        self.reviewed_at = timezone.now()
+        self.rejection_reason = reason
+        self.save(update_fields=[
+            'status', 'reviewed_by', 'reviewed_at', 'rejection_reason', 'updated_at'
+        ])

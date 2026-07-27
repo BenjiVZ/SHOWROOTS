@@ -1,10 +1,12 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from unfold.admin import ModelAdmin, TabularInline
 
 from .models import (
     Booking, Payment, Message, Notification, Review, PlatformConfig,
     PartnerProductionProfile, ProductionPack, OpenGigRequest,
+    PaymentMethod, ManualPaymentOrder,
 )
 
 
@@ -172,3 +174,105 @@ class OpenGigRequestAdmin(ModelAdmin):
     list_filter = ['status']
     search_fields = ['client__email', 'client__first_name']
     date_hierarchy = 'event_date'
+
+
+# ── Sistema de pagos (métodos + revisión manual) ──
+
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(ModelAdmin):
+    list_display = ['name', 'kind', 'is_active', 'display_order', 'payment_method_code', 'requires_proof']
+    list_filter = ['kind', 'is_active']
+    list_editable = ['is_active', 'display_order']
+    search_fields = ['name', 'slug', 'account_holder', 'bank_name']
+    prepopulated_fields = {'slug': ('name',)}
+    fieldsets = (
+        ('Identidad', {
+            'fields': ('name', 'slug', 'kind', 'provider', 'is_active', 'display_order', 'logo')
+        }),
+        ('Cómo paga el cliente (manual)', {
+            'fields': (
+                'instructions', 'account_holder', 'bank_name',
+                'account_number', 'account_type', 'phone', 'extra_info',
+                'requires_proof', 'payment_method_code',
+            ),
+            'description': 'Estos datos se le muestran al cliente en el checkout cuando elige este método.'
+        }),
+    )
+
+
+@admin.register(ManualPaymentOrder)
+class ManualPaymentOrderAdmin(ModelAdmin):
+    list_display = [
+        'id', 'booking', 'client', 'method', 'amount',
+        'reference', 'receipt_thumb', 'status', 'created_at',
+    ]
+    list_filter = ['status', 'method', 'created_at']
+    search_fields = ['id', 'booking__id', 'client__email', 'client__first_name', 'reference']
+    date_hierarchy = 'created_at'
+    actions = ['approve_orders', 'reject_orders']
+    readonly_fields = [
+        'booking', 'client', 'method', 'amount', 'payment_type', 'reference',
+        'client_note', 'receipt_preview', 'status', 'payment',
+        'reviewed_by', 'reviewed_at', 'created_at', 'updated_at',
+    ]
+    fieldsets = (
+        ('Pago declarado por el cliente', {
+            'fields': ('booking', 'client', 'method', 'amount', 'payment_type', 'reference', 'client_note')
+        }),
+        ('Comprobante', {'fields': ('receipt_preview',)}),
+        ('Revisión', {
+            'fields': ('status', 'rejection_reason', 'review_notes', 'payment', 'reviewed_by', 'reviewed_at'),
+            'description': 'Usá las acciones "Aprobar" / "Rechazar" de la lista. Para rechazar con un motivo, escribilo en "rejection_reason", guardá, y luego corré la acción Rechazar.'
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Las órdenes las crea el cliente desde el checkout, no a mano.
+        return False
+
+    def receipt_thumb(self, obj):
+        if obj.receipt:
+            return format_html('<img src="{}" style="height:34px;border-radius:4px" />', obj.receipt.url)
+        return '—'
+    receipt_thumb.short_description = 'Comprobante'
+
+    def receipt_preview(self, obj):
+        if obj.receipt:
+            return format_html(
+                '<a href="{}" target="_blank" rel="noopener">'
+                '<img src="{}" style="max-height:260px;border-radius:10px;border:1px solid #ddd" /></a>',
+                obj.receipt.url, obj.receipt.url,
+            )
+        return '— sin comprobante —'
+    receipt_preview.short_description = 'Comprobante'
+
+    @admin.action(description='✓ Aprobar pago (confirma reserva + genera payouts)')
+    def approve_orders(self, request, queryset):
+        from .payment_notifications import notify_client_manual_payment_approved
+        done = 0
+        for order in queryset:
+            if order.status == 'approved':
+                continue
+            order.approve(by_user=request.user)
+            try:
+                notify_client_manual_payment_approved(order)
+            except Exception:
+                pass
+            done += 1
+        self.message_user(request, f'{done} pago(s) aprobados y reserva(s) confirmadas.')
+
+    @admin.action(description='✗ Rechazar pago (avisa al cliente)')
+    def reject_orders(self, request, queryset):
+        from .payment_notifications import notify_client_manual_payment_rejected
+        done = 0
+        for order in queryset:
+            if order.status == 'approved':
+                continue
+            reason = order.rejection_reason or 'No pudimos validar el comprobante. Verificá los datos y reintentá.'
+            order.reject(by_user=request.user, reason=reason)
+            try:
+                notify_client_manual_payment_rejected(order)
+            except Exception:
+                pass
+            done += 1
+        self.message_user(request, f'{done} pago(s) rechazados.')

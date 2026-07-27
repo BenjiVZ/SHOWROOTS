@@ -7,6 +7,7 @@ from .models import PremiumInvitation, Dispute, AuditLog
 from .models import PartnerProductionProfile, PartnerProductionPhoto
 from .models import ProductionPack, BookingPack, PackBundle
 from .models import OpenGigRequest, GigOffer
+from .models import PaymentMethod, ManualPaymentOrder
 from .serializers import (
     BookingListSerializer, BookingDetailSerializer,
     BookingCreateSerializer, ReviewSerializer,
@@ -20,6 +21,8 @@ from .serializers import (
     PackBundleSerializer, PackBundlePublicSerializer,
     OpenGigRequestListSerializer, OpenGigRequestDetailSerializer,
     OpenGigRequestCreateSerializer, GigOfferSerializer, GigOfferCreateSerializer,
+    PaymentMethodSerializer, ManualPaymentOrderSerializer,
+    ManualPaymentOrderCreateSerializer,
 )
 from django.db.models import Sum, Q, Count
 from decimal import Decimal
@@ -2452,3 +2455,62 @@ class GigOfferRejectView(APIView):
             link=f'/dashboard/open-gigs/{gig.id}',
         )
         return Response({'ok': True})
+
+
+# ─────────────────────────────  Pagos (métodos + manual)  ───────────────────
+
+def _automatic_gateway_available() -> bool:
+    """True si la pasarela automática (PagueloFacil) está instalada y configurada."""
+    from django.apps import apps as django_apps
+    if not django_apps.is_installed('payments'):
+        return False
+    try:
+        from payments.paguelofacil import PaguelofacilConfig
+        return bool(PaguelofacilConfig.access_token() and PaguelofacilConfig.cclw())
+    except Exception:
+        return False
+
+
+class PaymentMethodListView(generics.ListAPIView):
+    """Lista los métodos de pago activos para el checkout.
+
+    Los métodos automáticos solo se muestran si la pasarela está instalada y
+    configurada; los manuales siempre.
+    """
+    serializer_class = PaymentMethodSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = PaymentMethod.objects.filter(is_active=True)
+        if not _automatic_gateway_available():
+            qs = qs.exclude(kind='automatic')
+        return qs
+
+
+class ManualPaymentOrderCreateView(generics.CreateAPIView):
+    """POST (multipart) — el cliente declara un pago manual y sube el comprobante."""
+    serializer_class = ManualPaymentOrderCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+
+    def perform_create(self, serializer):
+        order = serializer.save()
+        # Dejar la reserva en 'pendiente_pago' si estaba aceptada (a la espera de validación)
+        booking = order.booking
+        if booking.status == 'aceptada':
+            booking.status = 'pendiente_pago'
+            booking.save(update_fields=['status', 'updated_at'])
+        try:
+            from .payment_notifications import notify_staff_new_manual_payment
+            notify_staff_new_manual_payment(order)
+        except Exception:
+            pass
+
+
+class ManualPaymentOrderDetailView(generics.RetrieveAPIView):
+    """GET — estado de una orden manual (solo el dueño)."""
+    serializer_class = ManualPaymentOrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ManualPaymentOrder.objects.filter(client=self.request.user)

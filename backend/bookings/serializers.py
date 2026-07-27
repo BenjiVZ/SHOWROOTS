@@ -7,6 +7,7 @@ from .models import (
     PartnerProductionProfile, PartnerProductionPhoto,
     ProductionPack, BookingPack, PackBundle,
     OpenGigRequest, GigOffer,
+    PaymentMethod, ManualPaymentOrder,
 )
 
 
@@ -770,3 +771,89 @@ class OpenGigRequestCreateSerializer(serializers.ModelSerializer):
         validated_data['expires_at'] = now + timedelta(hours=expiry_hours)
 
         return OpenGigRequest.objects.create(**validated_data)
+
+
+# ─────────────────────────  Pagos: métodos + órdenes manuales  ──────────────
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    """Método de pago tal como lo ve el cliente en el checkout."""
+    kind_display = serializers.CharField(source='get_kind_display', read_only=True)
+    logo = serializers.ImageField(read_only=True)
+
+    class Meta:
+        model = PaymentMethod
+        fields = [
+            'id', 'name', 'slug', 'kind', 'kind_display', 'provider',
+            'display_order', 'instructions',
+            'account_holder', 'bank_name', 'account_number', 'account_type',
+            'phone', 'extra_info', 'logo', 'requires_proof',
+        ]
+
+
+class ManualPaymentOrderSerializer(serializers.ModelSerializer):
+    """Lectura de una orden manual (para el cliente y para status polling)."""
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    method_name = serializers.CharField(source='method.name', read_only=True)
+
+    class Meta:
+        model = ManualPaymentOrder
+        fields = [
+            'id', 'booking', 'method', 'method_name', 'amount', 'payment_type',
+            'reference', 'receipt', 'client_note', 'status', 'status_display',
+            'rejection_reason', 'created_at', 'reviewed_at',
+        ]
+        read_only_fields = fields
+
+
+class ManualPaymentOrderCreateSerializer(serializers.ModelSerializer):
+    """Alta de una orden manual (multipart: incluye el comprobante)."""
+
+    class Meta:
+        model = ManualPaymentOrder
+        fields = [
+            'id', 'booking', 'method', 'amount', 'payment_type',
+            'reference', 'receipt', 'client_note', 'status',
+        ]
+        read_only_fields = ['id', 'status']
+
+    def validate_booking(self, booking):
+        user = self.context['request'].user
+        if booking.client_id != user.id:
+            raise serializers.ValidationError('Esta reserva no te pertenece.')
+        if booking.status in ('cancelada', 'rechazada', 'completada'):
+            raise serializers.ValidationError(
+                'Esta reserva ya no admite pagos.'
+            )
+        return booking
+
+    def validate_method(self, method):
+        if not method.is_active:
+            raise serializers.ValidationError('Ese método de pago no está disponible.')
+        if method.kind != 'manual':
+            raise serializers.ValidationError(
+                'Ese método no es manual — usa el flujo automático de la pasarela.'
+            )
+        return method
+
+    def validate_amount(self, amount):
+        from decimal import Decimal
+        if amount is None or amount < Decimal('1.00'):
+            raise serializers.ValidationError('El monto mínimo es USD 1.00.')
+        return amount
+
+    def validate(self, data):
+        method = data.get('method')
+        if method and method.requires_proof and not data.get('receipt'):
+            raise serializers.ValidationError(
+                {'receipt': 'Este método requiere que subas el comprobante.'}
+            )
+        if not (data.get('reference') or '').strip():
+            raise serializers.ValidationError(
+                {'reference': 'Ingresa el número de referencia del pago.'}
+            )
+        return data
+
+    def create(self, validated_data):
+        validated_data['client'] = self.context['request'].user
+        validated_data['status'] = 'pending_review'
+        return ManualPaymentOrder.objects.create(**validated_data)

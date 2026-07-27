@@ -14,6 +14,11 @@ urlpatterns = [
     # POST /api/payments/paguelofacil/init/  (app 'payments').
     path('bookings/<int:booking_id>/payments/', views.BookingPaymentsView.as_view(), name='booking-payments'),
 
+    # Métodos de pago (checkout) + pagos manuales con comprobante
+    path('payment-methods/', views.PaymentMethodListView.as_view(), name='payment-methods'),
+    path('manual-payments/', views.ManualPaymentOrderCreateView.as_view(), name='manual-payment-create'),
+    path('manual-payments/<int:pk>/', views.ManualPaymentOrderDetailView.as_view(), name='manual-payment-detail'),
+
     # Messages
     path('bookings/<int:booking_id>/messages/', views.MessageListView.as_view(), name='booking-messages'),
     path('messages/send/', views.MessageCreateView.as_view(), name='message-send'),

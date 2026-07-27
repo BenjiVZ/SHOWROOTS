@@ -128,6 +128,8 @@ UNFOLD = {
                 'title': _('Pagos'),
                 'separator': True,
                 'items': [
+                    {'title': _('Pagos por revisar'), 'icon': 'fact_check', 'link': reverse_lazy('admin:bookings_manualpaymentorder_changelist')},
+                    {'title': _('Métodos de pago'), 'icon': 'account_balance', 'link': reverse_lazy('admin:bookings_paymentmethod_changelist')},
                     {'title': _('Pagos (Bookings)'), 'icon': 'account_balance_wallet', 'link': reverse_lazy('admin:bookings_payment_changelist')},
                     {'title': _('Transacciones PFL'), 'icon': 'credit_card', 'link': reverse_lazy('admin:payments_paguelofaciltransaction_changelist'), 'permission': _payments_installed},
                     {'title': _('Payouts a proveedores'), 'icon': 'send_money', 'link': reverse_lazy('admin:payments_payout_changelist'), 'permission': _payments_installed},
