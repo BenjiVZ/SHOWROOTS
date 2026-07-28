@@ -209,7 +209,7 @@ const tourSteps = [
   },
   {
     target: '[data-tour="tabs"]',
-    title: 'Filtrá tus reservas',
+    title: 'Filtra tus reservas',
     body: 'Usa estas pestañas para filtrar por estado: <strong>todas, activas, completadas o canceladas</strong>.',
   },
   {
