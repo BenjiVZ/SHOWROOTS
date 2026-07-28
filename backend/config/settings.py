@@ -67,8 +67,66 @@ from django.urls import reverse_lazy  # noqa: E402
 from django.utils.translation import gettext_lazy as _  # noqa: E402
 
 
-def _payments_installed(request):
-    return 'payments' in INSTALLED_APPS
+# Los ítems que apuntan a la app 'payments' se agregan SOLO si está instalada.
+# Unfold evalúa el reverse_lazy() del 'link' ANTES de mirar 'permission', así que
+# dejar un link a una URL de una app apagada tira NoReverseMatch y rompe TODO el
+# admin (el sidebar se renderiza en cada página). Por eso la nav se arma en Python.
+_payments_on = 'payments' in INSTALLED_APPS
+
+_sidebar_nav = []
+
+if _payments_on:
+    _sidebar_nav.append({
+        'title': _('Panel'),
+        'separator': False,
+        'items': [
+            {'title': _('Centro de Pagos'), 'icon': 'payments', 'link': reverse_lazy('pfl-test')},
+        ],
+    })
+
+_sidebar_nav.append({
+    'title': _('Marketplace'),
+    'separator': True,
+    'items': [
+        {'title': _('Reservas'), 'icon': 'event', 'link': reverse_lazy('admin:bookings_booking_changelist')},
+        {'title': _('Talentos / DJs'), 'icon': 'music_note', 'link': reverse_lazy('admin:talents_talentprofile_changelist')},
+        {'title': _('Aliados de producción'), 'icon': 'handshake', 'link': reverse_lazy('admin:bookings_partnerproductionprofile_changelist')},
+        {'title': _('Packs de producción'), 'icon': 'inventory_2', 'link': reverse_lazy('admin:bookings_productionpack_changelist')},
+        {'title': _('Solicitudes abiertas'), 'icon': 'campaign', 'link': reverse_lazy('admin:bookings_opengigrequest_changelist')},
+    ],
+})
+
+_pagos_items = [
+    {'title': _('Pagos por revisar'), 'icon': 'fact_check', 'link': reverse_lazy('admin:bookings_manualpaymentorder_changelist')},
+    {'title': _('Métodos de pago'), 'icon': 'account_balance', 'link': reverse_lazy('admin:bookings_paymentmethod_changelist')},
+    {'title': _('Pagos (Bookings)'), 'icon': 'account_balance_wallet', 'link': reverse_lazy('admin:bookings_payment_changelist')},
+]
+if _payments_on:
+    _pagos_items += [
+        {'title': _('Transacciones PFL'), 'icon': 'credit_card', 'link': reverse_lazy('admin:payments_paguelofaciltransaction_changelist')},
+        {'title': _('Payouts a proveedores'), 'icon': 'send_money', 'link': reverse_lazy('admin:payments_payout_changelist')},
+    ]
+_sidebar_nav.append({'title': _('Pagos'), 'separator': True, 'items': _pagos_items})
+
+_sidebar_nav.append({
+    'title': _('Contenido'),
+    'separator': True,
+    'items': [
+        {'title': _('Reseñas'), 'icon': 'star', 'link': reverse_lazy('admin:bookings_review_changelist')},
+        {'title': _('Mensajes'), 'icon': 'chat', 'link': reverse_lazy('admin:bookings_message_changelist')},
+        {'title': _('Notificaciones'), 'icon': 'notifications', 'link': reverse_lazy('admin:bookings_notification_changelist')},
+        {'title': _('Géneros'), 'icon': 'queue_music', 'link': reverse_lazy('admin:talents_genre_changelist')},
+    ],
+})
+
+_sidebar_nav.append({
+    'title': _('Configuración'),
+    'separator': True,
+    'items': [
+        {'title': _('Usuarios'), 'icon': 'group', 'link': reverse_lazy('admin:accounts_user_changelist')},
+        {'title': _('Config. plataforma'), 'icon': 'settings', 'link': reverse_lazy('admin:bookings_platformconfig_changelist')},
+    ],
+})
 
 
 UNFOLD = {
@@ -100,60 +158,7 @@ UNFOLD = {
     'SIDEBAR': {
         'show_search': True,
         'show_all_applications': True,
-        'navigation': [
-            {
-                'title': _('Panel'),
-                'separator': False,
-                'items': [
-                    {
-                        'title': _('Centro de Pagos'),
-                        'icon': 'payments',
-                        'link': reverse_lazy('pfl-test'),
-                        'permission': _payments_installed,
-                    },
-                ],
-            },
-            {
-                'title': _('Marketplace'),
-                'separator': True,
-                'items': [
-                    {'title': _('Reservas'), 'icon': 'event', 'link': reverse_lazy('admin:bookings_booking_changelist')},
-                    {'title': _('Talentos / DJs'), 'icon': 'music_note', 'link': reverse_lazy('admin:talents_talentprofile_changelist')},
-                    {'title': _('Aliados de producción'), 'icon': 'handshake', 'link': reverse_lazy('admin:bookings_partnerproductionprofile_changelist')},
-                    {'title': _('Packs de producción'), 'icon': 'inventory_2', 'link': reverse_lazy('admin:bookings_productionpack_changelist')},
-                    {'title': _('Solicitudes abiertas'), 'icon': 'campaign', 'link': reverse_lazy('admin:bookings_opengigrequest_changelist')},
-                ],
-            },
-            {
-                'title': _('Pagos'),
-                'separator': True,
-                'items': [
-                    {'title': _('Pagos por revisar'), 'icon': 'fact_check', 'link': reverse_lazy('admin:bookings_manualpaymentorder_changelist')},
-                    {'title': _('Métodos de pago'), 'icon': 'account_balance', 'link': reverse_lazy('admin:bookings_paymentmethod_changelist')},
-                    {'title': _('Pagos (Bookings)'), 'icon': 'account_balance_wallet', 'link': reverse_lazy('admin:bookings_payment_changelist')},
-                    {'title': _('Transacciones PFL'), 'icon': 'credit_card', 'link': reverse_lazy('admin:payments_paguelofaciltransaction_changelist'), 'permission': _payments_installed},
-                    {'title': _('Payouts a proveedores'), 'icon': 'send_money', 'link': reverse_lazy('admin:payments_payout_changelist'), 'permission': _payments_installed},
-                ],
-            },
-            {
-                'title': _('Contenido'),
-                'separator': True,
-                'items': [
-                    {'title': _('Reseñas'), 'icon': 'star', 'link': reverse_lazy('admin:bookings_review_changelist')},
-                    {'title': _('Mensajes'), 'icon': 'chat', 'link': reverse_lazy('admin:bookings_message_changelist')},
-                    {'title': _('Notificaciones'), 'icon': 'notifications', 'link': reverse_lazy('admin:bookings_notification_changelist')},
-                    {'title': _('Géneros'), 'icon': 'queue_music', 'link': reverse_lazy('admin:talents_genre_changelist')},
-                ],
-            },
-            {
-                'title': _('Configuración'),
-                'separator': True,
-                'items': [
-                    {'title': _('Usuarios'), 'icon': 'group', 'link': reverse_lazy('admin:accounts_user_changelist')},
-                    {'title': _('Config. plataforma'), 'icon': 'settings', 'link': reverse_lazy('admin:bookings_platformconfig_changelist')},
-                ],
-            },
-        ],
+        'navigation': _sidebar_nav,
     },
 }
 
