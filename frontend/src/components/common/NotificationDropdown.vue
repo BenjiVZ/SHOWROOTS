@@ -77,16 +77,18 @@ async function markAllRead() {
   } catch { /* */ }
 }
 
-async function handleClick(n) {
-  if (!n.is_read) {
-    try {
-      await api.post('/notifications/read/', { ids: [n.id] })
-      n.is_read = true
-      unreadCount.value = Math.max(0, unreadCount.value - 1)
-    } catch { /* */ }
-  }
+function handleClick(n) {
   isOpen.value = false
-  if (n.link) router.push(n.link)
+  // Marcar leída en segundo plano — NO bloquear la navegación esperando el POST.
+  if (!n.is_read) {
+    n.is_read = true
+    unreadCount.value = Math.max(0, unreadCount.value - 1)
+    api.post('/notifications/read/', { ids: [n.id] }).catch(() => {})
+  }
+  // Navegar al destino de la notificación.
+  if (n.link) {
+    router.push(n.link).catch(() => {})
+  }
 }
 
 function timeAgo(dateStr) {
