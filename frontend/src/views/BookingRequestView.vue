@@ -642,6 +642,31 @@ const prodLoading = ref(false)
 const showAllSizes = ref(false)
 const packAddWarnings = ref([])
 
+// `form` debe declararse ANTES de suggestedEventSize: el watch de más abajo
+// evalúa suggestedEventSize al crearse, y ese computed lee form.value — si
+// `form` va después, salta un TDZ ("Cannot access 'form' before initialization")
+// y el componente no monta (pantalla en negro).
+const form = ref({
+  event_type: '',
+  event_name: '',
+  event_date: '',
+  event_time_start: '',
+  event_time_end: '',
+  event_location: '',
+  event_city: 'Ciudad de Panamá',
+  event_indoor: true,
+  guest_count: null,
+  genre_preference: '',
+  description: '',
+  budget: null,
+  client_notes: '',
+  additional_services: [],
+  additional_services_notes: '',
+  client_final_name: '',
+  client_final_email: '',
+  client_final_phone: '',
+})
+
 const suggestedEventSize = computed(() => {
   const g = form.value.guest_count || 0
   if (!g) return ''
@@ -676,27 +701,6 @@ function toggleCartPack(p) {
   else cartPacks.value.push(p)
 }
 const cartSubtotal = computed(() => cartPacks.value.reduce((s, p) => s + Number(p.price || 0), 0))
-
-const form = ref({
-  event_type: '',
-  event_name: '',
-  event_date: '',
-  event_time_start: '',
-  event_time_end: '',
-  event_location: '',
-  event_city: 'Ciudad de Panamá',
-  event_indoor: true,
-  guest_count: null,
-  genre_preference: '',
-  description: '',
-  budget: null,
-  client_notes: '',
-  additional_services: [],
-  additional_services_notes: '',
-  client_final_name: '',
-  client_final_email: '',
-  client_final_phone: '',
-})
 
 const minDate = computed(() => {
   const d = new Date()
