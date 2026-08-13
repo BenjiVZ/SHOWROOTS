@@ -725,6 +725,7 @@ class OpenGigRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OpenGigRequest
         fields = [
+            'id',
             'event_type', 'event_name', 'event_date',
             'event_time_start', 'event_time_end', 'event_duration_hours',
             'event_location', 'event_city', 'event_indoor',
@@ -733,6 +734,7 @@ class OpenGigRequestCreateSerializer(serializers.ModelSerializer):
             'additional_services', 'additional_services_notes',
             'budget',
         ]
+        read_only_fields = ['id']
 
     def validate_requested_items(self, value):
         if not value:
