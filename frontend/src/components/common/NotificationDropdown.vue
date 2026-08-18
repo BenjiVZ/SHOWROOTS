@@ -33,6 +33,9 @@
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           <p>Sin notificaciones</p>
         </div>
+        <div class="notif-footer">
+          <button class="see-all" @click="goToAll">Ver todas las notificaciones</button>
+        </div>
       </div>
     </Transition>
   </div>
@@ -89,6 +92,11 @@ function handleClick(n) {
   if (n.link) {
     router.push(n.link).catch(() => {})
   }
+}
+
+function goToAll() {
+  isOpen.value = false
+  router.push({ name: 'notifications' }).catch(() => {})
 }
 
 function timeAgo(dateStr) {
@@ -215,6 +223,10 @@ onUnmounted(() => {
 .notif-empty { padding: var(--space-10); text-align: center; color: var(--color-text-muted); }
 .notif-empty svg { margin: 0 auto var(--space-3); opacity: 0.3; }
 .notif-empty p { font-size: var(--font-size-sm); }
+
+.notif-footer { border-top: 1px solid var(--color-border); padding: var(--space-2); }
+.see-all { width: 100%; background: none; border: none; color: var(--color-primary); font-weight: 600; font-size: var(--font-size-sm); padding: var(--space-3); border-radius: var(--radius-md); cursor: pointer; }
+.see-all:hover { background: rgba(193,216,47,0.06); }
 
 .dropdown-enter-active { transition: all 0.2s ease; }
 .dropdown-leave-active { transition: all 0.15s ease; }
