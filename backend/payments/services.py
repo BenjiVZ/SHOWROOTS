@@ -100,6 +100,17 @@ def create_payment_and_payouts(tx: PaguelofacilTransaction) -> Payment:
     except Exception:
         logger.exception('Fallo enviando emails de confirmación de pago')
 
+    # Notificaciones in-app (cliente + DJ + Aliados). Los emails ya salieron arriba.
+    try:
+        from bookings.payment_notifications import (
+            notify_client_payment_confirmed,
+            notify_providers_payment_received,
+        )
+        notify_client_payment_confirmed(booking)
+        notify_providers_payment_received(booking)
+    except Exception:
+        logger.exception('Fallo creando notificaciones in-app de pago PFL')
+
     return payment
 
 

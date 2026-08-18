@@ -243,6 +243,38 @@ class BookingUpdateStatusView(generics.UpdateAPIView):
                 booking=booking
             )
 
+        # Cancelación: avisar a la contraparte (quien NO canceló) y liberar la fecha del DJ.
+        if new_status == 'cancelada':
+            from accounts.emails import send_booking_notification_email
+            canceller = request.user
+            who = canceller.get_full_name() or canceller.username
+            recipients = []
+            if booking.client_id != canceller.id:
+                recipients.append(booking.client)
+            if booking.talent and booking.talent.user_id != canceller.id:
+                recipients.append(booking.talent.user)
+            # Liberar la disponibilidad que se bloqueó al confirmar/aceptar.
+            if booking.talent:
+                from talents.models import Availability
+                Availability.objects.filter(
+                    talent=booking.talent, date=booking.event_date,
+                    status='booked', note=f'Booking #{booking.id}',
+                ).delete()
+            for user in recipients:
+                Notification.objects.create(
+                    user=user,
+                    notification_type='booking_cancelled',
+                    title='Reserva cancelada',
+                    message=f'{who} canceló la reserva del {booking.event_date}.',
+                    link=f'/dashboard/bookings/{booking.id}',
+                )
+                send_booking_notification_email(
+                    user,
+                    'Reserva cancelada',
+                    f'{who} canceló la reserva del {booking.event_date}. Si tenías un pago en custodia, revisá el detalle de la reserva.',
+                    booking=booking,
+                )
+
         return Response(BookingDetailSerializer(booking).data)
 
 
@@ -715,14 +747,15 @@ class DisputeCreateView(generics.CreateAPIView):
         booking.status = 'en_disputa'
         booking.save(update_fields=['status', 'updated_at'])
 
-        # Notify talent + admins
-        Notification.objects.create(
-            user=booking.talent.user,
-            notification_type='system',
-            title='Disputa abierta en tu booking',
-            message=f'El cliente reportó: {dispute.get_reason_display()}. Pulsar revisará.',
-            link=f'/dashboard/bookings/{booking.id}'
-        )
+        # Notify talent (si hay DJ; en reservas de solo-servicios no hay contraparte DJ)
+        if booking.talent:
+            Notification.objects.create(
+                user=booking.talent.user,
+                notification_type='system',
+                title='Disputa abierta en tu booking',
+                message=f'El cliente reportó: {dispute.get_reason_display()}. Pulsar revisará.',
+                link=f'/dashboard/bookings/{booking.id}'
+            )
         return Response({
             'dispute_id': dispute.id,
             'status': dispute.status,
@@ -762,13 +795,14 @@ class BookingModifyView(APIView):
             booking.status = 'pendiente_respuesta'
         booking.save()
 
-        Notification.objects.create(
-            user=booking.talent.user,
-            notification_type='system',
-            title='Cambio en booking',
-            message=f'El cliente solicitó nueva fecha: {new_date} {new_start}. Confirma o ajusta.',
-            link=f'/dashboard/bookings/{booking.id}'
-        )
+        if booking.talent:
+            Notification.objects.create(
+                user=booking.talent.user,
+                notification_type='system',
+                title='Cambio en booking',
+                message=f'El cliente solicitó nueva fecha: {new_date} {new_start}. Confirma o ajusta.',
+                link=f'/dashboard/bookings/{booking.id}'
+            )
         return Response(BookingDetailSerializer(booking).data)
 
 
@@ -865,8 +899,8 @@ class BookingContractView(APIView):
             booking = Booking.objects.select_related('client', 'talent').get(id=booking_id)
         except Booking.DoesNotExist:
             return Response({'error': 'Not found'}, status=404)
-        # Solo participantes
-        if booking.client != request.user and booking.talent.user != request.user:
+        # Solo participantes (reserva de solo-servicios no tiene DJ)
+        if booking.client != request.user and not (booking.talent and booking.talent.user == request.user):
             return Response({'error': 'Forbidden'}, status=403)
 
         gross = booking.quoted_price or booking.precio_estimado or Decimal('0.00')
@@ -2447,8 +2481,10 @@ class GigOfferRejectView(APIView):
             return Response({'error': 'Esta oferta ya no está pendiente.'}, status=400)
         offer.status = 'rejected'
         offer.save(update_fields=['status', 'updated_at'])
+        # La oferta puede ser de un DJ (talent) o de un Aliado (partner); en packs talent=None.
+        provider_user = offer.talent.user if offer.offer_kind == 'dj' else offer.partner
         Notification.objects.create(
-            user=offer.talent.user,
+            user=provider_user,
             notification_type='open_gig_offer_rejected',
             title='Tu oferta no fue seleccionada',
             message=f'El cliente descartó tu oferta para la solicitud del {gig.event_date}.',
